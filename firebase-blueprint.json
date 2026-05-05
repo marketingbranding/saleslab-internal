@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "Scenario": {
+      "title": "Sales Scenario",
+      "description": "A simulation scenario for sales practice.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "target": { "type": "string" },
+        "consumerProfile": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+        "icon": { "type": "string" },
+        "name": { "type": "string" },
+        "gender": { "type": "string", "enum": ["Pria", "Wanita"] },
+        "aggressiveness": { "type": "number" },
+        "patience": { "type": "number" },
+        "responseStyle": { "type": "string", "enum": ["To the point", "Banyak Tanya", "Ragu-ragu", "Cerewet"] },
+        "firstSpeaker": { "type": "string", "enum": ["AI", "Sales"] },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "name", "userId", "createdAt"]
+    },
+    "Session": {
+      "title": "Roleplay Session",
+      "description": "A completed roleplay session with transcript and feedback.",
+      "type": "object",
+      "properties": {
+        "scenarioId": { "type": "string" },
+        "salespersonName": { "type": "string" },
+        "transcript": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": { "type": "string" },
+              "text": { "type": "string" }
+            }
+          }
+        },
+        "score": { "type": "number" },
+        "feedback": { "type": "object" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["scenarioId", "salespersonName", "transcript", "score", "userId", "createdAt"]
+    },
+    "Settings": {
+      "title": "Application Settings",
+      "description": "Global settings for the application model and AI configuration.",
+      "type": "object",
+      "properties": {
+        "modelProvider": { "type": "string", "enum": ["gemini", "ollama"] },
+        "ollamaUrl": { "type": "string" },
+        "ollamaModel": { "type": "string" },
+        "updatedBy": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["modelProvider", "updatedAt"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Information about a registered user.",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "email", "updatedAt"]
+    },
+    "Admin": {
+      "title": "Administrator",
+      "description": "User with admin privileges.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "addedAt"]
+    }
+  },
+  "firestore": {
+    "admins": {
+      "schema": "Admin",
+      "description": "Whitelist of admin users."
+    },
+    "users": {
+      "schema": "UserProfile",
+      "description": "User profiles for mapped settings and names."
+    },
+    "scenarios": {
+      "schema": "Scenario",
+      "description": "Public and private custom scenarios."
+    },
+    "sessions": {
+      "schema": "Session",
+      "description": "History of all simulated sessions."
+    },
+    "settings": {
+      "schema": "Settings",
+      "description": "Global config for AI models."
+    }
+  }
+}

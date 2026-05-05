@@ -1,0 +1,6 @@
+{
+  "name": "SalesLab Internal",
+  "description": "Platform internal untuk melatih skill sales dan negosiasi tim kita pake simulasi AI.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": []
+}

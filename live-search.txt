@@ -1,0 +1,318 @@
+﻿
+  node_modules\@google\genai\dist\node\index.mjs:3283:    return 
+processJsonSchema(schema);
+  node_modules\@google\genai\dist\node\index.mjs:3284:}
+> node_modules\@google\genai\dist\node\index.mjs:3285:function 
+tSpeechConfig(speechConfig) {
+> node_modules\@google\genai\dist\node\index.mjs:3286:    if (typeof 
+speechConfig === 'object') {
+> node_modules\@google\genai\dist\node\index.mjs:3287:        return 
+speechConfig;
+  node_modules\@google\genai\dist\node\index.mjs:3288:    }
+> node_modules\@google\genai\dist\node\index.mjs:3289:    else if (typeof 
+speechConfig === 'string') {
+  node_modules\@google\genai\dist\node\index.mjs:3290:        return {
+> node_modules\@google\genai\dist\node\index.mjs:3291:            voiceConfig: 
+{
+> node_modules\@google\genai\dist\node\index.mjs:3292:                
+prebuiltVoiceConfig: {
+> node_modules\@google\genai\dist\node\index.mjs:3293:                    
+voiceName: speechConfig,
+  node_modules\@google\genai\dist\node\index.mjs:3294:                },
+  node_modules\@google\genai\dist\node\index.mjs:3295:            },
+  node_modules\@google\genai\dist\node\index.mjs:3297:    }
+  node_modules\@google\genai\dist\node\index.mjs:3298:    else {
+> node_modules\@google\genai\dist\node\index.mjs:3299:        throw new 
+Error(`Unsupported speechConfig type: ${typeof speechConfig}`);
+  node_modules\@google\genai\dist\node\index.mjs:3300:    }
+  node_modules\@google\genai\dist\node\index.mjs:3301:}
+> node_modules\@google\genai\dist\node\index.mjs:3302:function 
+tLiveSpeechConfig(speechConfig) {
+> node_modules\@google\genai\dist\node\index.mjs:3303:    if 
+('multiSpeakerVoiceConfig' in speechConfig) {
+> node_modules\@google\genai\dist\node\index.mjs:3304:        throw new 
+Error('multiSpeakerVoiceConfig is not supported in the live API.');
+  node_modules\@google\genai\dist\node\index.mjs:3305:    }
+> node_modules\@google\genai\dist\node\index.mjs:3306:    return speechConfig;
+  node_modules\@google\genai\dist\node\index.mjs:3307:}
+  node_modules\@google\genai\dist\node\index.mjs:3308:function tTool(tool) {
+  node_modules\@google\genai\dist\node\index.mjs:4553:        
+setValueByPath(toObject, ['mediaResolution'], fromMediaResolution);
+  node_modules\@google\genai\dist\node\index.mjs:4554:    }
+> node_modules\@google\genai\dist\node\index.mjs:4555:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:4556:    if (fromSpeechConfig 
+!= null) {
+> node_modules\@google\genai\dist\node\index.mjs:4557:        
+setValueByPath(toObject, ['speechConfig'], tSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\node\index.mjs:4558:    }
+  node_modules\@google\genai\dist\node\index.mjs:4559:    if 
+(getValueByPath(fromObject, ['audioTimestamp']) !== undefined) {
+  node_modules\@google\genai\dist\node\index.mjs:8036:        
+setValueByPath(toObject, ['seed'], fromSeed);
+  node_modules\@google\genai\dist\node\index.mjs:8037:    }
+> node_modules\@google\genai\dist\node\index.mjs:8038:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:8039:    if (fromSpeechConfig 
+!= null) {
+> node_modules\@google\genai\dist\node\index.mjs:8040:        
+setValueByPath(toObject, ['speechConfig'], fromSpeechConfig);
+  node_modules\@google\genai\dist\node\index.mjs:8041:    }
+  node_modules\@google\genai\dist\node\index.mjs:8042:    const 
+fromStopSequences = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\node\index.mjs:8144:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'seed'], fromSeed);
+  node_modules\@google\genai\dist\node\index.mjs:8145:    }
+> node_modules\@google\genai\dist\node\index.mjs:8146:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:8147:    if (parentObject !== 
+undefined && fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\node\index.mjs:8148:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'speechConfig'], 
+tLiveSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\node\index.mjs:8149:    }
+  node_modules\@google\genai\dist\node\index.mjs:8150:    const 
+fromThinkingConfig = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\node\index.mjs:8273:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'seed'], fromSeed);
+  node_modules\@google\genai\dist\node\index.mjs:8274:    }
+> node_modules\@google\genai\dist\node\index.mjs:8275:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:8276:    if (parentObject !== 
+undefined && fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\node\index.mjs:8277:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'speechConfig'], 
+tLiveSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\node\index.mjs:8278:    }
+  node_modules\@google\genai\dist\node\index.mjs:8279:    const 
+fromThinkingConfig = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\node\index.mjs:10010:        
+setValueByPath(toObject, ['mediaResolution'], fromMediaResolution);
+  node_modules\@google\genai\dist\node\index.mjs:10011:    }
+> node_modules\@google\genai\dist\node\index.mjs:10012:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:10013:    if 
+(fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\node\index.mjs:10014:        
+setValueByPath(toObject, ['speechConfig'], tSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\node\index.mjs:10015:    }
+  node_modules\@google\genai\dist\node\index.mjs:10016:    if 
+(getValueByPath(fromObject, ['audioTimestamp']) !== undefined) {
+  node_modules\@google\genai\dist\node\index.mjs:10184:        
+setValueByPath(toObject, ['mediaResolution'], fromMediaResolution);
+  node_modules\@google\genai\dist\node\index.mjs:10185:    }
+> node_modules\@google\genai\dist\node\index.mjs:10186:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:10187:    if 
+(fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\node\index.mjs:10188:        
+setValueByPath(toObject, ['speechConfig'], tSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\node\index.mjs:10189:    }
+  node_modules\@google\genai\dist\node\index.mjs:10190:    const 
+fromAudioTimestamp = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\node\index.mjs:11160:        
+setValueByPath(toObject, ['seed'], fromSeed);
+  node_modules\@google\genai\dist\node\index.mjs:11161:    }
+> node_modules\@google\genai\dist\node\index.mjs:11162:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:11163:    if 
+(fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\node\index.mjs:11164:        
+setValueByPath(toObject, ['speechConfig'], fromSpeechConfig);
+  node_modules\@google\genai\dist\node\index.mjs:11165:    }
+  node_modules\@google\genai\dist\node\index.mjs:11166:    const 
+fromStopSequences = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\node\index.mjs:13957:         model = 
+'gemini-live-2.5-flash-preview';
+  node_modules\@google\genai\dist\node\index.mjs:13958:       }
+> node_modules\@google\genai\dist\node\index.mjs:13959:       const session = 
+await ai.live.connect({
+  node_modules\@google\genai\dist\node\index.mjs:13960:         model: model,
+  node_modules\@google\genai\dist\node\index.mjs:13961:         config: {
+  node_modules\@google\genai\dist\node\index.mjs:14297:         model = 
+'gemini-live-2.5-flash-preview';
+  node_modules\@google\genai\dist\node\index.mjs:14298:       }
+> node_modules\@google\genai\dist\node\index.mjs:14299:       const session = 
+await ai.live.connect({
+  node_modules\@google\genai\dist\node\index.mjs:14300:         model: model,
+  node_modules\@google\genai\dist\node\index.mjs:14301:         config: {
+  node_modules\@google\genai\dist\node\index.mjs:16348:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'seed'], fromSeed);
+  node_modules\@google\genai\dist\node\index.mjs:16349:    }
+> node_modules\@google\genai\dist\node\index.mjs:16350:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\node\index.mjs:16351:    if (parentObject 
+!== undefined && fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\node\index.mjs:16352:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'speechConfig'], 
+tLiveSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\node\index.mjs:16353:    }
+  node_modules\@google\genai\dist\node\index.mjs:16354:    const 
+fromThinkingConfig = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\node\index.mjs:16707:                
+'responseModalities',
+  node_modules\@google\genai\dist\node\index.mjs:16708:                'seed',
+> node_modules\@google\genai\dist\node\index.mjs:16709:                
+'speechConfig',
+  node_modules\@google\genai\dist\node\index.mjs:16710:            ];
+  node_modules\@google\genai\dist\node\index.mjs:16711:            let 
+mappedFieldsFromPreExisting = [];
+  node_modules\@google\genai\dist\web\index.mjs:3275:    return 
+processJsonSchema(schema);
+  node_modules\@google\genai\dist\web\index.mjs:3276:}
+> node_modules\@google\genai\dist\web\index.mjs:3277:function 
+tSpeechConfig(speechConfig) {
+> node_modules\@google\genai\dist\web\index.mjs:3278:    if (typeof 
+speechConfig === 'object') {
+> node_modules\@google\genai\dist\web\index.mjs:3279:        return 
+speechConfig;
+  node_modules\@google\genai\dist\web\index.mjs:3280:    }
+> node_modules\@google\genai\dist\web\index.mjs:3281:    else if (typeof 
+speechConfig === 'string') {
+  node_modules\@google\genai\dist\web\index.mjs:3282:        return {
+> node_modules\@google\genai\dist\web\index.mjs:3283:            voiceConfig: {
+> node_modules\@google\genai\dist\web\index.mjs:3284:                
+prebuiltVoiceConfig: {
+> node_modules\@google\genai\dist\web\index.mjs:3285:                    
+voiceName: speechConfig,
+  node_modules\@google\genai\dist\web\index.mjs:3286:                },
+  node_modules\@google\genai\dist\web\index.mjs:3287:            },
+  node_modules\@google\genai\dist\web\index.mjs:3289:    }
+  node_modules\@google\genai\dist\web\index.mjs:3290:    else {
+> node_modules\@google\genai\dist\web\index.mjs:3291:        throw new 
+Error(`Unsupported speechConfig type: ${typeof speechConfig}`);
+  node_modules\@google\genai\dist\web\index.mjs:3292:    }
+  node_modules\@google\genai\dist\web\index.mjs:3293:}
+> node_modules\@google\genai\dist\web\index.mjs:3294:function 
+tLiveSpeechConfig(speechConfig) {
+> node_modules\@google\genai\dist\web\index.mjs:3295:    if 
+('multiSpeakerVoiceConfig' in speechConfig) {
+> node_modules\@google\genai\dist\web\index.mjs:3296:        throw new 
+Error('multiSpeakerVoiceConfig is not supported in the live API.');
+  node_modules\@google\genai\dist\web\index.mjs:3297:    }
+> node_modules\@google\genai\dist\web\index.mjs:3298:    return speechConfig;
+  node_modules\@google\genai\dist\web\index.mjs:3299:}
+  node_modules\@google\genai\dist\web\index.mjs:3300:function tTool(tool) {
+  node_modules\@google\genai\dist\web\index.mjs:4545:        
+setValueByPath(toObject, ['mediaResolution'], fromMediaResolution);
+  node_modules\@google\genai\dist\web\index.mjs:4546:    }
+> node_modules\@google\genai\dist\web\index.mjs:4547:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:4548:    if (fromSpeechConfig 
+!= null) {
+> node_modules\@google\genai\dist\web\index.mjs:4549:        
+setValueByPath(toObject, ['speechConfig'], tSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\web\index.mjs:4550:    }
+  node_modules\@google\genai\dist\web\index.mjs:4551:    if 
+(getValueByPath(fromObject, ['audioTimestamp']) !== undefined) {
+  node_modules\@google\genai\dist\web\index.mjs:8028:        
+setValueByPath(toObject, ['seed'], fromSeed);
+  node_modules\@google\genai\dist\web\index.mjs:8029:    }
+> node_modules\@google\genai\dist\web\index.mjs:8030:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:8031:    if (fromSpeechConfig 
+!= null) {
+> node_modules\@google\genai\dist\web\index.mjs:8032:        
+setValueByPath(toObject, ['speechConfig'], fromSpeechConfig);
+  node_modules\@google\genai\dist\web\index.mjs:8033:    }
+  node_modules\@google\genai\dist\web\index.mjs:8034:    const 
+fromStopSequences = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\web\index.mjs:8136:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'seed'], fromSeed);
+  node_modules\@google\genai\dist\web\index.mjs:8137:    }
+> node_modules\@google\genai\dist\web\index.mjs:8138:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:8139:    if (parentObject !== 
+undefined && fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\web\index.mjs:8140:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'speechConfig'], 
+tLiveSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\web\index.mjs:8141:    }
+  node_modules\@google\genai\dist\web\index.mjs:8142:    const 
+fromThinkingConfig = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\web\index.mjs:8265:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'seed'], fromSeed);
+  node_modules\@google\genai\dist\web\index.mjs:8266:    }
+> node_modules\@google\genai\dist\web\index.mjs:8267:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:8268:    if (parentObject !== 
+undefined && fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\web\index.mjs:8269:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'speechConfig'], 
+tLiveSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\web\index.mjs:8270:    }
+  node_modules\@google\genai\dist\web\index.mjs:8271:    const 
+fromThinkingConfig = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\web\index.mjs:10002:        
+setValueByPath(toObject, ['mediaResolution'], fromMediaResolution);
+  node_modules\@google\genai\dist\web\index.mjs:10003:    }
+> node_modules\@google\genai\dist\web\index.mjs:10004:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:10005:    if (fromSpeechConfig 
+!= null) {
+> node_modules\@google\genai\dist\web\index.mjs:10006:        
+setValueByPath(toObject, ['speechConfig'], tSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\web\index.mjs:10007:    }
+  node_modules\@google\genai\dist\web\index.mjs:10008:    if 
+(getValueByPath(fromObject, ['audioTimestamp']) !== undefined) {
+  node_modules\@google\genai\dist\web\index.mjs:10176:        
+setValueByPath(toObject, ['mediaResolution'], fromMediaResolution);
+  node_modules\@google\genai\dist\web\index.mjs:10177:    }
+> node_modules\@google\genai\dist\web\index.mjs:10178:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:10179:    if (fromSpeechConfig 
+!= null) {
+> node_modules\@google\genai\dist\web\index.mjs:10180:        
+setValueByPath(toObject, ['speechConfig'], tSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\web\index.mjs:10181:    }
+  node_modules\@google\genai\dist\web\index.mjs:10182:    const 
+fromAudioTimestamp = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\web\index.mjs:11152:        
+setValueByPath(toObject, ['seed'], fromSeed);
+  node_modules\@google\genai\dist\web\index.mjs:11153:    }
+> node_modules\@google\genai\dist\web\index.mjs:11154:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:11155:    if (fromSpeechConfig 
+!= null) {
+> node_modules\@google\genai\dist\web\index.mjs:11156:        
+setValueByPath(toObject, ['speechConfig'], fromSpeechConfig);
+  node_modules\@google\genai\dist\web\index.mjs:11157:    }
+  node_modules\@google\genai\dist\web\index.mjs:11158:    const 
+fromStopSequences = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\web\index.mjs:13949:         model = 
+'gemini-live-2.5-flash-preview';
+  node_modules\@google\genai\dist\web\index.mjs:13950:       }
+> node_modules\@google\genai\dist\web\index.mjs:13951:       const session = 
+await ai.live.connect({
+  node_modules\@google\genai\dist\web\index.mjs:13952:         model: model,
+  node_modules\@google\genai\dist\web\index.mjs:13953:         config: {
+  node_modules\@google\genai\dist\web\index.mjs:14289:         model = 
+'gemini-live-2.5-flash-preview';
+  node_modules\@google\genai\dist\web\index.mjs:14290:       }
+> node_modules\@google\genai\dist\web\index.mjs:14291:       const session = 
+await ai.live.connect({
+  node_modules\@google\genai\dist\web\index.mjs:14292:         model: model,
+  node_modules\@google\genai\dist\web\index.mjs:14293:         config: {
+  node_modules\@google\genai\dist\web\index.mjs:16340:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'seed'], fromSeed);
+  node_modules\@google\genai\dist\web\index.mjs:16341:    }
+> node_modules\@google\genai\dist\web\index.mjs:16342:    const 
+fromSpeechConfig = getValueByPath(fromObject, ['speechConfig']);
+> node_modules\@google\genai\dist\web\index.mjs:16343:    if (parentObject !== 
+undefined && fromSpeechConfig != null) {
+> node_modules\@google\genai\dist\web\index.mjs:16344:        
+setValueByPath(parentObject, ['setup', 'generationConfig', 'speechConfig'], 
+tLiveSpeechConfig(fromSpeechConfig));
+  node_modules\@google\genai\dist\web\index.mjs:16345:    }
+  node_modules\@google\genai\dist\web\index.mjs:16346:    const 
+fromThinkingConfig = getValueByPath(fromObject, [
+  node_modules\@google\genai\dist\web\index.mjs:16699:                
+'responseModalities',
+  node_modules\@google\genai\dist\web\index.mjs:16700:                'seed',
+> node_modules\@google\genai\dist\web\index.mjs:16701:                
+'speechConfig',
+  node_modules\@google\genai\dist\web\index.mjs:16702:            ];
+  node_modules\@google\genai\dist\web\index.mjs:16703:            let 
+mappedFieldsFromPreExisting = [];
+
+

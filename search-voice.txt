@@ -1,0 +1,235 @@
+﻿D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:601:    /** If enabled, detected voice and text input count as activity. If disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:7651:    /** Voice activity detection signal. Allowlisted only. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:7652:    voiceActivityDetectionSignal?: VoiceActivityDetectionSignal;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:7653:    /** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:7654:    voiceActivity?: VoiceActivity;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:8455:export declare interface MultiSpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:8456:    /** Required. A list of configurations for the voices of the speakers. Exactly two speaker voice configurations must be provided. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:8457:    speakerVoiceConfigs?: SpeakerVoiceConfig[];
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9001:/** Configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9002:export declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9003:    /** The name of the prebuilt voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9004:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9198:    /** If not set, automatic activity detection is enabled by default. If automatic voice detection is disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9356:/** The configuration for the replicated voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9357:export declare interface ReplicatedVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9358:    /** The mimetype of the voice sample. The only currently supported
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9363:    /** The sample of the custom voice.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9366:    voiceSampleAudio?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9849:     - Managing turns when not using audio input and voice activity detection.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9878:     based on voice activity detection (VAD).
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10000:export declare interface SpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10003:    /** Required. The configuration for the voice of this speaker. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10004:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10009:    /** The configuration in case of single-voice output. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10010:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10013:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10014:    multiSpeakerVoiceConfig?: MultiSpeakerVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10030:     * The voice of the speaker.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10032:    voice?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11291:        VoiceActivityType,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11363:        ReplicatedVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11364:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11365:        VoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11366:        SpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11367:        MultiSpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11654:        VoiceActivityDetectionSignal,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11655:        VoiceActivity,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12469:/** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12470:export declare interface VoiceActivity {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12471:    /** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12472:    voiceActivityType?: VoiceActivityType;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12475:export declare interface VoiceActivityDetectionSignal {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12480:/** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12481:export declare enum VoiceActivityType {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12483:     * The default is VOICE_ACTIVITY_TYPE_UNSPECIFIED.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12496:/** The configuration for the voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12497:export declare interface VoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12498:    /** The configuration for a replicated voice, which is a clone of a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12499:     user's voice that can be used for speech synthesis. If this is unset, a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12500:     default voice is used. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12501:    replicatedVoiceConfig?: ReplicatedVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12502:    /** The configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12503:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:718:declare interface MultiSpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:719:    /** Required. A list of configurations for the voices of the speakers. Exactly two speaker voice configurations must be provided. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:720:    speakerVoiceConfigs?: SpeakerVoiceConfig[];
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:865:/** Configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:866:declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:867:    /** The name of the prebuilt voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:868:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:919:/** The configuration for the replicated voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:920:declare interface ReplicatedVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:921:    /** The mimetype of the voice sample. The only currently supported
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:926:    /** The sample of the custom voice.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:929:    voiceSampleAudio?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1017:declare interface SpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1020:    /** Required. The configuration for the voice of this speaker. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1021:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1026:    /** The configuration in case of single-voice output. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1027:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1030:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1031:    multiSpeakerVoiceConfig?: MultiSpeakerVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1292:/** The configuration for the voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1293:declare interface VoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1294:    /** The configuration for a replicated voice, which is a clone of a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1295:     user's voice that can be used for speech synthesis. If this is unset, a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1296:     default voice is used. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1297:    replicatedVoiceConfig?: ReplicatedVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1298:    /** The configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1299:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:431:    /** If enabled, detected voice and text input count as activity. If disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5008:    /** Voice activity detection signal. Allowlisted only. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5009:    voiceActivityDetectionSignal?: VoiceActivityDetectionSignal;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5010:    /** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5011:    voiceActivity?: VoiceActivity;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5355:declare interface MultiSpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5356:    /** Required. A list of configurations for the voices of the speakers. Exactly two speaker voice configurations must be provided. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5357:    speakerVoiceConfigs?: SpeakerVoiceConfig[];
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5676:/** Configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5677:declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5678:    /** The name of the prebuilt voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5679:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5861:    /** If not set, automatic activity detection is enabled by default. If automatic voice detection is disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6019:/** The configuration for the replicated voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6020:declare interface ReplicatedVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6021:    /** The mimetype of the voice sample. The only currently supported
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6026:    /** The sample of the custom voice.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6029:    voiceSampleAudio?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6428:declare interface SpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6431:    /** Required. The configuration for the voice of this speaker. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6432:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6437:    /** The configuration in case of single-voice output. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6438:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6441:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6442:    multiSpeakerVoiceConfig?: MultiSpeakerVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7345:        VoiceActivityType,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7417:        ReplicatedVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7418:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7419:        VoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7420:        SpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7421:        MultiSpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7708:        VoiceActivityDetectionSignal,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7709:        VoiceActivity,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8276:/** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8277:declare interface VoiceActivity {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8278:    /** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8279:    voiceActivityType?: VoiceActivityType;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8282:declare interface VoiceActivityDetectionSignal {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8287:/** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8288:declare enum VoiceActivityType {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8290:     * The default is VOICE_ACTIVITY_TYPE_UNSPECIFIED.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8303:/** The configuration for the voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8304:declare interface VoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8305:    /** The configuration for a replicated voice, which is a clone of a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8306:     user's voice that can be used for speech synthesis. If this is unset, a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8307:     default voice is used. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8308:    replicatedVoiceConfig?: ReplicatedVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8309:    /** The configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8310:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:601:    /** If enabled, detected voice and text input count as activity. If disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:7644:    /** Voice activity detection signal. Allowlisted only. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:7645:    voiceActivityDetectionSignal?: VoiceActivityDetectionSignal;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:7646:    /** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:7647:    voiceActivity?: VoiceActivity;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8448:export declare interface MultiSpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8449:    /** Required. A list of configurations for the voices of the speakers. Exactly two speaker voice configurations must be provided. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8450:    speakerVoiceConfigs?: SpeakerVoiceConfig[];
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8994:/** Configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8995:export declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8996:    /** The name of the prebuilt voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8997:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9191:    /** If not set, automatic activity detection is enabled by default. If automatic voice detection is disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9349:/** The configuration for the replicated voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9350:export declare interface ReplicatedVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9351:    /** The mimetype of the voice sample. The only currently supported
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9356:    /** The sample of the custom voice.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9359:    voiceSampleAudio?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9842:     - Managing turns when not using audio input and voice activity detection.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9871:     based on voice activity detection (VAD).
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9993:export declare interface SpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9996:    /** Required. The configuration for the voice of this speaker. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:9997:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:10002:    /** The configuration in case of single-voice output. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:10003:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:10006:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:10007:    multiSpeakerVoiceConfig?: MultiSpeakerVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:10023:     * The voice of the speaker.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:10025:    voice?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11284:        VoiceActivityType,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11356:        ReplicatedVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11357:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11358:        VoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11359:        SpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11360:        MultiSpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11647:        VoiceActivityDetectionSignal,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11648:        VoiceActivity,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12462:/** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12463:export declare interface VoiceActivity {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12464:    /** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12465:    voiceActivityType?: VoiceActivityType;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12468:export declare interface VoiceActivityDetectionSignal {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12473:/** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12474:export declare enum VoiceActivityType {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12476:     * The default is VOICE_ACTIVITY_TYPE_UNSPECIFIED.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12489:/** The configuration for the voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12490:export declare interface VoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12491:    /** The configuration for a replicated voice, which is a clone of a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12492:     user's voice that can be used for speech synthesis. If this is unset, a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12493:     default voice is used. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12494:    replicatedVoiceConfig?: ReplicatedVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12495:    /** The configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12496:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:601:    /** If enabled, detected voice and text input count as activity. If disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:7639:    /** Voice activity detection signal. Allowlisted only. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:7640:    voiceActivityDetectionSignal?: VoiceActivityDetectionSignal;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:7641:    /** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:7642:    voiceActivity?: VoiceActivity;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8443:export declare interface MultiSpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8444:    /** Required. A list of configurations for the voices of the speakers. Exactly two speaker voice configurations must be provided. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8445:    speakerVoiceConfigs?: SpeakerVoiceConfig[];
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8989:/** Configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8990:export declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8991:    /** The name of the prebuilt voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8992:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9186:    /** If not set, automatic activity detection is enabled by default. If automatic voice detection is disabled, the client must send activity signals. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9344:/** The configuration for the replicated voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9345:export declare interface ReplicatedVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9346:    /** The mimetype of the voice sample. The only currently supported
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9351:    /** The sample of the custom voice.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9354:    voiceSampleAudio?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9837:     - Managing turns when not using audio input and voice activity detection.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9866:     based on voice activity detection (VAD).
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9988:export declare interface SpeakerVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9991:    /** Required. The configuration for the voice of this speaker. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9992:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9997:    /** The configuration in case of single-voice output. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:9998:    voiceConfig?: VoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:10001:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:10002:    multiSpeakerVoiceConfig?: MultiSpeakerVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:10018:     * The voice of the speaker.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:10020:    voice?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11279:        VoiceActivityType,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11351:        ReplicatedVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11352:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11353:        VoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11354:        SpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11355:        MultiSpeakerVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11642:        VoiceActivityDetectionSignal,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11643:        VoiceActivity,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12457:/** Voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12458:export declare interface VoiceActivity {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12459:    /** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12460:    voiceActivityType?: VoiceActivityType;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12463:export declare interface VoiceActivityDetectionSignal {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12468:/** The type of the voice activity signal. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12469:export declare enum VoiceActivityType {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12471:     * The default is VOICE_ACTIVITY_TYPE_UNSPECIFIED.
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12484:/** The configuration for the voice to use. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12485:export declare interface VoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12486:    /** The configuration for a replicated voice, which is a clone of a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12487:     user's voice that can be used for speech synthesis. If this is unset, a
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12488:     default voice is used. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12489:    replicatedVoiceConfig?: ReplicatedVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12490:    /** The configuration for a prebuilt voice. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12491:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;

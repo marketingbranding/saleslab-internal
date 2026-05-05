@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "faizalsyahiddin@gmail.com" ||
+        request.auth.token.email == "groupmarketing.mbn@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Scenarios Rules
+    match /scenarios/{scenarioId} {
+      function isValidScenario(data) {
+        return data.title is string && data.title.size() <= 200
+               && data.name is string && data.name.size() <= 100
+               && (data.difficulty in ['Easy', 'Medium', 'Hard'])
+               && (data.gender in ['Pria', 'Wanita']);
+      }
+
+      allow read: if true;
+      allow create: if isSignedIn() && isValidScenario(request.resource.data) && isValidId(scenarioId);
+      allow update: if isOwner(resource.data.userId) 
+                    && isValidScenario(request.resource.data)
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId']));
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Sessions Rules
+    match /sessions/{sessionId} {
+      function isValidSession(data) {
+        return data.scenarioId is string 
+               && data.salespersonName is string
+               && data.userId == request.auth.uid
+               && data.score is number;
+      }
+
+      allow create: if isSignedIn() && isValidSession(request.resource.data) && isValidId(sessionId);
+      allow read: if true;
+      // Updates usually not needed for sessions, but let's allow if owner
+      allow update: if isOwner(resource.data.userId) && isValidSession(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Settings Rules
+    match /settings/{settingsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      function isValidProfile(data) {
+        return data.displayName is string && data.displayName.size() <= 100
+               && data.email is string && data.email.size() <= 200;
+      }
+      allow read: if true;
+      allow write: if isOwner(userId) && isValidProfile(request.resource.data);
+    }
+  }
+}

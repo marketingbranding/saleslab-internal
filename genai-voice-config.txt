@@ -1,0 +1,30 @@
+﻿D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\index.mjs:3292:                prebuiltVoiceConfig: {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\index.mjs:3293:                    voiceName: speechConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9002:export declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:9004:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:10013:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:11364:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\node\node.d.ts:12503:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:866:declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:868:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1030:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\tokenizer\node.d.ts:1299:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5677:declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:5679:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:6441:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:7418:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\vertex_internal\index.d.ts:8310:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\index.mjs:3284:                prebuiltVoiceConfig: {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\index.mjs:3285:                    voiceName: speechConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8995:export declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:8997:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:10006:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:11357:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\web\web.d.ts:12496:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8990:export declare interface PrebuiltVoiceConfig {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:8992:    voiceName?: string;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:10001:    /** The configuration for a multi-speaker text-to-speech request. This field is mutually exclusive with `voice_config`. */
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:11352:        PrebuiltVoiceConfig,
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\genai.d.ts:12491:    prebuiltVoiceConfig?: PrebuiltVoiceConfig;
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\index.mjs:3254:                prebuiltVoiceConfig: {
+D:\WEBSITE\project\saleslab-internal\node_modules\@google\genai\dist\index.mjs:3255:                    voiceName: speechConfig,
