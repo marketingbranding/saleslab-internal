@@ -179,53 +179,17 @@ export async function analyzePerformance(
   scenario: SalesScenario,
   transcript: { role: string; text: string }[]
 ) {
-  const ai = await getGenAI();
-  const formattedTranscript = transcript.map(t => `${t.role.toUpperCase()}: ${t.text}`).join("\n");
+  const res = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scenario, transcript }),
+  })
 
-  const prompt = `
-    Analisis performa sales dalam transkrip roleplay berikut dalam Bahasa Indonesia yang santai tapi profesional.
-    Gunakan istilah sales kayak 'Closing', 'Opening', 'Objection Handling', dll.
+  const data = await res.json()
 
-    SKENARIO: ${scenario.title}
-    TARGET: ${scenario.target}
+  if (!res.ok) {
+    throw new Error(data.error || 'Gagal menganalisis performa. Silakan coba lagi.')
+  }
 
-    TRANSCRIPT:
-    ${formattedTranscript}
-
-    Berikan evaluasi terstruktur dalam format JSON murni tanpa markdown, dengan keys:
-    - overallScore: (number 0-100)
-    - strengths: (array of string)
-    - weaknesses: (array of string)
-    - keyObjectionsHandled: (array of string)
-    - missedOpportunities: (array of string)
-    - verdict: (string)
-    - actionableTips: (array of string)
-  `;
-
-  const generate = async (retryCount = 0): Promise<any> => {
-    try {
-      const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: [
-          { role: "user", parts: [{ text: prompt }] }
-        ],
-        config: {
-          temperature: 0.7,
-        },
-      });
-
-      const cleaned = (response.text || '').replace(/```json|```/g, '').trim();
-      return JSON.parse(cleaned);
-    } catch (e: any) {
-      const msg = e?.message || ''
-      if (retryCount < 3 && (msg.includes('503') || msg.includes('429') || msg.includes('capacity') || msg.includes('RESOURCE_EXHAUSTED'))) {
-        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
-        return generate(retryCount + 1);
-      }
-      console.error("Failed to parse Gemini JSON:", e);
-      throw new Error("Gagal menganalisis performa. Silakan coba lagi.");
-    }
-  };
-
-  return await generate();
+  return data
 }
