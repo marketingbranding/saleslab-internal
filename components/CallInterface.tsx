@@ -394,37 +394,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
         </div>
       </div>
 
-      <div
-        ref={transcriptScrollRef}
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 z-10 bg-black/40"
-      >
-        <div className="flex items-center gap-2 mb-3 sticky top-0 bg-black pb-2 border-b border-white/10">
-          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white/60 italic">Live Transcript</span>
-          <span className="text-[9px] text-gray-500 ml-auto">{transcript.length} pesan</span>
-        </div>
-        {transcript.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-xs sm:text-sm font-bold text-gray-500 italic uppercase text-center">Menunggu percakapan...</p>
-          </div>
-        ) : (
-          transcript.map((t, i) => (
-            <motion.div
-              key={`${i}-${t.text.slice(0, 10)}`}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={`p-3 sm:p-4 border-l-4 ${t.role === 'user' ? 'border-yellow-400 bg-yellow-400/10' : 'border-white bg-white/5'}`}
-            >
-              <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-tighter mb-1 ${t.role === 'user' ? 'text-yellow-400' : 'text-white'}`}>
-                 {t.role === 'user' ? salespersonName : scenario.name}
-              </p>
-              <p className="text-sm sm:text-base font-medium text-white/90 leading-relaxed">
-                 {t.text}
-              </p>
-            </motion.div>
-          ))
-        )}
-      </div>
+      <div className="flex-1" />
 
       <div className="flex items-center justify-center gap-3 sm:gap-4 py-3 sm:py-4 px-4 z-10 border-t border-white/10 bg-black/60">
         <div className="relative shrink-0">
