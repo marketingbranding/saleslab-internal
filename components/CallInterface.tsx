@@ -35,6 +35,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const transcriptScrollRef = React.useRef<HTMLDivElement>(null)
   const thinkingTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const thinkingDelayRef = React.useRef(1500)
+  const pendingModelTranscriptRef = React.useRef<string | null>(null)
 
   const appendTranscript = (role: 'user' | 'model', text: string) => {
     if (!isMountedRef.current) return
@@ -81,6 +82,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       clearTimeout(thinkingTimeoutRef.current)
       thinkingTimeoutRef.current = null
     }
+    pendingModelTranscriptRef.current = null
     streamRef.current?.getTracks().forEach(track => track.stop())
     processorRef.current?.disconnect()
     audioContextRef.current?.close()
@@ -229,6 +231,10 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
                 if (thinkingTimeoutRef.current) clearTimeout(thinkingTimeoutRef.current)
                 thinkingTimeoutRef.current = setTimeout(() => {
                   thinkingTimeoutRef.current = null
+                  if (pendingModelTranscriptRef.current) {
+                    appendTranscript('model', pendingModelTranscriptRef.current)
+                    pendingModelTranscriptRef.current = null
+                  }
                   playNextInQueueRef.current()
                 }, thinkingDelayRef.current)
               }
@@ -246,7 +252,11 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             if (sc?.outputTranscription?.text?.trim() && isMountedRef.current) {
               const text = sc.outputTranscription.text.trim()
               console.log('OUTPUT:', text)
-              appendTranscript('model', text)
+              if (thinkingTimeoutRef.current) {
+                pendingModelTranscriptRef.current = text
+              } else {
+                appendTranscript('model', text)
+              }
             }
 
             if (message.serverContent?.interrupted) {
@@ -254,6 +264,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
                 clearTimeout(thinkingTimeoutRef.current)
                 thinkingTimeoutRef.current = null
               }
+              pendingModelTranscriptRef.current = null
               audioQueueRef.current = []
               isPlayingRef.current = false
               if (isMountedRef.current) {
