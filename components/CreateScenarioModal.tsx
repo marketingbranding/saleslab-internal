@@ -202,7 +202,7 @@ export function CreateScenarioModal({ isOpen, onClose, onCreated, editingScenari
                     onChange={e => setFormData({ ...formData, patience: parseInt(e.target.value) })}
                     className="w-full h-8 accent-black"
                   />
-                  <div className="flex justify-between text-[10px] font-black"><span>CEPET EMOSI</span><span>SABAR BANGET</span></div>
+                  <div className="flex justify-between text-[10px] font-black"><span>SABAR BANGET</span><span>CEPET EMOSI</span></div>
                 </div>
               </div>
 

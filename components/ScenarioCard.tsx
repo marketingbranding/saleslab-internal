@@ -88,7 +88,7 @@ export function ScenarioCard({ scenario, onSelect, onEdit, onDelete, isAdmin }: 
             <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Kesabaran</span>
             <div className="flex gap-0.5">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className={`h-1.5 flex-1 border border-black ${i < Math.round(scenario.patience/2) ? 'bg-blue-400' : 'bg-gray-100'}`} />
+                <div key={i} className={`h-1.5 flex-1 border border-black ${i < Math.round((11 - scenario.patience) / 2) ? 'bg-blue-400' : 'bg-gray-100'}`} />
               ))}
             </div>
           </div>

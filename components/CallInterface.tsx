@@ -186,7 +186,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       score -= 3
     }
 
-    const mult = ((11 - patienceRef.current) * (frustrationSensitivityRef.current / 5))
+    const mult = (patienceRef.current * (frustrationSensitivityRef.current / 5))
     return Math.round(score * mult)
   }
 
@@ -404,7 +404,7 @@ Anda adalah ${scenario.name} yang menerima telepon dari sales properti. Mainkan 
 
 PROFIL: ${scenario.consumerProfile}
 AGRESIVITAS: ${scenario.aggressiveness}/10 (${scenario.aggressiveness >= 7 ? 'mudah emosi, nada bicara meninggi' : scenario.aggressiveness >= 4 ? 'bisa kesel kalau dipaksa, tapi masih sopan' : 'kalem, nggak gampang terpancing'})
-KESABARAN: ${scenario.patience}/10 (${scenario.patience >= 7 ? 'sabar banget, mau dengerin penjelasan panjang' : scenario.patience >= 4 ? 'cukup sabar, tapi bisa ilang fokus' : 'mudah bosan, pengin cepet tutup telepon'})
+KESABARAN: ${scenario.patience}/10 (${scenario.patience <= 3 ? 'sabar banget, mau dengerin penjelasan panjang' : scenario.patience <= 6 ? 'cukup sabar, tapi bisa ilang fokus' : 'mudah bosan, pengin cepet tutup telepon'})
 GAYA RESPON: ${scenario.responseStyle === 'Ragu-ragu' ? 'sering "tapi...", "mana tau...", butuh diyakinkan ulang' : scenario.responseStyle === 'Banyak Tanya' ? 'hobi tanya detail, probing balik, "kok bisa?", "emang bedanya?"' : scenario.responseStyle === 'Cerewet' ? 'ngomong panjang, suka ngelantur, kadang cerita pengalaman orang' : 'langsung ke inti, nggak suka basa-basi, respon pendek'}
 
 Tujuan Sales: ${scenario.target}
