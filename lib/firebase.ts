@@ -82,7 +82,7 @@ export async function getSettings() {
   } catch (err) {
     console.error("Failed to fetch settings:", err);
   }
-  return { modelProvider: 'gemini', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3', thinkingDelay: 1500 };
+  return { modelProvider: 'gemini', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3', thinkingDelay: 1500, frustrationSensitivity: 5 };
 }
 
 async function testConnection() {

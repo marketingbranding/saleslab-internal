@@ -20,6 +20,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
   const [ollamaUrl, setOllamaUrl] = React.useState(currentSettings?.ollamaUrl || 'http://localhost:11434')
   const [ollamaModel, setOllamaModel] = React.useState(currentSettings?.ollamaModel || 'llama3')
   const [thinkingDelay, setThinkingDelay] = React.useState(currentSettings?.thinkingDelay || 1500)
+  const [frustrationSensitivity, setFrustrationSensitivity] = React.useState(currentSettings?.frustrationSensitivity || 5)
   const [isSaving, setIsSaving] = React.useState(false)
 
   const handleSave = async () => {
@@ -32,6 +33,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
         ollamaUrl,
         ollamaModel,
         thinkingDelay,
+        frustrationSensitivity,
         updatedBy: user.uid,
         updatedAt: serverTimestamp()
       })
@@ -148,6 +150,29 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                 </div>
                 <p className="text-[9px] text-gray-400 italic">
                   Simulasi waktu berpikir sebelum AI merespon ({thinkingDelay}ms)
+                </p>
+              </div>
+
+              {/* Frustration Sensitivity */}
+              <div className="space-y-4 pt-4 border-t-2 border-black">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  Frustration Sensitivity
+                </label>
+                <div className="flex items-center gap-4">
+                  <span className="text-[9px] font-black text-gray-400">Kalem</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={frustrationSensitivity}
+                    onChange={(e) => setFrustrationSensitivity(Number(e.target.value))}
+                    className="flex-1 accent-black"
+                  />
+                  <span className="text-[9px] font-black text-gray-400">Mudah Frustrasi</span>
+                </div>
+                <p className="text-[9px] text-gray-400 italic text-center">
+                  Sensitivitas ({frustrationSensitivity}/10) — semakin tinggi, semakin cepat AI frustrasi
                 </p>
               </div>
 

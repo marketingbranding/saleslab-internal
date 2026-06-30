@@ -24,6 +24,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const [transcript, setTranscript] = React.useState<{ role: 'user' | 'model'; text: string }[]>([])
   const [isThinking, setIsThinking] = React.useState(false)
   const [elapsedSeconds, setElapsedSeconds] = React.useState(0)
+  const [frustrationLevel, setFrustrationLevel] = React.useState(0)
 
   const audioContextRef = React.useRef<AudioContext | null>(null)
   const sessionRef = React.useRef<any>(null)
@@ -41,6 +42,9 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const isAITalkingRef = React.useRef(false)
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
   const currentSourceRef = React.useRef<AudioBufferSourceNode | null>(null)
+  const frustrationRef = React.useRef(0)
+  const frustrationSensitivityRef = React.useRef(5)
+  const patienceRef = React.useRef(scenario.patience)
 
   const appendTranscript = (role: 'user' | 'model', text: string) => {
     if (!isMountedRef.current) return
@@ -159,6 +163,41 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
+  const analyzeFrustration = (text: string): number => {
+    const lower = text.toLowerCase()
+    let score = 0
+
+    const strong: string[] = ['saya tutup', 'saya mau tutup', 'saya tutup telepon', 'buang waktu', 'cukup', 'nggak usah', 'stop', 'berhenti']
+    const medium: string[] = ['kesel', 'capek', 'sudahlah', 'masa sih', 'kok gitu', 'jengkel', 'sebal', 'kesal']
+    const mild: string[] = ['tapi', 'hmm', 'saya rasa', 'kurang yakin', 'mana tau', 'nggak tahu deh']
+    const positive: string[] = ['iya juga', 'berarti', 'nggak apa-apa', 'oke deh', 'setuju', 'insyaallah', 'baiklah', 'oh gitu', 'iya sih', 'boleh juga']
+
+    for (const k of strong) { if (lower.includes(k)) { score += 30; break } }
+    if (score === 0) {
+      for (const k of medium) { if (lower.includes(k)) { score += 15; break } }
+    }
+    if (score === 0) {
+      for (const k of mild) { if (lower.includes(k)) { score += 5; break } }
+    }
+    if (score === 0) {
+      for (const k of positive) { if (lower.includes(k)) { score -= 15; break } }
+    }
+    if (score === 0) {
+      score -= 3
+    }
+
+    const mult = ((11 - patienceRef.current) * (frustrationSensitivityRef.current / 5))
+    return Math.round(score * mult)
+  }
+
+  const endCall = React.useCallback(() => {
+    if (!isMountedRef.current) return
+    stopAudio()
+    if (isMountedRef.current) {
+      onFinish(transcript)
+    }
+  }, [stopAudio, onFinish, transcript])
+
   const startCall = React.useCallback(async () => {
     if (!isMountedRef.current) return
 
@@ -172,6 +211,10 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
 
       const settings = await getSettings()
       thinkingDelayRef.current = settings.thinkingDelay ?? 1500
+      frustrationSensitivityRef.current = settings.frustrationSensitivity ?? 5
+      frustrationRef.current = 0
+      setFrustrationLevel(0)
+      patienceRef.current = scenario.patience
       if (settings.modelProvider === 'ollama') {
         if (isMountedRef.current) {
           setError("Audio Call saat ini hanya didukung oleh Gemini. Ganti ke Gemini di Settings atau gunakan Text Chat.")
@@ -300,6 +343,18 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
               } else {
                 appendTranscript('model', text)
               }
+              // Frustration analysis
+              const change = analyzeFrustration(text)
+              if (change !== 0) {
+                const newLevel = Math.max(0, Math.min(100, frustrationRef.current + change))
+                frustrationRef.current = newLevel
+                setFrustrationLevel(newLevel)
+                // Auto-end if frustration hits 100 or AI explicitly hangs up
+                if (newLevel >= 100 || /saya (mau )?tutup (telepon)?/.test(text.toLowerCase())) {
+                  setError("Customer hung up — frustrasi sudah maksimal")
+                  setTimeout(() => { if (isMountedRef.current) endCall() }, 500)
+                }
+              }
             }
 
             if (message.serverContent?.interrupted) {
@@ -345,17 +400,27 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
           systemInstruction: {
             parts: [{
               text: `
-            Anda sedang melakukan panggilan telepon sebagai ${scenario.name}.
-            PROFIL: ${scenario.consumerProfile}.
-            AGRESIVITAS: ${scenario.aggressiveness}/10.
-            KESABARAN: ${scenario.patience}/10.
-            GAYA RESPON: ${scenario.responseStyle}.
+Anda adalah ${scenario.name} yang menerima telepon dari sales properti. Mainkan peran ini dengan natural.
 
-            GOAL SALES: ${scenario.target}.
+PROFIL: ${scenario.consumerProfile}
+AGRESIVITAS: ${scenario.aggressiveness}/10 (${scenario.aggressiveness >= 7 ? 'mudah emosi, nada bicara meninggi' : scenario.aggressiveness >= 4 ? 'bisa kesel kalau dipaksa, tapi masih sopan' : 'kalem, nggak gampang terpancing'})
+KESABARAN: ${scenario.patience}/10 (${scenario.patience >= 7 ? 'sabar banget, mau dengerin penjelasan panjang' : scenario.patience >= 4 ? 'cukup sabar, tapi bisa ilang fokus' : 'mudah bosan, pengin cepet tutup telepon'})
+GAYA RESPON: ${scenario.responseStyle === 'Ragu-ragu' ? 'sering "tapi...", "mana tau...", butuh diyakinkan ulang' : scenario.responseStyle === 'Banyak Tanya' ? 'hobi tanya detail, probing balik, "kok bisa?", "emang bedanya?"' : scenario.responseStyle === 'Cerewet' ? 'ngomong panjang, suka ngelantur, kadang cerita pengalaman orang' : 'langsung ke inti, nggak suka basa-basi, respon pendek'}
 
-            Berikan respon singkat dan natural layaknya di telepon.
-            JANGAN memberikan feedback atau analisis saat panggilan berlangsung.
-            Jika sales berhasil meyakinkan Anda sesuai target, akhiri panggilan dengan positif.
+Tujuan Sales: ${scenario.target}
+
+ALUR EMOSI (ikuti secara natural):
+- Awal: bicara normal sesuai profil. Mau dengerin penjelasan.
+- Jika sales memaksa atau tidak mendengar keluhan: nada mulai datar, respon makin pendek, mulai ragu
+- Jika sales terus mendorong tanpa empati: tampak kesal, "sudahlah", "capek", ancam tutup telepon
+- Jika sales minta maaf atau ubah pendekatan dengan baik: sedikit melunak, mau dengerin lagi
+- Jika sales berhasil yakinkan sesuai tujuan: akhiri positif (setuju survey / booking)
+
+ATURAN BERMAIN:
+1. Bicaralah seperti orang Indonesia asli di telepon. Pakai "hmm", "ee", "anu", jeda, kadang ngulang kata. Hindari bahasa kaku atau formal.
+2. Respon singkat — maksimal 2 kalimat. Jangan monolog.
+3. Panggil sales dengan sopan: "pak", "bu", "mas", "mbak". Jangan pakai "lo/gue".
+4. JANGAN memberikan feedback, analisis, atau menyebut istilah sales. Anda konsumen biasa.
           `
             }]
           },
@@ -442,6 +507,31 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       </div>
 
       <div className="flex-1" />
+
+      {isConnected && elapsedSeconds > 3 && (
+        <div className="px-4 sm:px-6 py-2 z-10">
+          <div className="flex items-center gap-2">
+            <span className="text-[8px] font-black uppercase tracking-widest text-gray-500 shrink-0">FRUSTRASI</span>
+            <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${frustrationLevel}%`,
+                  backgroundColor: frustrationLevel < 30 ? '#22c55e' : frustrationLevel < 60 ? '#eab308' : frustrationLevel < 80 ? '#f97316' : '#ef4444'
+                }}
+              />
+            </div>
+            <span
+              className="text-[10px] font-black tabular-nums shrink-0"
+              style={{
+                color: frustrationLevel < 30 ? '#22c55e' : frustrationLevel < 60 ? '#eab308' : frustrationLevel < 80 ? '#f97316' : '#ef4444'
+              }}
+            >
+              {frustrationLevel}%
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-center gap-3 sm:gap-4 py-3 sm:py-4 px-4 z-10 border-t border-white/10 bg-black/60">
         <div className="relative shrink-0">
