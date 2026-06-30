@@ -19,6 +19,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
   const [provider, setProvider] = React.useState(currentSettings?.modelProvider || 'gemini')
   const [ollamaUrl, setOllamaUrl] = React.useState(currentSettings?.ollamaUrl || 'http://localhost:11434')
   const [ollamaModel, setOllamaModel] = React.useState(currentSettings?.ollamaModel || 'llama3')
+  const [thinkingDelay, setThinkingDelay] = React.useState(currentSettings?.thinkingDelay || 1500)
   const [isSaving, setIsSaving] = React.useState(false)
 
   const handleSave = async () => {
@@ -30,6 +31,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
         modelProvider: provider,
         ollamaUrl,
         ollamaModel,
+        thinkingDelay,
         updatedBy: user.uid,
         updatedAt: serverTimestamp()
       })
@@ -126,6 +128,28 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                   </div>
                 </motion.div>
               )}
+
+              {/* Thinking Delay */}
+              <div className="space-y-4 pt-4 border-t-2 border-black">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  AI Response Delay
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="500"
+                    max="3000"
+                    step="100"
+                    value={thinkingDelay}
+                    onChange={(e) => setThinkingDelay(Number(e.target.value))}
+                    className="flex-1 accent-black"
+                  />
+                  <span className="font-black text-lg tabular-nums w-14 text-right">{(thinkingDelay / 1000).toFixed(1)}s</span>
+                </div>
+                <p className="text-[9px] text-gray-400 italic">
+                  Simulasi waktu berpikir sebelum AI merespon ({thinkingDelay}ms)
+                </p>
+              </div>
 
               <button
                 disabled={isSaving}

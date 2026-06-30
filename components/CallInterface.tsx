@@ -33,6 +33,8 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const isMountedRef = React.useRef(true)
   const lastTranscriptRef = React.useRef<{ role: 'user' | 'model'; text: string } | null>(null)
   const transcriptScrollRef = React.useRef<HTMLDivElement>(null)
+  const thinkingTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const thinkingDelayRef = React.useRef(1500)
 
   const appendTranscript = (role: 'user' | 'model', text: string) => {
     if (!isMountedRef.current) return
@@ -75,6 +77,10 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   }
 
   const stopAudio = React.useCallback(() => {
+    if (thinkingTimeoutRef.current) {
+      clearTimeout(thinkingTimeoutRef.current)
+      thinkingTimeoutRef.current = null
+    }
     streamRef.current?.getTracks().forEach(track => track.stop())
     processorRef.current?.disconnect()
     audioContextRef.current?.close()
@@ -141,6 +147,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       }
 
       const settings = await getSettings()
+      thinkingDelayRef.current = settings.thinkingDelay ?? 1500
       if (settings.modelProvider === 'ollama') {
         if (isMountedRef.current) {
           setError("Audio Call saat ini hanya didukung oleh Gemini. Ganti ke Gemini di Settings atau gunakan Text Chat.")
@@ -219,7 +226,11 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
               }
               audioQueueRef.current.push(bytes)
               if (!isPlayingRef.current && isMountedRef.current) {
-                playNextInQueueRef.current()
+                if (thinkingTimeoutRef.current) clearTimeout(thinkingTimeoutRef.current)
+                thinkingTimeoutRef.current = setTimeout(() => {
+                  thinkingTimeoutRef.current = null
+                  playNextInQueueRef.current()
+                }, thinkingDelayRef.current)
               }
             }
 
@@ -239,6 +250,10 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             }
 
             if (message.serverContent?.interrupted) {
+              if (thinkingTimeoutRef.current) {
+                clearTimeout(thinkingTimeoutRef.current)
+                thinkingTimeoutRef.current = null
+              }
               audioQueueRef.current = []
               isPlayingRef.current = false
               if (isMountedRef.current) {
