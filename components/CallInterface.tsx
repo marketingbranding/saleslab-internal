@@ -182,10 +182,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
     if (score === 0) {
       for (const k of positive) { if (lower.includes(k)) { score -= 15; break } }
     }
-    if (score === 0) {
-      score -= 3
-    }
-
     const mult = (patienceRef.current * (frustrationSensitivityRef.current / 5))
     return Math.round(score * mult)
   }
