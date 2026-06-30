@@ -22,6 +22,8 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const [isAITalking, setIsAITalking] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [transcript, setTranscript] = React.useState<{ role: 'user' | 'model'; text: string }[]>([])
+  const [isThinking, setIsThinking] = React.useState(false)
+  const [elapsedSeconds, setElapsedSeconds] = React.useState(0)
 
   const audioContextRef = React.useRef<AudioContext | null>(null)
   const sessionRef = React.useRef<any>(null)
@@ -36,6 +38,9 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const thinkingTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const thinkingDelayRef = React.useRef(1500)
   const pendingModelTranscriptRef = React.useRef<string | null>(null)
+  const isAITalkingRef = React.useRef(false)
+  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
+  const currentSourceRef = React.useRef<AudioBufferSourceNode | null>(null)
 
   const appendTranscript = (role: 'user' | 'model', text: string) => {
     if (!isMountedRef.current) return
@@ -82,7 +87,12 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       clearTimeout(thinkingTimeoutRef.current)
       thinkingTimeoutRef.current = null
     }
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
     pendingModelTranscriptRef.current = null
+    setIsThinking(false)
     streamRef.current?.getTracks().forEach(track => track.stop())
     processorRef.current?.disconnect()
     audioContextRef.current?.close()
@@ -126,9 +136,11 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       buffer.getChannelData(0).set(float32)
 
       const source = audioContextRef.current.createBufferSource()
+      currentSourceRef.current = source
       source.buffer = buffer
       source.connect(audioContextRef.current.destination)
       source.onended = () => {
+        currentSourceRef.current = null
         if (isMountedRef.current) {
           playNextInQueueRef.current()
         }
@@ -136,6 +148,16 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       source.start()
     }
   })
+
+  React.useEffect(() => {
+    isAITalkingRef.current = isAITalking
+  }, [isAITalking])
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
 
   const startCall = React.useCallback(async () => {
     if (!isMountedRef.current) return
@@ -186,6 +208,10 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             if (!isMountedRef.current) return
 
             setIsConnected(true)
+            setElapsedSeconds(0)
+            timerRef.current = setInterval(() => {
+              setElapsedSeconds(prev => prev + 1)
+            }, 1000)
 
             if (!streamRef.current) return
 
@@ -197,6 +223,21 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
               if (isMuted || !sessionRef.current || !isMountedRef.current) return
 
               const inputData = e.inputBuffer.getChannelData(0)
+
+              if (isAITalkingRef.current) {
+                let sum = 0
+                for (let i = 0; i < inputData.length; i++) {
+                  sum += Math.abs(inputData[i])
+                }
+                if (sum / inputData.length > 0.015) {
+                  audioQueueRef.current = []
+                  isPlayingRef.current = false
+                  currentSourceRef.current?.stop()
+                  currentSourceRef.current = null
+                  setIsAITalking(false)
+                }
+              }
+
               const pcm16 = floatTo16BitPCM(inputData)
               const base64Audio = int16ArrayToBase64(pcm16)
 
@@ -229,8 +270,10 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
               audioQueueRef.current.push(bytes)
               if (!isPlayingRef.current && isMountedRef.current) {
                 if (thinkingTimeoutRef.current) clearTimeout(thinkingTimeoutRef.current)
+                setIsThinking(true)
                 thinkingTimeoutRef.current = setTimeout(() => {
                   thinkingTimeoutRef.current = null
+                  setIsThinking(false)
                   if (pendingModelTranscriptRef.current) {
                     appendTranscript('model', pendingModelTranscriptRef.current)
                     pendingModelTranscriptRef.current = null
@@ -264,9 +307,12 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
                 clearTimeout(thinkingTimeoutRef.current)
                 thinkingTimeoutRef.current = null
               }
+              setIsThinking(false)
               pendingModelTranscriptRef.current = null
               audioQueueRef.current = []
               isPlayingRef.current = false
+              currentSourceRef.current?.stop()
+              currentSourceRef.current = null
               if (isMountedRef.current) {
                 setIsAITalking(false)
               }
@@ -276,6 +322,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             console.log('Live API WebSocket closed')
             if (isMountedRef.current) {
               setIsConnected(false)
+              setError("Panggilan terputus. Sesi telah berakhir.")
               stopAudio()
             }
           },
@@ -411,6 +458,11 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
               TALKING...
             </div>
           )}
+          {isThinking && (
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-400 text-black px-1.5 py-0.5 font-black italic uppercase text-[7px] sm:text-[8px] border border-black whitespace-nowrap">
+              SEDANG BERPIKIR...
+            </div>
+          )}
         </div>
         <div className="text-center min-w-0">
           <h2 className="text-sm sm:text-lg font-black italic uppercase tracking-tighter text-white truncate">{scenario.title}</h2>
@@ -440,15 +492,24 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
            <Volume2 size={20} />
         </div>
       </div>
-      
+
+      {elapsedSeconds > 720 && isConnected && (
+        <div className="px-4 py-2 bg-yellow-500 text-black text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center z-10">
+          ⚠️ Sesi akan berakhir dalam {Math.ceil((900 - elapsedSeconds) / 60)} menit
+        </div>
+      )}
+
       <div className="px-4 sm:px-8 py-2 sm:py-3 bg-white/5 flex items-center justify-between text-[8px] sm:text-[10px] text-gray-500 font-black uppercase tracking-widest italic z-10">
         <span>ENCRYPTED AI CALL</span>
-        <button 
-          onClick={onExit}
-          className="hover:text-white transition-colors"
-        >
-          FORCE EXIT
-        </button>
+        <div className="flex items-center gap-3">
+          <span>{formatTime(elapsedSeconds)} / 15:00</span>
+          <button 
+            onClick={onExit}
+            className="hover:text-white transition-colors"
+          >
+            FORCE EXIT
+          </button>
+        </div>
       </div>
     </div>
   )
