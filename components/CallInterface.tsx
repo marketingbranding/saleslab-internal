@@ -19,13 +19,9 @@ interface CallInterfaceProps {
 export function CallInterface({ scenario, salespersonName, onFinish, onExit }: CallInterfaceProps) {
   const [isConnected, setIsConnected] = React.useState(false)
   const [isMuted, setIsMuted] = React.useState(false)
-  const isMutedRef = React.useRef(false)
   const [isAITalking, setIsAITalking] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [transcript, setTranscript] = React.useState<{ role: 'user' | 'model'; text: string }[]>([])
-  const [isThinking, setIsThinking] = React.useState(false)
-  const [elapsedSeconds, setElapsedSeconds] = React.useState(0)
-  const [frustrationLevel, setFrustrationLevel] = React.useState(0)
 
   const audioContextRef = React.useRef<AudioContext | null>(null)
   const sessionRef = React.useRef<any>(null)
@@ -37,20 +33,24 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const isMountedRef = React.useRef(true)
   const lastTranscriptRef = React.useRef<{ role: 'user' | 'model'; text: string } | null>(null)
   const transcriptScrollRef = React.useRef<HTMLDivElement>(null)
-  const thinkingTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-  const thinkingDelayRef = React.useRef(1500)
-  const pendingModelTranscriptRef = React.useRef<string | null>(null)
-  const isAITalkingRef = React.useRef(false)
-  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
-  const currentSourceRef = React.useRef<AudioBufferSourceNode | null>(null)
-  const frustrationRef = React.useRef(0)
-  const frustrationSensitivityRef = React.useRef(5)
-  const patienceRef = React.useRef(scenario.patience)
+
+  const getTextFromParts = (parts?: Array<{ text?: string } | any>) => {
+    if (!parts?.length) return undefined
+    const textParts = parts
+      .map(part => {
+        if (typeof part?.text === 'string') return part.text.trim()
+        if (typeof part === 'string') return part.trim()
+        return undefined
+      })
+      .filter((text): text is string => !!text)
+    return textParts.length ? textParts.join(' ') : undefined
+  }
 
   const appendTranscript = (role: 'user' | 'model', text: string) => {
     if (!isMountedRef.current) return
 
-    if (lastTranscriptRef.current?.role === role && lastTranscriptRef.current?.text === text) {
+    const lastTranscript = lastTranscriptRef.current
+    if (lastTranscript?.role === role && lastTranscript?.text === text) {
       return
     }
 
@@ -58,24 +58,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
 
     setTranscript(prev => {
       const last = prev[prev.length - 1]
-
-      if (last?.role === role) {
-        if (last.text === text) return prev
-        const updated = [...prev]
-        if (text.startsWith(last.text)) {
-          updated[updated.length - 1] = { ...last, text }
-        } else {
-          updated[updated.length - 1] = { ...last, text: last.text + ' ' + text }
-        }
-        setTimeout(() => {
-          transcriptScrollRef.current?.scrollTo({
-            top: transcriptScrollRef.current?.scrollHeight || 0,
-            behavior: 'smooth'
-          })
-        }, 0)
-        return updated
-      }
-
+      if (last?.role === role && last.text === text) return prev
       const newTranscript = [...prev, { role, text }]
       setTimeout(() => {
         transcriptScrollRef.current?.scrollTo({
@@ -88,16 +71,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   }
 
   const stopAudio = React.useCallback(() => {
-    if (thinkingTimeoutRef.current) {
-      clearTimeout(thinkingTimeoutRef.current)
-      thinkingTimeoutRef.current = null
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-    pendingModelTranscriptRef.current = null
-    setIsThinking(false)
     streamRef.current?.getTracks().forEach(track => track.stop())
     processorRef.current?.disconnect()
     audioContextRef.current?.close()
@@ -141,11 +114,9 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       buffer.getChannelData(0).set(float32)
 
       const source = audioContextRef.current.createBufferSource()
-      currentSourceRef.current = source
       source.buffer = buffer
       source.connect(audioContextRef.current.destination)
       source.onended = () => {
-        currentSourceRef.current = null
         if (isMountedRef.current) {
           playNextInQueueRef.current()
         }
@@ -153,47 +124,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       source.start()
     }
   })
-
-  React.useEffect(() => {
-    isAITalkingRef.current = isAITalking
-  }, [isAITalking])
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-  }
-
-  const analyzeFrustration = (text: string): number => {
-    const lower = text.toLowerCase()
-    let score = 0
-
-    const strong: string[] = ['saya tutup', 'saya mau tutup', 'saya tutup telepon', 'buang waktu', 'cukup', 'nggak usah', 'stop', 'berhenti']
-    const medium: string[] = ['kesel', 'capek', 'sudahlah', 'masa sih', 'kok gitu', 'jengkel', 'sebal', 'kesal']
-    const mild: string[] = ['tapi', 'hmm', 'saya rasa', 'kurang yakin', 'mana tau', 'nggak tahu deh']
-    const positive: string[] = ['iya juga', 'berarti', 'nggak apa-apa', 'oke deh', 'setuju', 'insyaallah', 'baiklah', 'oh gitu', 'iya sih', 'boleh juga']
-
-    for (const k of strong) { if (lower.includes(k)) { score += 30; break } }
-    if (score === 0) {
-      for (const k of medium) { if (lower.includes(k)) { score += 15; break } }
-    }
-    if (score === 0) {
-      for (const k of mild) { if (lower.includes(k)) { score += 5; break } }
-    }
-    if (score === 0) {
-      for (const k of positive) { if (lower.includes(k)) { score -= 15; break } }
-    }
-    const mult = ((11 - patienceRef.current) * (frustrationSensitivityRef.current / 5))
-    return Math.round(score * mult)
-  }
-
-  const endCall = React.useCallback(() => {
-    if (!isMountedRef.current) return
-    stopAudio()
-    if (isMountedRef.current) {
-      onFinish(transcript)
-    }
-  }, [stopAudio, onFinish, transcript])
 
   const startCall = React.useCallback(async () => {
     if (!isMountedRef.current) return
@@ -207,11 +137,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       }
 
       const settings = await getSettings()
-      thinkingDelayRef.current = settings.thinkingDelay ?? 1500
-      frustrationSensitivityRef.current = settings.frustrationSensitivity ?? 5
-      frustrationRef.current = 0
-      setFrustrationLevel(0)
-      patienceRef.current = scenario.patience
       if (settings.modelProvider === 'ollama') {
         if (isMountedRef.current) {
           setError("Audio Call saat ini hanya didukung oleh Gemini. Ganti ke Gemini di Settings atau gunakan Text Chat.")
@@ -248,10 +173,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             if (!isMountedRef.current) return
 
             setIsConnected(true)
-            setElapsedSeconds(0)
-            timerRef.current = setInterval(() => {
-              setElapsedSeconds(prev => prev + 1)
-            }, 1000)
 
             if (!streamRef.current) return
 
@@ -260,24 +181,9 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1)
 
             processor.onaudioprocess = (e) => {
-              if (isMutedRef.current || !sessionRef.current || !isMountedRef.current) return
+              if (isMuted || !sessionRef.current || !isMountedRef.current) return
 
               const inputData = e.inputBuffer.getChannelData(0)
-
-              if (isAITalkingRef.current) {
-                let sum = 0
-                for (let i = 0; i < inputData.length; i++) {
-                  sum += Math.abs(inputData[i])
-                }
-                if (sum / inputData.length > 0.015) {
-                  audioQueueRef.current = []
-                  isPlayingRef.current = false
-                  currentSourceRef.current?.stop()
-                  currentSourceRef.current = null
-                  setIsAITalking(false)
-                }
-              }
-
               const pcm16 = floatTo16BitPCM(inputData)
               const base64Audio = int16ArrayToBase64(pcm16)
 
@@ -309,61 +215,46 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
               }
               audioQueueRef.current.push(bytes)
               if (!isPlayingRef.current && isMountedRef.current) {
-                if (thinkingTimeoutRef.current) clearTimeout(thinkingTimeoutRef.current)
-                setIsThinking(true)
-                thinkingTimeoutRef.current = setTimeout(() => {
-                  thinkingTimeoutRef.current = null
-                  setIsThinking(false)
-                  if (pendingModelTranscriptRef.current) {
-                    appendTranscript('model', pendingModelTranscriptRef.current)
-                    pendingModelTranscriptRef.current = null
-                  }
-                  playNextInQueueRef.current()
-                }, thinkingDelayRef.current)
+                playNextInQueueRef.current()
               }
             }
 
-            // Extract transcriptions from Live API
-            const sc = message.serverContent
-
-            if (sc?.inputTranscription?.text?.trim() && isMountedRef.current) {
-              const text = sc.inputTranscription.text.trim()
-              console.log('INPUT:', text)
-              appendTranscript('user', text)
-            }
-
-            if (sc?.outputTranscription?.text?.trim() && isMountedRef.current) {
-              const text = sc.outputTranscription.text.trim()
-              console.log('OUTPUT:', text)
-              if (thinkingTimeoutRef.current) {
-                pendingModelTranscriptRef.current = text
-              } else {
+            // Extract AI text from parts
+            const modelParts = message.serverContent?.modelTurn?.parts || []
+            for (const part of modelParts) {
+              if (part?.text?.trim() && isMountedRef.current) {
+                const text = part.text.trim()
+                console.log('AI text:', text)
                 appendTranscript('model', text)
               }
-              // Frustration analysis
-              const change = analyzeFrustration(text)
-              if (change !== 0) {
-                const newLevel = Math.max(0, Math.min(100, frustrationRef.current + change))
-                frustrationRef.current = newLevel
-                setFrustrationLevel(newLevel)
-                if (newLevel >= 100 || /saya (mau )?tutup (telepon)?/.test(text.toLowerCase())) {
-                  setError("Customer hung up — frustrasi sudah maksimal")
-                  setTimeout(() => { if (isMountedRef.current) endCall() }, 500)
-                }
+            }
+
+            // Extract user text from parts
+            const userParts = message.serverContent?.userTurn?.parts || []
+            for (const part of userParts) {
+              if (part?.text?.trim() && isMountedRef.current) {
+                const text = part.text.trim()
+                console.log('User text:', text)
+                appendTranscript('user', text)
               }
+            }
+
+            // Fallback extraction
+            const fallbackModelText = getTextFromParts(modelParts)
+            if (fallbackModelText && isMountedRef.current) {
+              console.log('AI text (fallback):', fallbackModelText)
+              appendTranscript('model', fallbackModelText)
+            }
+
+            const fallbackUserText = getTextFromParts(userParts)
+            if (fallbackUserText && isMountedRef.current) {
+              console.log('User text (fallback):', fallbackUserText)
+              appendTranscript('user', fallbackUserText)
             }
 
             if (message.serverContent?.interrupted) {
-              if (thinkingTimeoutRef.current) {
-                clearTimeout(thinkingTimeoutRef.current)
-                thinkingTimeoutRef.current = null
-              }
-              setIsThinking(false)
-              pendingModelTranscriptRef.current = null
               audioQueueRef.current = []
               isPlayingRef.current = false
-              currentSourceRef.current?.stop()
-              currentSourceRef.current = null
               if (isMountedRef.current) {
                 setIsAITalking(false)
               }
@@ -373,7 +264,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             console.log('Live API WebSocket closed')
             if (isMountedRef.current) {
               setIsConnected(false)
-              setError("Panggilan terputus. Sesi telah berakhir.")
               stopAudio()
             }
           },
@@ -396,32 +286,17 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
           systemInstruction: {
             parts: [{
               text: `
-Anda adalah ${scenario.name} yang menerima telepon dari sales properti. Mainkan peran ini dengan natural.
+            Anda sedang melakukan panggilan telepon sebagai ${scenario.name}.
+            PROFIL: ${scenario.consumerProfile}.
+            AGRESIVITAS: ${scenario.aggressiveness}/10.
+            KESABARAN: ${scenario.patience}/10.
+            GAYA RESPON: ${scenario.responseStyle}.
 
-PROFIL: ${scenario.consumerProfile}
-AGRESIVITAS: ${scenario.aggressiveness}/10 (${scenario.aggressiveness >= 7 ? 'mudah emosi, nada bicara meninggi' : scenario.aggressiveness >= 4 ? 'bisa kesel kalau dipaksa, tapi masih sopan' : 'kalem, nggak gampang terpancing'})
-KESABARAN: ${scenario.patience}/10 (${scenario.patience <= 3 ? 'sabar banget, mau dengerin penjelasan panjang' : scenario.patience <= 6 ? 'cukup sabar, tapi bisa ilang fokus' : 'mudah bosan, pengin cepet tutup telepon'})
-GAYA RESPON: ${scenario.responseStyle === 'Ragu-ragu' ? 'sering "tapi...", "mana tau...", butuh diyakinkan ulang' : scenario.responseStyle === 'Banyak Tanya' ? 'hobi tanya detail, probing balik, "kok bisa?", "emang bedanya?"' : scenario.responseStyle === 'Cerewet' ? 'ngomong panjang, suka ngelantur, kadang cerita pengalaman orang' : 'langsung ke inti, nggak suka basa-basi, respon pendek'}
+            GOAL SALES: ${scenario.target}.
 
-Tujuan Sales: ${scenario.target}
-
-ALUR EMOSI (ikuti secara natural):
-- Awal: bicara normal sesuai profil. Mau dengerin penjelasan.
-- Jika sales memaksa atau tidak mendengar keluhan: nada mulai datar, respon makin pendek, mulai ragu
-- Jika sales terus mendorong tanpa empati: tampak kesal, "sudahlah", "capek", ancam tutup telepon
-- Jika sales minta maaf atau ubah pendekatan dengan baik: sedikit melunak, mau dengerin lagi
-- Jika sales berhasil yakinkan sesuai tujuan: akhiri positif (setuju survey / booking)
-
-KATA KUNCI EKSPRESI (wajib digunakan sesuai suasana hati):
-- Saat kesal: "kesel", "capek", "sudahlah", "masa sih", "kok gitu", "jengkel", "sebal"
-- Saat sangat kesal: "buang-buang waktu", "cukup", "nggak usah", "saya tutup telepon"
-- Saat setuju/melayani: "baiklah", "iya juga", "insyaallah", "setuju", "nggak apa-apa"
-
-ATURAN BERMAIN:
-1. Bicaralah seperti orang Indonesia asli di telepon. Pakai "hmm", "ee", "anu", jeda, kadang ngulang kata. Hindari bahasa kaku atau formal.
-2. Respon singkat — maksimal 2 kalimat. Jangan monolog.
-3. Panggil sales dengan sopan: "pak", "bu", "mas", "mbak". Jangan pakai "lo/gue".
-4. JANGAN memberikan feedback, analisis, atau menyebut istilah sales. Anda konsumen biasa.
+            Berikan respon singkat dan natural layaknya di telepon.
+            JANGAN memberikan feedback atau analisis saat panggilan berlangsung.
+            Jika sales berhasil meyakinkan Anda sesuai target, akhiri panggilan dengan positif.
           `
             }]
           },
@@ -472,7 +347,7 @@ ATURAN BERMAIN:
     <div className="flex flex-col h-[75vh] bg-black border-4 border-black overflow-hidden relative">
       <AnimatePresence>
         {isAITalking && (
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
             exit={{ opacity: 0 }}
@@ -482,129 +357,117 @@ ATURAN BERMAIN:
         )}
       </AnimatePresence>
 
-      <div className="p-4 sm:p-6 bg-white/10 backdrop-blur-md border-b-4 border-black flex items-center justify-between z-10">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className={`w-10 h-10 sm:w-12 sm:h-12 border-4 border-black ${isAITalking ? 'bg-yellow-400' : 'bg-black'} flex items-center justify-center text-white italic font-black text-base sm:text-xl transition-colors shrink-0`}>
+      <div className="p-6 bg-white/10 backdrop-blur-md border-b-4 border-black flex items-center justify-between z-10">
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 border-4 border-black ${isAITalking ? 'bg-yellow-400' : 'bg-black'} flex items-center justify-center text-white italic font-black text-xl transition-colors`}>
             AI
           </div>
-          <div className="min-w-0">
-            <h3 className="font-black italic text-base sm:text-xl uppercase tracking-tighter leading-none text-white truncate">{scenario.name}</h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-widest font-black truncate">
+          <div>
+            <h3 className="font-black italic text-xl uppercase tracking-tighter leading-none text-white">{scenario.name}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">
                 {isConnected ? 'Connected • Panggilan Berlangsung' : 'Connecting...'}
               </p>
               <SyncIndicator status={isConnected ? (isAITalking ? 'syncing' : 'synced') : 'syncing'} />
             </div>
           </div>
         </div>
-        <div className="flex gap-2 sm:gap-4 shrink-0">
+        <div className="flex gap-4">
            {error && (
-             <div className="flex items-center gap-1 sm:gap-2 text-red-500 font-bold text-[10px] sm:text-xs uppercase tracking-tighter">
-                <AlertCircle size={12} />
-                <span className="hidden sm:inline">{error}</span>
+             <div className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-tighter">
+                <AlertCircle size={14} />
+                {error}
              </div>
            )}
         </div>
       </div>
 
-      <div className="flex-1" />
-
-      {isConnected && elapsedSeconds > 3 && (
-        <div className="px-4 sm:px-6 py-2 z-10">
-          <div className="flex items-center gap-2">
-            <span className="text-[8px] font-black uppercase tracking-widest text-gray-500 shrink-0">FRUSTRASI</span>
-            <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${frustrationLevel}%`,
-                  backgroundColor: frustrationLevel < 30 ? '#22c55e' : frustrationLevel < 60 ? '#eab308' : frustrationLevel < 80 ? '#f97316' : '#ef4444'
-                }}
-              />
-            </div>
-            <span
-              className="text-[10px] font-black tabular-nums shrink-0"
-              style={{
-                color: frustrationLevel < 30 ? '#22c55e' : frustrationLevel < 60 ? '#eab308' : frustrationLevel < 80 ? '#f97316' : '#ef4444'
-              }}
-            >
-              {frustrationLevel}%
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center justify-center gap-3 sm:gap-4 py-3 sm:py-4 px-4 z-10 border-t border-white/10 bg-black/60">
-        <div className="relative shrink-0">
-          <motion.div 
+      <div className="flex-1 flex flex-col items-center justify-center space-y-12 z-10">
+        <div className="relative">
+          <motion.div
             animate={isAITalking ? { scale: [1, 1.1, 1] } : {}}
             transition={{ repeat: Infinity, duration: 1 }}
-            className="w-10 h-10 sm:w-14 sm:h-14 rounded-full border-4 border-white flex items-center justify-center overflow-hidden bg-gray-900"
+            className="w-48 h-48 rounded-full border-8 border-white flex items-center justify-center overflow-hidden bg-gray-900"
           >
-             <User size={20} className="text-white opacity-20 sm:block hidden" />
-             <User size={14} className="text-white opacity-20 sm:hidden" />
+             <User size={80} className="text-white opacity-20" />
           </motion.div>
           {isAITalking && (
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-400 text-black px-1.5 py-0.5 font-black italic uppercase text-[7px] sm:text-[8px] border border-black whitespace-nowrap">
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-black px-4 py-1 font-black italic uppercase text-xs border-2 border-black">
               TALKING...
             </div>
           )}
-          {isThinking && (
-            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-400 text-black px-1.5 py-0.5 font-black italic uppercase text-[7px] sm:text-[8px] border border-black whitespace-nowrap">
-              SEDANG BERPIKIR...
-            </div>
-          )}
         </div>
-        <div className="text-center min-w-0">
-          <h2 className="text-sm sm:text-lg font-black italic uppercase tracking-tighter text-white truncate">{scenario.title}</h2>
-          <p className="text-gray-400 font-bold uppercase tracking-widest text-[8px] sm:text-[10px] italic truncate">Goal: {scenario.target}</p>
+
+        <div className="text-center space-y-2">
+          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{scenario.title}</h2>
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs italic underline decoration-yellow-400 underline-offset-4 decoration-2">
+            Goal: {scenario.target}
+          </p>
         </div>
       </div>
 
-      <div className="p-6 sm:p-12 bg-gradient-to-t from-black to-transparent flex justify-center items-center gap-8 sm:gap-12 z-10">
-        <button
-          onClick={() => {
-            const newMuted = !isMuted
-            setIsMuted(newMuted)
-            isMutedRef.current = newMuted
-          }}
-          className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full border-4 border-white flex items-center justify-center transition-all ${isMuted ? 'bg-red-500 border-red-500' : 'hover:bg-white hover:text-black text-white'}`}
+      <div className="absolute top-32 left-8 right-8 flex flex-col gap-2 z-10 pointer-events-none">
+        <div
+          ref={transcriptScrollRef}
+          className="max-h-[200px] overflow-y-auto scrollbar-hide flex flex-col gap-2 bg-black/60 backdrop-blur-md p-4 rounded-xl border-2 border-white/20 pointer-events-auto shadow-2xl"
         >
-          {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+           <div className="flex items-center gap-2 mb-2 sticky top-0 bg-black/60 backdrop-blur-md pb-2 border-b border-white/10">
+             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+             <span className="text-[10px] font-black uppercase tracking-widest text-white/60 italic">Live Transcript</span>
+           </div>
+           {transcript.length === 0 ? (
+             <p className="text-[10px] font-bold text-gray-500 italic uppercase">Menunggu percakapan...</p>
+           ) : (
+             transcript.map((t, i) => (
+               <motion.div
+                 key={`${i}-${t.text.slice(0, 10)}`}
+                 initial={{ opacity: 0, x: -10 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 className={`p-3 border-l-4 ${t.role === 'user' ? 'border-yellow-400 bg-yellow-400/10' : 'border-white bg-white/5'}`}
+               >
+                 <p className={`text-[10px] font-black uppercase tracking-tighter ${t.role === 'user' ? 'text-yellow-400' : 'text-white'}`}>
+                    {t.role === 'user' ? salespersonName : scenario.name}
+                 </p>
+                 <p className="text-sm font-medium text-white/90 leading-tight">
+                    {t.text}
+                 </p>
+               </motion.div>
+             ))
+           )}
+        </div>
+      </div>
+
+      <div className="p-12 bg-gradient-to-t from-black to-transparent flex justify-center items-center gap-12 z-10">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className={`w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all ${isMuted ? 'bg-red-500 border-red-500' : 'hover:bg-white hover:text-black text-white'}`}
+        >
+          {isMuted ? <MicOff size={32} /> : <Mic size={32} />}
         </button>
 
-        <button 
+        <button
           onClick={() => {
             stopAudio()
             onFinish(transcript)
           }}
-          className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-red-600 border-4 border-white flex items-center justify-center hover:bg-black transition-all shadow-[0px_0px_30px_rgba(220,38,38,0.5)]"
+          className="w-24 h-24 rounded-full bg-red-600 border-4 border-white flex items-center justify-center hover:bg-black transition-all shadow-[0px_0px_30px_rgba(220,38,38,0.5)]"
         >
-          <PhoneOff size={28} className="text-white" />
+          <PhoneOff size={40} className="text-white" />
         </button>
 
-        <div className="w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center text-white opacity-50">
-           <Volume2 size={20} />
+        <div className="w-20 h-20 flex items-center justify-center text-white opacity-50">
+           <Volume2 size={32} />
         </div>
       </div>
 
-      {elapsedSeconds > 720 && isConnected && (
-        <div className="px-4 py-2 bg-yellow-500 text-black text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center z-10">
-          ⚠️ Sesi akan berakhir dalam {Math.ceil((900 - elapsedSeconds) / 60)} menit
-        </div>
-      )}
-
-      <div className="px-4 sm:px-8 py-2 sm:py-3 bg-white/5 flex items-center justify-between text-[8px] sm:text-[10px] text-gray-500 font-black uppercase tracking-widest italic z-10">
+      <div className="px-8 py-3 bg-white/5 flex items-center justify-between text-[10px] text-gray-500 font-black uppercase tracking-widest italic z-10">
         <span>ENCRYPTED AI CALL</span>
-        <div className="flex items-center gap-3">
-          <span>{formatTime(elapsedSeconds)} / 15:00</span>
-          <button 
-            onClick={onExit}
-            className="hover:text-white transition-colors"
-          >
-            FORCE EXIT
-          </button>
-        </div>
+        <button
+          onClick={onExit}
+          className="hover:text-white transition-colors"
+        >
+          FORCE EXIT
+        </button>
       </div>
     </div>
   )
