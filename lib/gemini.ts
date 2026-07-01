@@ -2,6 +2,25 @@ import { GoogleGenAI } from "@google/genai";
 import { getSettings } from "./firebase";
 import { callOllama, OllamaMessage } from "./ollama";
 
+export async function callOpenRouter(apiKey: string, model: string, messages: { role: string; content: string }[], signal?: AbortSignal): Promise<string> {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+      "HTTP-Referer": typeof window !== 'undefined' ? window.location.origin : "https://saleslab.local",
+    },
+    body: JSON.stringify({ model, messages, stream: false }),
+    signal,
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`OpenRouter error: ${response.status} — ${err}`);
+  }
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content ?? "";
+}
+
 let genAI: GoogleGenAI | null = null;
 
 export async function getGenAI() {
@@ -132,8 +151,22 @@ export async function getConsumerResponse(
     6. JANGAN berikan feedback saat chat.
   `;
 
-  // Text mode uses Ollama, Audio call uses Gemini
+  // Text mode: OpenRouter, Ollama, or Gemini
   if (mode === 'text') {
+    if (settings.modelProvider === 'openrouter' && settings.openRouterApiKey) {
+      const messages = [
+        { role: 'system', content: systemInstruction },
+        ...history.map(h => ({
+          role: h.role === 'user' ? 'user' : 'assistant' as const,
+          content: h.parts[0].text
+        }))
+      ];
+      if (history.length === 0 && scenario.firstSpeaker === 'AI') {
+        messages.push({ role: 'user', content: "Mulai obrolan sesuai skenario." });
+      }
+      return await callOpenRouter(settings.openRouterApiKey, settings.openRouterModel || 'mistralai/mistral-7b-instruct:free', messages, signal);
+    }
+
     const ollamaMessages: OllamaMessage[] = [
       { role: 'system', content: systemInstruction },
       ...history.map(h => ({
@@ -179,7 +212,6 @@ export async function analyzePerformance(
   scenario: SalesScenario,
   transcript: { role: string; text: string }[]
 ) {
-  const ai = await getGenAI();
   const formattedTranscript = transcript.map(t => `${t.role.toUpperCase()}: ${t.text}`).join("\n");
 
   const prompt = `
@@ -202,27 +234,51 @@ export async function analyzePerformance(
     - actionableTips: (array of string)
   `;
 
+  const groqKey = process.env.GROQ_API_KEY;
+
+  // Use Groq (fast + free tier)
+  if (groqKey) {
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${groqKey}`,
+        },
+        body: JSON.stringify({
+          model: "llama3-70b-8192",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          response_format: { type: "json_object" },
+        }),
+      });
+      if (!response.ok) throw new Error(`Groq error: ${response.status}`);
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || "";
+      return JSON.parse(content.replace(/```json|```/g, '').trim());
+    } catch (e: any) {
+      console.warn("Groq analysis failed, falling back to Gemini:", e?.message);
+    }
+  }
+
+  // Fallback: Gemini
+  const ai = await getGenAI();
   const generate = async (retryCount = 0): Promise<any> => {
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.0-flash",
-        contents: [
-          { role: "user", parts: [{ text: prompt }] }
-        ],
-        config: {
-          temperature: 0.7,
-        },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: { temperature: 0.7 },
       });
-
       const cleaned = (response.text || '').replace(/```json|```/g, '').trim();
       return JSON.parse(cleaned);
     } catch (e: any) {
-      const msg = e?.message || ''
+      const msg = e?.message || '';
       if (retryCount < 3 && (msg.includes('503') || msg.includes('429') || msg.includes('capacity') || msg.includes('RESOURCE_EXHAUSTED'))) {
         await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
         return generate(retryCount + 1);
       }
-      console.error("Failed to parse Gemini JSON:", e);
+      console.error("Gemini analysis failed:", e);
       throw new Error("Gagal menganalisis performa. Silakan coba lagi.");
     }
   };

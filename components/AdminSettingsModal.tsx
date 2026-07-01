@@ -3,7 +3,7 @@
 
 import * as React from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Settings, Save, X, Server, Sparkles, Globe } from 'lucide-react'
+import { Settings, Save, X, Server, Sparkles, Globe, Key } from 'lucide-react'
 import { db, OperationType, handleFirestoreError } from '@/lib/firebase'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { useAuth } from '@/lib/AuthContext'
@@ -19,6 +19,8 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
   const [provider, setProvider] = React.useState(currentSettings?.modelProvider || 'gemini')
   const [ollamaUrl, setOllamaUrl] = React.useState(currentSettings?.ollamaUrl || 'http://localhost:11434')
   const [ollamaModel, setOllamaModel] = React.useState(currentSettings?.ollamaModel || 'llama3')
+  const [openRouterApiKey, setOpenRouterApiKey] = React.useState(currentSettings?.openRouterApiKey || '')
+  const [openRouterModel, setOpenRouterModel] = React.useState(currentSettings?.openRouterModel || 'mistralai/mistral-7b-instruct:free')
   const [thinkingDelay, setThinkingDelay] = React.useState(currentSettings?.thinkingDelay || 1500)
   const [frustrationSensitivity, setFrustrationSensitivity] = React.useState(currentSettings?.frustrationSensitivity || 5)
   const [isSaving, setIsSaving] = React.useState(false)
@@ -32,6 +34,8 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
         modelProvider: provider,
         ollamaUrl,
         ollamaModel,
+        openRouterApiKey,
+        openRouterModel,
         thinkingDelay,
         frustrationSensitivity,
         updatedBy: user.uid,
@@ -93,6 +97,13 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                     <Server size={32} />
                     <span className="font-black uppercase text-sm">Ollama (Local)</span>
                   </button>
+                  <button
+                    onClick={() => setProvider('openrouter')}
+                    className={`p-6 border-4 border-black flex flex-col items-center gap-3 transition-all ${provider === 'openrouter' ? 'bg-yellow-400' : 'bg-white hover:bg-gray-50'}`}
+                  >
+                    <Key size={32} />
+                    <span className="font-black uppercase text-sm">OpenRouter</span>
+                  </button>
                 </div>
               </div>
 
@@ -127,6 +138,45 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                       placeholder="e.g. gemma2, llama3, gemma4:e4b"
                       className="w-full border-4 border-black p-4 font-black text-lg outline-none focus:bg-yellow-50"
                     />
+                  </div>
+                </motion.div>
+              )}
+
+              {provider === 'openrouter' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  className="space-y-6 pt-4 border-t-2 border-black"
+                >
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                      <Key size={12} /> OpenRouter API Key
+                    </label>
+                    <input
+                      type="password"
+                      value={openRouterApiKey}
+                      onChange={(e) => setOpenRouterApiKey(e.target.value)}
+                      placeholder="sk-or-..."
+                      className="w-full border-4 border-black p-4 font-black text-lg outline-none focus:bg-yellow-50"
+                    />
+                    <div className="bg-blue-50 border-2 border-blue-200 p-3 text-[10px] space-y-1">
+                      <p className="font-extrabold text-blue-600 uppercase">Cara Dapat API Key:</p>
+                      <p className="text-gray-600">1. Buka <strong>openrouter.ai</strong> → Sign Up</p>
+                      <p className="text-gray-600">2. Menuju <strong>Keys</strong> → Buat key baru</p>
+                      <p className="text-gray-600">3. Model free: <code className="bg-white px-1 border">mistralai/mistral-7b-instruct:free</code></p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Nama Model</label>
+                    <input
+                      value={openRouterModel}
+                      onChange={(e) => setOpenRouterModel(e.target.value)}
+                      placeholder="mistralai/mistral-7b-instruct:free"
+                      className="w-full border-4 border-black p-4 font-black text-lg outline-none focus:bg-yellow-50"
+                    />
+                    <p className="text-[9px] text-gray-400 italic">
+                      Lihat model gratis: openrouter.ai/models → filter <strong>Free</strong>
+                    </p>
                   </div>
                 </motion.div>
               )}
