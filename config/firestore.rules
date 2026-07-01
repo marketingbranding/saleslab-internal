@@ -18,6 +18,7 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.token.email == "faizalsyahiddin@gmail.com" ||
         request.auth.token.email == "groupmarketing.mbn@gmail.com" ||
+        request.auth.token.email == "redhapekug@gmail.com" ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
@@ -36,11 +37,11 @@ service cloud.firestore {
       }
 
       allow read: if true;
-      allow create: if isSignedIn() && isValidScenario(request.resource.data) && isValidId(scenarioId);
-      allow update: if isOwner(resource.data.userId) 
+      allow create: if isAdmin() || (isSignedIn() && isValidScenario(request.resource.data) && isValidId(scenarioId));
+      allow update: if isAdmin() || (isOwner(resource.data.userId)
                     && isValidScenario(request.resource.data)
-                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId']));
-      allow delete: if isOwner(resource.data.userId);
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId'])));
+      allow delete: if isAdmin() || isOwner(resource.data.userId);
     }
 
     // Sessions Rules

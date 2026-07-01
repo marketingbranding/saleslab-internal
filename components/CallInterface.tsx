@@ -19,6 +19,7 @@ interface CallInterfaceProps {
 export function CallInterface({ scenario, salespersonName, onFinish, onExit }: CallInterfaceProps) {
   const [isConnected, setIsConnected] = React.useState(false)
   const [isMuted, setIsMuted] = React.useState(false)
+  const isMutedRef = React.useRef(false)
   const [isAITalking, setIsAITalking] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [transcript, setTranscript] = React.useState<{ role: 'user' | 'model'; text: string }[]>([])
@@ -259,7 +260,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1)
 
             processor.onaudioprocess = (e) => {
-              if (isMuted || !sessionRef.current || !isMountedRef.current) return
+              if (isMutedRef.current || !sessionRef.current || !isMountedRef.current) return
 
               const inputData = e.inputBuffer.getChannelData(0)
 
@@ -561,8 +562,12 @@ ATURAN BERMAIN:
       </div>
 
       <div className="p-6 sm:p-12 bg-gradient-to-t from-black to-transparent flex justify-center items-center gap-8 sm:gap-12 z-10">
-        <button 
-          onClick={() => setIsMuted(!isMuted)}
+        <button
+          onClick={() => {
+            const newMuted = !isMuted
+            setIsMuted(newMuted)
+            isMutedRef.current = newMuted
+          }}
           className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full border-4 border-white flex items-center justify-center transition-all ${isMuted ? 'bg-red-500 border-red-500' : 'hover:bg-white hover:text-black text-white'}`}
         >
           {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
