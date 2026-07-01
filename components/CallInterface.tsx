@@ -182,7 +182,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
     if (score === 0) {
       for (const k of positive) { if (lower.includes(k)) { score -= 15; break } }
     }
-    const mult = (patienceRef.current * (frustrationSensitivityRef.current / 5))
+    const mult = ((11 - patienceRef.current) * (frustrationSensitivityRef.current / 5))
     return Math.round(score * mult)
   }
 
@@ -345,7 +345,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
                 const newLevel = Math.max(0, Math.min(100, frustrationRef.current + change))
                 frustrationRef.current = newLevel
                 setFrustrationLevel(newLevel)
-                // Auto-end if frustration hits 100 or AI explicitly hangs up
                 if (newLevel >= 100 || /saya (mau )?tutup (telepon)?/.test(text.toLowerCase())) {
                   setError("Customer hung up — frustrasi sudah maksimal")
                   setTimeout(() => { if (isMountedRef.current) endCall() }, 500)
