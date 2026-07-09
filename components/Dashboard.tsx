@@ -42,6 +42,7 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
   const [selectedSession, setSelectedSession] = React.useState<Session | null>(null)
   const [viewMode, setViewMode] = React.useState<'personal' | 'all'>(isAdmin ? 'all' : 'personal')
   const [searchTerm, setSearchTerm] = React.useState('')
+  const [deleteError, setDeleteError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     console.log("Dashboard mounted, isAdmin:", isAdmin, "User:", user?.email)
@@ -54,13 +55,11 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
     let q;
     
     if (isAdmin && viewMode === 'all') {
-      // Admins see everything
       q = query(
         collection(db, path),
         orderBy('createdAt', 'desc')
       )
     } else {
-      // Normal users (or admin in personal mode) see only their own
       q = query(
         collection(db, path),
         where('userId', '==', user.uid),
@@ -85,18 +84,13 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
 
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    console.log("Delete button clicked for session:", sessionId)
-    // Removing confirm() because it might be blocked in iframe
-    // if (!confirm('Hapus riwayat sesi ini? Tindakan ini tidak bisa dibatalkan.')) return
+    setDeleteError(null)
 
     try {
-      console.log("Calling deleteDoc for sessions/", sessionId)
       await deleteDoc(doc(db, 'sessions', sessionId))
-      console.log("Delete call completed")
     } catch (err) {
-      console.error("Delete operation failed error stack:", err)
       handleFirestoreError(err, OperationType.DELETE, `sessions/${sessionId}`)
-      alert('Gagal menghapus sesi. Cek konsol.')
+      setDeleteError('Gagal menghapus sesi. Cek konsol.')
     }
   }
 
@@ -134,88 +128,93 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
     : 0
 
   return (
-    <div className="space-y-12">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-4 border-black pb-4 gap-4">
+    <div className="space-y-10">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 border-dark/15 pb-4 gap-4">
         <div>
           <button
             onClick={onBack}
-            className="text-[10px] font-black tracking-widest uppercase text-gray-400 hover:text-black mb-2 flex items-center gap-1 transition-colors"
+            className="text-[10px] font-bold uppercase text-muted hover:text-dark mb-2 flex items-center gap-1 font-heading"
           >
-            <ChevronRight size={12} className="rotate-180 border border-gray-400" /> Balik ke Menu
+            <ChevronRight size={12} className="rotate-180" /> Balik ke Menu
           </button>
           <div className="flex items-center gap-3">
-            <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter uppercase">DASHBOARD KITA</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold font-heading">DASHBOARD KITA</h2>
             <SyncIndicator status={loading ? 'syncing' : 'synced'} />
           </div>
           {isAdmin && viewMode === 'all' && (
-            <span className="text-[10px] font-black uppercase bg-black text-yellow-400 px-2 py-0.5 mt-1 inline-block w-fit">ADMIN VIEW</span>
+            <span className="text-[10px] font-bold uppercase bg-primary text-dark px-2.5 py-0.5 mt-1 inline-block font-heading">ADMIN VIEW</span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           {isAdmin && (
-            <div className="flex bg-gray-100 border-2 border-black p-1">
-              <button 
+            <div className="flex bg-surface border-2 border-dark/15 p-1">
+              <button
                 onClick={() => setViewMode('all')}
-                className={`px-4 py-1 font-black text-[10px] uppercase tracking-widest transition-all ${viewMode === 'all' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}
+                className={`px-4 py-1.5 font-bold text-[10px] uppercase font-heading ${viewMode === 'all' ? 'bg-primary text-dark' : 'text-muted hover:text-dark'}`}
               >
                 All Users
               </button>
-              <button 
+              <button
                 onClick={() => setViewMode('personal')}
-                className={`px-4 py-1 font-black text-[10px] uppercase tracking-widest transition-all ${viewMode === 'personal' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}
+                className={`px-4 py-1.5 font-bold text-[10px] uppercase font-heading ${viewMode === 'personal' ? 'bg-primary text-dark' : 'text-muted hover:text-dark'}`}
               >
                 Personal
               </button>
             </div>
           )}
-          <div className="flex items-center gap-2 px-4 py-2 bg-yellow-400 border-4 border-black font-black uppercase text-xs italic">
-            <Trophy size={16} /> Skor Rata-rata: {avgScore}
+          <div className="flex items-center gap-2 px-4 py-2 bg-warning/10 border-2 border-warning/20 text-warning font-bold text-xs uppercase font-heading">
+            <Trophy size={14} /> Skor Rata-rata: {avgScore}
           </div>
         </div>
       </div>
 
+      {deleteError && (
+        <div className="p-4 bg-danger/10 border-2 border-danger/30 text-danger font-bold text-xs uppercase" role="alert">
+          {deleteError}
+        </div>
+      )}
       {isAdmin && viewMode === 'all' && (
         <div className="flex flex-col sm:flex-row gap-4">
-          <input 
-            type="text" 
-            placeholder="Search by Salesperson Name..." 
+          <input
+            type="text"
+            placeholder="Cari nama salesperson..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 p-4 border-4 border-black font-bold uppercase text-xs focus:ring-0 focus:outline-none placeholder:text-gray-300"
+            className="flex-1 p-4 retro-input bg-surface font-semibold text-sm"
           />
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div className="p-8 bg-black text-white border-4 border-black space-y-4">
-          <BarChart2 className="text-yellow-400" size={32} />
-          <div className="text-4xl font-black italic tracking-tighter text-white">{sessions.length}</div>
-          <div className="text-[10px] font-black uppercase tracking-widest">Total Simulasi</div>
-        </div>
-        
-        <div className="p-8 bg-white border-4 border-black space-y-4">
-          <Calendar className="text-black" size={32} />
-          <div className="text-4xl font-black italic tracking-tighter text-black">
-            {sessions.length > 0 ? new Date(sessions[0].createdAt?.toDate()).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : '-'}
-          </div>
-          <div className="text-[10px] font-black uppercase tracking-widest">Simulasi Terakhir</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="p-6 bg-primary text-dark space-y-3 retro-panel">
+          <BarChart2 className="text-dark/80" size={28} />
+          <div className="text-4xl font-bold font-heading">{sessions.length}</div>
+          <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Total Missions</div>
         </div>
 
-        <div className="p-8 bg-white border-4 border-black space-y-4">
-          <User className="text-black" size={32} />
-          <div className="text-xl font-black italic tracking-tighter text-black truncate">
+        <div className="p-6 bg-surface retro-panel space-y-3">
+          <Calendar className="text-primary" size={28} />
+          <div className="text-4xl font-bold text-dark font-heading">
+            {sessions.length > 0 ? new Date(sessions[0].createdAt?.toDate()).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : '-'}
+          </div>
+          <div className="text-[10px] font-bold uppercase text-muted font-heading">Last Mission</div>
+        </div>
+
+        <div className="p-6 bg-surface retro-panel space-y-3">
+          <User className="text-primary" size={28} />
+          <div className="text-lg font-bold text-dark truncate font-heading">
             {isAdmin && viewMode === 'all' ? `${uniqueSalespeople} Salespeople` : (user?.displayName || user?.email?.split('@')[0] || 'User')}
           </div>
-          <div className="text-[10px] font-black uppercase tracking-widest">
+          <div className="text-[10px] font-bold uppercase text-muted font-heading">
             {isAdmin && viewMode === 'all' ? 'Total Sales Tertunda' : 'Profil Aktif'}
           </div>
         </div>
       </div>
 
       {isAdmin && viewMode === 'all' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="p-8 border-4 border-black bg-white space-y-6">
-            <h3 className="text-xl font-black uppercase italic tracking-tighter border-b-2 border-black pb-2">Top Objections (Global)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-6 bg-surface retro-panel space-y-5">
+            <h3 className="text-lg font-bold font-heading uppercase border-b border-dark/10 pb-2">Top Objections (Global)</h3>
             <div className="space-y-3">
               {(() => {
                 const objections = filteredSessions.flatMap(s => s.feedback?.keyObjectionsHandled || []);
@@ -227,18 +226,18 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                   .map(([obj, count], i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 truncate">
-                        <div className="w-6 h-6 bg-black text-white flex items-center justify-center font-black italic text-[10px] shrink-0">{i + 1}</div>
-                        <span className="font-bold text-xs uppercase tracking-tight truncate">{obj}</span>
+                        <div className="w-6 h-6 bg-primary text-dark flex items-center justify-center font-bold text-[10px] shrink-0">{i + 1}</div>
+                        <span className="font-semibold text-xs truncate">{obj}</span>
                       </div>
-                      <span className="text-[10px] font-black text-gray-400">{count}x</span>
+                      <span className="text-[10px] font-bold text-muted">{count}x</span>
                     </div>
                   ));
               })()}
-              {filteredSessions.length === 0 && <p className="text-gray-400 italic">Belum ada data objection.</p>}
+              {filteredSessions.length === 0 && <p className="text-muted text-sm">Belum ada data objection.</p>}
             </div>
           </div>
-          <div className="p-8 border-4 border-black bg-white space-y-6">
-            <h3 className="text-xl font-black uppercase italic tracking-tighter border-b-2 border-black pb-2">Common Weaknesses</h3>
+          <div className="p-6 bg-surface retro-panel space-y-5">
+            <h3 className="text-lg font-bold font-heading uppercase border-b border-dark/10 pb-2">Common Weaknesses</h3>
             <div className="space-y-3">
               {(() => {
                 const weaknesses = filteredSessions.flatMap(s => s.feedback?.weaknesses || []);
@@ -250,41 +249,41 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                   .map(([weak, count], i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 truncate">
-                        <div className="w-6 h-6 bg-red-400 border-2 border-black flex items-center justify-center font-black italic text-[10px] shrink-0">{i + 1}</div>
-                        <span className="font-bold text-xs uppercase tracking-tight truncate">{weak}</span>
+                        <div className="w-6 h-6 bg-danger text-surface flex items-center justify-center font-bold text-[10px] shrink-0">{i + 1}</div>
+                        <span className="font-semibold text-xs truncate">{weak}</span>
                       </div>
-                      <span className="text-[10px] font-black text-gray-400">{count}x</span>
+                      <span className="text-[10px] font-bold text-muted">{count}x</span>
                     </div>
                   ));
               })()}
-              {filteredSessions.length === 0 && <p className="text-gray-400 italic">Belum ada data kekurangan.</p>}
+              {filteredSessions.length === 0 && <p className="text-muted text-sm">Belum ada data kekurangan.</p>}
             </div>
           </div>
         </div>
       )}
 
       {isAdmin && viewMode === 'all' && (
-        <div className="space-y-6">
-          <h3 className="text-2xl font-black uppercase italic tracking-tighter border-b-2 border-black pb-2">Sales Leaderboard</h3>
+        <div className="space-y-5">
+          <h3 className="text-xl font-bold font-heading uppercase border-b border-dark/10 pb-2">Sales Leaderboard</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {leaderboard.map((item, i) => (
-              <div key={item.name} className="p-4 border-4 border-black bg-white flex flex-col justify-between">
+              <div key={item.name} className="p-4 bg-surface retro-panel flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">#{i + 1}</span>
-                    <div className={`px-2 py-0.5 border-2 border-black font-black text-[10px] italic ${
-                      item.avg >= 80 ? 'bg-green-400' : item.avg >= 60 ? 'bg-yellow-400' : 'bg-red-400'
+                    <span className="text-[10px] font-bold uppercase text-muted font-heading">#{i + 1}</span>
+                    <div className={`px-2 py-0.5 font-bold text-[10px] font-heading ${
+                      item.avg >= 80 ? 'bg-success/10 text-success' : item.avg >= 60 ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger'
                     }`}>
                       AVG: {item.avg}
                     </div>
                   </div>
-                  <div className="text-lg font-black italic uppercase tracking-tighter truncate leading-none">{item.name}</div>
+                  <div className="text-base font-bold uppercase truncate leading-none font-heading">{item.name}</div>
                 </div>
                 <div className="mt-4 flex justify-between items-end">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
-                    {item.total} Sesi
+                  <div className="text-[10px] font-bold uppercase text-muted leading-none font-heading">
+                    {item.total} Missions
                   </div>
-                  <div className="text-[8px] font-bold text-gray-300 leading-none">
+                  <div className="text-[8px] font-semibold text-muted/50 leading-none">
                     Last: {item.lastSeen?.toDate().toLocaleDateString('id-ID')}
                   </div>
                 </div>
@@ -294,48 +293,49 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
         </div>
       )}
 
-      <div className="space-y-6">
-        <h3 className="text-2xl font-black uppercase italic tracking-tighter border-b-2 border-gray-200 pb-2">Riwayat Sesi</h3>
+      <div className="space-y-5">
+        <h3 className="text-xl font-bold font-heading uppercase border-b border-dark/10 pb-2">Mission History</h3>
         {loading ? (
           <div className="flex justify-center p-12">
-            <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin"></div>
+            <div className="w-8 h-8 border-[3px] border-dark/20 border-t-primary animate-spin"></div>
           </div>
         ) : filteredSessions.length === 0 ? (
-          <div className="p-12 border-4 border-black border-dashed text-center">
-            <p className="font-bold text-gray-400 italic">Belum ada riwayat simulasi sesuai pencarian. Gas latihan!</p>
+          <div className="p-12 border-2 border-dashed border-dark/15 text-center">
+            <p className="font-semibold text-muted">Belum ada riwayat simulasi sesuai pencarian. Gas latihan!</p>
           </div>
         ) : (
           <div className="grid lg:grid-cols-2 gap-4">
             {filteredSessions.map((session) => (
-              <div 
-                key={session.id} 
+              <div
+                key={session.id}
                 onClick={() => setSelectedSession(session)}
-                className="p-4 border-4 border-black bg-white hover:bg-yellow-50 transition-colors flex items-center justify-between cursor-pointer group"
+                className="p-4 bg-surface retro-panel hover:bg-primary/5 flex items-center justify-between cursor-pointer group"
               >
                 <div>
-                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                  <div className="text-[10px] font-bold text-muted uppercase mb-1 font-heading">
                     {session.createdAt?.toDate().toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
                   </div>
-                  <div className="text-lg font-black italic uppercase tracking-tighter truncate max-w-[250px]">
+                  <div className="text-base font-bold truncate max-w-[250px] font-heading">
                     {session.salespersonName}
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className={`px-3 py-1 border-2 border-black font-black text-sm italic ${
-                    session.score >= 80 ? 'bg-green-400' : session.score >= 60 ? 'bg-yellow-400' : 'bg-red-400'
+                <div className="flex items-center gap-3">
+                  <div className={`px-3 py-1 font-bold text-sm font-heading ${
+                    session.score >= 80 ? 'bg-success/10 text-success' : session.score >= 60 ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger'
                   }`}>
                     {session.score}
                   </div>
-                  { isAdmin && (
-                    <button 
+                    {isAdmin && (
+                    <button
                       onClick={(e) => handleDeleteSession(session.id, e)}
-                      className="p-2 bg-white border-2 border-black hover:bg-red-500 hover:text-white transition-all group/del"
+                      className="p-2 border-2 border-danger/30 bg-danger/10 hover:bg-danger hover:text-surface group/del"
                       title="Hapus Sesi"
+                      aria-label={`Delete session for ${session.salespersonName}`}
                     >
-                      <Trash2 size={16} className="group-hover/del:scale-110 transition-transform" />
+                      <Trash2 size={14} className="group-hover/del:scale-110 transition-transform" />
                     </button>
                   )}
-                  <ChevronRight size={20} className="text-gray-300 group-hover:text-black transition-colors" />
+                  <ChevronRight size={18} className="text-dark/15 group-hover:text-primary" />
                 </div>
               </div>
             ))}
@@ -346,63 +346,63 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
       {/* Detail Modal */}
       {selectedSession && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-dark/80"
             onClick={() => setSelectedSession(null)}
           />
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-4xl max-h-[90vh] bg-white border-8 border-black shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex flex-col"
+            className="relative w-full max-w-4xl max-h-[90vh] bg-surface retro-panel overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="p-6 border-b-4 border-black bg-yellow-400 flex justify-between items-center shrink-0">
+            <div className="p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
               <div>
-                <h3 className="text-3xl font-black italic uppercase tracking-tighter">HASIL SIMULASI</h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-black/60">
+                <h3 className="text-xl font-bold font-heading">HASIL SIMULASI</h3>
+                <p className="text-[10px] font-bold uppercase text-dark/60 font-heading">
                   {selectedSession.salespersonName} • {selectedSession.createdAt?.toDate().toLocaleString('id-ID')}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedSession(null)}
-                className="bg-black text-white p-2 border-2 border-black hover:bg-white hover:text-black transition-all font-black"
+                className="bg-dark/20 text-dark p-2 hover:bg-dark/30 font-bold text-xs"
               >
                 CLOSE
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
               {/* Score Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-6 border-4 border-black">
-                <div className="space-y-4">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Skor Keseluruhan</div>
-                  <div className={`text-7xl font-black italic tracking-tighter ${
-                    selectedSession.score >= 80 ? 'text-green-500' : selectedSession.score >= 60 ? 'text-yellow-600' : 'text-red-500'
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-surface p-6 border border-dark/10">
+                <div className="space-y-3">
+                  <div className="text-[10px] font-bold uppercase text-muted font-heading">Skor Keseluruhan</div>
+                  <div className={`text-7xl font-bold font-heading ${
+                    selectedSession.score >= 80 ? 'text-success' : selectedSession.score >= 60 ? 'text-warning' : 'text-danger'
                   }`}>
                     {selectedSession.score}
                   </div>
-                  <p className="font-bold text-sm leading-relaxed">{selectedSession.feedback?.verdict}</p>
+                  <p className="font-medium text-sm leading-relaxed">{selectedSession.feedback?.verdict}</p>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-5">
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-widest bg-green-400 inline-block px-2 py-1 border-2 border-black mb-2 italic">Kekuatan</h4>
+                    <h4 className="text-xs font-bold uppercase bg-success/10 text-success inline-block px-2.5 py-1 mb-2 font-heading">Kekuatan</h4>
                     <ul className="space-y-1">
                       {selectedSession.feedback?.strengths.map((s, i) => (
-                        <li key={i} className="text-xs font-bold leading-tight flex items-start gap-2">
-                          <span className="shrink-0 text-green-600">✓</span> {s}
+                        <li key={i} className="text-xs font-semibold leading-tight flex items-start gap-2">
+                          <span className="shrink-0 text-success font-bold">✓</span> {s}
                         </li>
                       ))}
                     </ul>
                   </div>
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-widest bg-red-400 inline-block px-2 py-1 border-2 border-black mb-2 italic">Perbaikan</h4>
+                    <h4 className="text-xs font-bold uppercase bg-danger/10 text-danger inline-block px-2.5 py-1 mb-2 font-heading">Perbaikan</h4>
                     <ul className="space-y-1">
                       {selectedSession.feedback?.weaknesses.map((w, i) => (
-                        <li key={i} className="text-xs font-bold leading-tight flex items-start gap-2">
-                          <span className="shrink-0 text-red-600">!</span> {w}
+                        <li key={i} className="text-xs font-semibold leading-tight flex items-start gap-2">
+                          <span className="shrink-0 text-danger font-bold">!</span> {w}
                         </li>
                       ))}
                     </ul>
@@ -412,14 +412,14 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
 
               {/* Analysis Details */}
               {selectedSession.feedback?.salesPathEvaluation && (
-                <div className="p-6 border-4 border-black bg-white">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-black mb-4 italic">Sales Path Checklist</h4>
+                <div className="p-6 bg-surface border-2 border-dark/15">
+                  <h4 className="text-xs font-bold uppercase text-dark mb-4 font-heading">Sales Path Checklist</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {Object.entries(selectedSession.feedback.salesPathEvaluation).map(([stage, status]) => (
                       <div key={stage} className="flex flex-col gap-1">
-                        <span className="text-[8px] font-black uppercase tracking-tighter text-gray-400">{stage}</span>
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 border-2 border-black inline-block text-center ${
-                          status === 'Good' ? 'bg-green-400' : status === 'Fair' ? 'bg-yellow-400' : status === 'Poor' ? 'bg-red-400' : 'bg-gray-100'
+                        <span className="text-[8px] font-bold uppercase text-muted font-heading">{stage}</span>
+                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 inline-block text-center font-heading ${
+                          status === 'Good' ? 'bg-success/10 text-success' : status === 'Fair' ? 'bg-warning/10 text-warning' : status === 'Poor' ? 'bg-danger/10 text-danger' : 'bg-surface text-muted'
                         }`}>
                           {status}
                         </span>
@@ -429,23 +429,23 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                 </div>
               )}
 
-              <div className="grid md:grid-cols-2 gap-8 bg-black text-white p-6 border-4 border-black">
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest bg-yellow-400 text-black inline-block px-2 py-1 border-2 border-black italic">Objections Handled</h4>
+              <div className="grid md:grid-cols-2 gap-6 bg-bg text-dark p-6">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase text-warning inline-block px-2.5 py-1 font-heading">Objections Handled</h4>
                   <ul className="space-y-1">
                     {selectedSession.feedback?.keyObjectionsHandled?.map((obj, i) => (
-                      <li key={i} className="text-sm font-bold flex gap-2">
-                        <span className="text-yellow-400 font-black">»</span> {obj}
+                      <li key={i} className="text-sm font-semibold flex gap-2">
+                        <span className="text-warning font-bold">»</span> {obj}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest bg-gray-600 text-white inline-block px-2 py-1 border-2 border-white italic">Opportunities Missed</h4>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase bg-dark/10 text-dark inline-block px-2.5 py-1 font-heading">Opportunities Missed</h4>
                   <ul className="space-y-1">
                     {selectedSession.feedback?.missedOpportunities?.map((opp, i) => (
-                      <li key={i} className="text-sm font-bold flex gap-2 opacity-80">
-                        <span className="text-red-400 font-black">!</span> {opp}
+                      <li key={i} className="text-sm font-semibold flex gap-2 opacity-80">
+                        <span className="text-danger font-bold">!</span> {opp}
                       </li>
                     ))}
                   </ul>
@@ -453,12 +453,12 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
               </div>
 
               {/* Tips Section */}
-              <div className="p-6 border-4 border-black bg-black text-white">
-                <h4 className="text-xs font-black uppercase tracking-widest text-yellow-400 mb-2 italic">Pro Tips</h4>
+              <div className="p-6 bg-primary/5 border-2 border-primary/15">
+                <h4 className="text-xs font-bold uppercase text-primary mb-3 font-heading">Pro Tips</h4>
                 <ul className="space-y-2">
                   {selectedSession.feedback?.actionableTips.map((tip, i) => (
-                    <li key={i} className="font-bold text-sm italic flex gap-2">
-                      <span className="text-yellow-400">#</span> {tip}
+                    <li key={i} className="font-semibold text-sm flex gap-2 text-dark">
+                      <span className="text-primary font-bold">#</span> {tip}
                     </li>
                   ))}
                 </ul>
@@ -466,14 +466,14 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
 
               {/* Transcript Section */}
               <div className="space-y-4">
-                <h4 className="text-xl font-black uppercase italic tracking-tighter border-b-2 border-black pb-2">Transkrip Percakapan</h4>
-                <div className="space-y-4">
+                <h4 className="text-lg font-bold font-heading uppercase border-b border-dark/10 pb-2">Transkrip Percakapan</h4>
+                <div className="space-y-3">
                   {selectedSession.transcript?.map((msg, i) => (
                     <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                      <div className={`max-w-[85%] p-4 border-4 border-black font-bold text-sm ${
-                        msg.role === 'user' ? 'bg-yellow-400' : 'bg-white'
+                      <div className={`max-w-[85%] p-4 font-semibold text-sm border-2 ${
+                        msg.role === 'user' ? 'bg-primary/10 text-dark border-primary/20' : 'bg-surface text-dark border-dark/10'
                       }`}>
-                        <div className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">
+                        <div className="text-[10px] font-bold uppercase mb-1 text-muted font-heading">
                           {msg.role === 'user' ? selectedSession.salespersonName : 'Customer'}
                         </div>
                         {msg.text}

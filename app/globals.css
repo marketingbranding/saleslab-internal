@@ -1,12 +1,292 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui;
-  --font-display: var(--font-display), ui-sans-serif, system-ui;
+  --font-heading: Georgia, 'Times New Roman', serif;
+  --font-body: Inter, Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  --color-bg: #F6F0E7;
+  --color-surface: #FFFDF8;
+  --color-primary: #E6915D;
+  --color-dark: #222222;
+  --color-text: #222222;
+  --color-navy: #243447;
+  --color-success: #5B8C5A;
+  --color-warning: #C9972F;
+  --color-danger: #B34A48;
+  --color-muted: #8A8178;
 }
 
 @layer base {
+  *,
+  *::before,
+  *::after {
+    border-radius: 0 !important;
+  }
+
+  html {
+    background-color: var(--color-bg);
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-dark);
+    background-color: transparent;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
+    font-family: var(--font-heading);
+    color: var(--color-dark);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  button:focus:not(:focus-visible),
+  a:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Skip-to-content link (visually hidden until focused) */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    z-index: 1000;
+    background: var(--color-dark);
+    color: var(--color-surface);
+    padding: 0.75rem 1.5rem;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+  }
+  .skip-link:focus {
+    top: 0;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+@layer components {
+  .retro-panel {
+    background: var(--color-surface);
+    border: 2px solid var(--color-dark);
+    box-shadow: 4px 4px 0 var(--color-dark);
+  }
+
+  .retro-dialog {
+    border: 2px solid var(--color-dark);
+    box-shadow: 8px 8px 0 var(--color-dark);
+  }
+
+  .retro-btn {
+    border: 2px solid var(--color-dark);
+    box-shadow: 3px 3px 0 var(--color-dark);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: none;
+    padding: 0.75rem 1rem;
+  }
+
+  .retro-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--color-dark);
+  }
+
+  .retro-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--color-dark);
+  }
+
+  .retro-btn-primary {
+    background: var(--color-primary);
+    color: var(--color-dark);
+    border-color: var(--color-dark);
+  }
+
+  .retro-btn-cyan,
+  .retro-button-cyan {
+    background: var(--color-primary);
+    color: var(--color-dark);
+    border-color: var(--color-dark);
+  }
+
+  .retro-btn-accent {
+    background: var(--color-warning);
+    color: var(--color-dark);
+    border-color: var(--color-dark);
+  }
+
+  .retro-button,
+  .retro-button-gold {
+    border: 2px solid var(--color-dark);
+    box-shadow: 3px 3px 0 var(--color-dark);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: none;
+    background: var(--color-warning);
+    color: var(--color-dark);
+  }
+
+  .retro-button:hover,
+  .retro-button-gold:hover,
+  .retro-button-cyan:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--color-dark);
+  }
+
+  .retro-button:active,
+  .retro-button-gold:active,
+  .retro-button-cyan:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--color-dark);
+  }
+
+  .retro-btn-danger {
+    background: var(--color-danger);
+    color: var(--color-surface);
+    border-color: var(--color-dark);
+  }
+
+  .retro-btn-ghost {
+    background: transparent;
+    color: var(--color-dark);
+    border-color: var(--color-dark);
+  }
+
+  .retro-btn-ghost:hover {
+    background: var(--color-dark);
+    color: var(--color-surface);
+  }
+
+  .retro-btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .retro-btn-lg {
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
+  }
+
+  .retro-input {
+    border: 2px solid var(--color-dark);
+    background: white;
+    color: var(--color-dark);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.75rem;
+    outline: none;
+    width: 100%;
+  }
+
+  .retro-input:focus {
+    box-shadow: 0 0 0 3px rgba(230, 145, 93, 0.35);
+    border-color: var(--color-primary);
+  }
+
+  .retro-badge {
+    border: 1px solid var(--color-dark);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: var(--font-heading);
+  }
+
+  .retro-shadow {
+    box-shadow: 4px 4px 0 var(--color-dark);
+  }
+
+  .retro-divider {
+    border-bottom: 2px solid var(--color-dark);
+    opacity: 0.15;
+  }
+
+  .heading-terminal {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    transition: none;
+  }
+
+  .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  .sidebar-link-active {
+    background: var(--color-primary);
+    color: var(--color-dark);
+  }
+
+  .sidebar-link-active:hover {
+    background: var(--color-primary);
+    color: var(--color-dark);
+  }
+
+  /* Z-index scale */
+  .z-sidebar { z-index: 40; }
+  .z-header { z-index: 45; }
+  .z-mobile-nav { z-index: 50; }
+  .z-overlay { z-index: 90; }
+  .z-modal { z-index: 100; }
+  .z-modal-top { z-index: 110; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
 }

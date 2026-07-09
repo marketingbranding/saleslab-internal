@@ -18,34 +18,34 @@ export function SyncIndicator({ status, className = '' }: SyncIndicatorProps) {
       case 'syncing':
         return {
           icon: <Loader2 size={12} className="animate-spin" />,
-          color: 'text-yellow-500',
-          bg: 'bg-yellow-50',
-          border: 'border-yellow-300',
-          label: 'Syncing...'
+          color: 'text-warning',
+          bg: 'bg-warning/10',
+          border: 'border-warning/30',
+          label: 'Menyinkronkan...'
         }
       case 'synced':
         return {
           icon: <Cloud size={12} />,
-          color: 'text-green-500',
-          bg: 'bg-green-50',
-          border: 'border-green-300',
-          label: 'Synced'
+          color: 'text-success',
+          bg: 'bg-success/10',
+          border: 'border-success/30',
+          label: 'Tersinkronisasi'
         }
       case 'offline':
         return {
           icon: <CloudOff size={12} />,
-          color: 'text-gray-400',
-          bg: 'bg-gray-50',
-          border: 'border-gray-300',
+          color: 'text-muted',
+          bg: 'bg-surface',
+          border: 'border-dark/20',
           label: 'Offline'
         }
       case 'error':
         return {
           icon: <CloudOff size={12} />,
-          color: 'text-red-500',
-          bg: 'bg-red-50',
-          border: 'border-red-300',
-          label: 'Sync Error'
+          color: 'text-danger',
+          bg: 'bg-danger/10',
+          border: 'border-danger/30',
+          label: 'Error Sinkronisasi'
         }
     }
   }
@@ -54,17 +54,20 @@ export function SyncIndicator({ status, className = '' }: SyncIndicatorProps) {
 
   return (
     <div
-      className={`relative inline-flex items-center gap-1.5 px-2 py-1 rounded-sm border ${config.border} ${config.bg} ${config.color} ${className}`}
+      className={`relative inline-flex items-center gap-1.5 px-2 py-1 border ${config.border} ${config.bg} ${config.color} ${className}`}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
+      role="status"
+      aria-live="polite"
+      aria-label={config.label}
     >
       {config.icon}
-      <span className="text-[9px] font-black uppercase tracking-wider leading-none">
+      <span className="text-[9px] font-bold uppercase tracking-wider leading-none">
         {status === 'syncing' ? '...' : 'OK'}
       </span>
 
       {showTooltip && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-[10px] font-bold whitespace-nowrap rounded-sm">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-dark text-surface text-[10px] font-bold whitespace-nowrap">
           {config.label}
         </div>
       )}

@@ -58,85 +58,85 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80"
           />
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="relative w-full max-w-lg bg-white border-8 border-black p-8 shadow-[20px_20px_0px_0px_rgba(0,0,0,1)]"
+            className="relative w-full max-w-lg bg-surface retro-dialog p-8"
           >
-            <div className="flex items-center justify-between mb-8 pb-4 border-b-4 border-black">
+            <div className="flex items-center justify-between mb-8 pb-4 border-b-[3px] border-dark/10">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-black text-white">
-                  <Settings size={24} />
+                <div className="p-2.5 bg-primary text-black">
+                  <Settings size={22} />
                 </div>
-                <h2 className="text-3xl font-black italic uppercase tracking-tighter">Admin Settings</h2>
+                <h2 className="text-2xl font-bold tracking-tight">Admin Settings</h2>
               </div>
-              <button onClick={onClose} className="hover:rotate-90 transition-transform">
-                <X size={32} strokeWidth={3} />
+              <button onClick={onClose} className="p-2 hover:bg-dark/5 transition-colors">
+                <X size={24} strokeWidth={2.5} />
               </button>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Provider Selection */}
-              <div className="space-y-4">
-                <label className="text-xs font-black uppercase tracking-widest text-gray-500">Pilih AI Provider</label>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted">Pilih AI Provider</label>
+                <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => setProvider('gemini')}
-                    className={`p-6 border-4 border-black flex flex-col items-center gap-3 transition-all ${provider === 'gemini' ? 'bg-yellow-400' : 'bg-white hover:bg-gray-50'}`}
+                    className={`p-4 border-3 flex flex-col items-center gap-2 transition-all ${provider === 'gemini' ? 'bg-primary text-black border-primary' : 'bg-surface border-dark/15 hover:border-primary/30'}`}
                   >
-                    <Sparkles size={32} />
-                    <span className="font-black uppercase text-sm">Gemini AI</span>
+                    <Sparkles size={24} strokeWidth={2} />
+                    <span className="font-bold uppercase text-[10px] tracking-wider">Gemini</span>
                   </button>
                   <button
                     onClick={() => setProvider('ollama')}
-                    className={`p-6 border-4 border-black flex flex-col items-center gap-3 transition-all ${provider === 'ollama' ? 'bg-yellow-400' : 'bg-white hover:bg-gray-50'}`}
+                    className={`p-4 border-3 flex flex-col items-center gap-2 transition-all ${provider === 'ollama' ? 'bg-primary text-black border-primary' : 'bg-surface border-dark/15 hover:border-primary/30'}`}
                   >
-                    <Server size={32} />
-                    <span className="font-black uppercase text-sm">Ollama (Local)</span>
+                    <Server size={24} strokeWidth={2} />
+                    <span className="font-bold uppercase text-[10px] tracking-wider">Ollama</span>
                   </button>
                   <button
                     onClick={() => setProvider('openrouter')}
-                    className={`p-6 border-4 border-black flex flex-col items-center gap-3 transition-all ${provider === 'openrouter' ? 'bg-yellow-400' : 'bg-white hover:bg-gray-50'}`}
+                    className={`p-4 border-3 flex flex-col items-center gap-2 transition-all ${provider === 'openrouter' ? 'bg-primary text-black border-primary' : 'bg-surface border-dark/15 hover:border-primary/30'}`}
                   >
-                    <Key size={32} />
-                    <span className="font-black uppercase text-sm">OpenRouter</span>
+                    <Key size={24} strokeWidth={2} />
+                    <span className="font-bold uppercase text-[10px] tracking-wider">OpenRouter</span>
                   </button>
                 </div>
               </div>
 
               {provider === 'ollama' && (
-                <motion.div 
+                <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
-                  className="space-y-6 pt-4 border-t-2 border-black"
+                  className="space-y-4 pt-4 border-t border-dark/10"
                 >
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted flex items-center gap-2">
                       <Globe size={12} /> Ollama API URL
                     </label>
                     <input
                       value={ollamaUrl}
                       onChange={(e) => setOllamaUrl(e.target.value)}
                       placeholder="http://localhost:11434"
-                      className="w-full border-4 border-black p-4 font-black text-lg outline-none focus:bg-yellow-50"
+                      className="w-full retro-input bg-surface p-4"
                     />
-                    <div className="bg-red-50 border-2 border-red-200 p-3 text-[10px] space-y-1">
-                      <p className="font-extrabold text-red-600 uppercase">Penting - Masalah Koneksi:</p>
-                      <p className="text-gray-600">1. Agar browser bisa mengakses Ollama, jalankan dengan:</p>
-                      <code className="block bg-white p-1 border border-red-100 font-mono text-[9px]">OLLAMA_ORIGINS=&quot;*&quot; ollama serve</code>
-                      <p className="text-gray-600 pt-1">2. Jika web ini diakses via <strong>HTTPS</strong>, gunakan URL <code>http://localhost:11434</code> (bukan IP) atau gunakan HTTPS Tunnel (ngrok).</p>
+                    <div className="bg-danger/5 border-2 border-danger/20 p-3 text-[10px] space-y-1">
+                      <p className="font-bold text-danger uppercase">Penting - Masalah Koneksi:</p>
+                      <p className="text-muted font-medium">1. Agar browser bisa mengakses Ollama, jalankan dengan:</p>
+                      <code className="block bg-white p-1.5 rounded-lg border border-dark/10 font-mono text-[9px]">OLLAMA_ORIGINS=&quot;*&quot; ollama serve</code>
+                      <p className="text-muted font-medium pt-1">2. Jika web ini diakses via <strong>HTTPS</strong>, gunakan URL <code>http://localhost:11434</code> (bukan IP) atau gunakan HTTPS Tunnel (ngrok).</p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Nama Model</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted">Nama Model</label>
                     <input
                       value={ollamaModel}
                       onChange={(e) => setOllamaModel(e.target.value)}
                       placeholder="e.g. gemma2, llama3, gemma4:e4b"
-                      className="w-full border-4 border-black p-4 font-black text-lg outline-none focus:bg-yellow-50"
+                      className="w-full retro-input bg-surface p-4"
                     />
                   </div>
                 </motion.div>
@@ -146,10 +146,10 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
-                  className="space-y-6 pt-4 border-t-2 border-black"
+                  className="space-y-4 pt-4 border-t border-dark/10"
                 >
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted flex items-center gap-2">
                       <Key size={12} /> OpenRouter API Key
                     </label>
                     <input
@@ -157,24 +157,24 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                       value={openRouterApiKey}
                       onChange={(e) => setOpenRouterApiKey(e.target.value)}
                       placeholder="sk-or-..."
-                      className="w-full border-4 border-black p-4 font-black text-lg outline-none focus:bg-yellow-50"
+                      className="w-full retro-input bg-surface p-4"
                     />
-                    <div className="bg-blue-50 border-2 border-blue-200 p-3 text-[10px] space-y-1">
-                      <p className="font-extrabold text-blue-600 uppercase">Cara Dapat API Key:</p>
-                      <p className="text-gray-600">1. Buka <strong>openrouter.ai</strong> → Sign Up</p>
-                      <p className="text-gray-600">2. Menuju <strong>Keys</strong> → Buat key baru</p>
-                      <p className="text-gray-600">3. Model free: <code className="bg-white px-1 border">mistralai/mistral-7b-instruct:free</code></p>
+                    <div className="bg-primary/5 border-2 border-primary/20 p-3 text-[10px] space-y-1">
+                      <p className="font-bold text-primary uppercase">Cara Dapat API Key:</p>
+                      <p className="text-muted font-medium">1. Buka <strong>openrouter.ai</strong> → Sign Up</p>
+                      <p className="text-muted font-medium">2. Menuju <strong>Keys</strong> → Buat key baru</p>
+                      <p className="text-muted font-medium">3. Model free: <code className="bg-white px-1.5 rounded-md border border-dark/10">mistralai/mistral-7b-instruct:free</code></p>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Nama Model</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted">Nama Model</label>
                     <input
                       value={openRouterModel}
                       onChange={(e) => setOpenRouterModel(e.target.value)}
                       placeholder="mistralai/mistral-7b-instruct:free"
-                      className="w-full border-4 border-black p-4 font-black text-lg outline-none focus:bg-yellow-50"
+                      className="w-full retro-input bg-surface p-4"
                     />
-                    <p className="text-[9px] text-gray-400 italic">
+                    <p className="text-[9px] text-muted font-medium">
                       Lihat model gratis: openrouter.ai/models → filter <strong>Free</strong>
                     </p>
                   </div>
@@ -182,8 +182,8 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
               )}
 
               {/* Thinking Delay */}
-              <div className="space-y-4 pt-4 border-t-2 border-black">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <div className="space-y-3 pt-4 border-t border-dark/10">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted">
                   AI Response Delay
                 </label>
                 <div className="flex items-center gap-4">
@@ -194,22 +194,22 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                     step="100"
                     value={thinkingDelay}
                     onChange={(e) => setThinkingDelay(Number(e.target.value))}
-                    className="flex-1 accent-black"
+                    className="flex-1 accent-cyan"
                   />
-                  <span className="font-black text-lg tabular-nums w-14 text-right">{(thinkingDelay / 1000).toFixed(1)}s</span>
+                  <span className="font-bold text-sm tabular-nums w-14 text-right text-dark">{(thinkingDelay / 1000).toFixed(1)}s</span>
                 </div>
-                <p className="text-[9px] text-gray-400 italic">
+                <p className="text-[9px] text-muted font-medium">
                   Simulasi waktu berpikir sebelum AI merespon ({thinkingDelay}ms)
                 </p>
               </div>
 
               {/* Frustration Sensitivity */}
-              <div className="space-y-4 pt-4 border-t-2 border-black">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <div className="space-y-3 pt-4 border-t border-dark/10">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted">
                   Frustration Sensitivity
                 </label>
                 <div className="flex items-center gap-4">
-                  <span className="text-[9px] font-black text-gray-400">Kalem</span>
+                  <span className="text-[9px] font-bold text-muted">Kalem</span>
                   <input
                     type="range"
                     min="1"
@@ -217,11 +217,11 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                     step="1"
                     value={frustrationSensitivity}
                     onChange={(e) => setFrustrationSensitivity(Number(e.target.value))}
-                    className="flex-1 accent-black"
+                    className="flex-1 accent-cyan"
                   />
-                  <span className="text-[9px] font-black text-gray-400">Mudah Frustrasi</span>
+                  <span className="text-[9px] font-bold text-muted">Mudah Frustrasi</span>
                 </div>
-                <p className="text-[9px] text-gray-400 italic text-center">
+                <p className="text-[9px] text-muted font-medium text-center">
                   Sensitivitas ({frustrationSensitivity}/10) — semakin tinggi, semakin cepat AI frustrasi
                 </p>
               </div>
@@ -229,9 +229,9 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
               <button
                 disabled={isSaving}
                 onClick={handleSave}
-                className="w-full bg-black text-white border-4 border-black p-5 font-black uppercase italic text-xl tracking-tighter hover:bg-yellow-400 hover:text-black transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                className="w-full retro-button retro-button-gold p-5 text-sm flex items-center justify-center gap-3 disabled:opacity-50"
               >
-                <Save size={24} />
+                <Save size={20} strokeWidth={2.5} />
                 {isSaving ? "SAVING..." : "SIMPAN PERUBAHAN"}
               </button>
             </div>

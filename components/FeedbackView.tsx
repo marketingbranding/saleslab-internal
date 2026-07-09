@@ -3,21 +3,27 @@
 import * as React from "react"
 import { motion } from "motion/react"
 import { SalesScenario, analyzePerformance } from "@/lib/gemini"
-import { Trophy, Target, AlertTriangle, Lightbulb, CheckCircle2, ChevronRight, Home, RefreshCcw } from "lucide-react"
+import { Trophy, Target, AlertTriangle, Lightbulb, CheckCircle2, Home, RefreshCcw } from "lucide-react"
 import confetti from "canvas-confetti"
-import { db, handleFirestoreError, OperationType } from "@/lib/firebase"
-import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { doc, setDoc, serverTimestamp } from "firebase/firestore"
 import { useAuth } from "@/lib/AuthContext"
 import { SyncIndicator } from "@/components/SyncIndicator"
 
 interface FeedbackData {
   overallScore: number
+  grade?: string
+  summary?: string
   strengths: string[]
   weaknesses: string[]
   keyObjectionsHandled: string[]
   missedOpportunities: string[]
   verdict: string
   actionableTips: string[]
+  skillScores?: Array<{ skill: string; score: number; evidence?: string[] }>
+  suggestedResponses?: string[]
+  recommendedNextScenario?: string | null
+  actionPlan?: string[]
 }
 
 interface FeedbackViewProps {
@@ -34,55 +40,88 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
   const [loading, setLoading] = React.useState(true)
   const [saved, setSaved] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [analysisStatus, setAnalysisStatus] = React.useState<'processing' | 'completed' | 'failed'>('processing')
+  const hasStartedRef = React.useRef(false)
+  const sessionIdRef = React.useRef<string | null>(null)
+
+  const ensureSessionId = React.useCallback(() => {
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = `session_${Date.now()}`
+    }
+    return sessionIdRef.current
+  }, [])
+
+  const saveSessionState = React.useCallback(async (payload: Record<string, any>) => {
+    if (!user) return
+    await setDoc(doc(db, 'sessions', ensureSessionId()), {
+      scenarioId: scenario.id,
+      salespersonName,
+      transcript,
+      userId: user.uid,
+      score: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      ...payload,
+    }, { merge: true })
+  }, [ensureSessionId, scenario.id, salespersonName, transcript, user])
+
+  const runAnalysis = React.useCallback(async () => {
+    try {
+      setError(null)
+      setLoading(true)
+      setAnalysisStatus('processing')
+
+      await saveSessionState({
+        analysisStatus: 'processing',
+        transcriptQuality: transcript.length < 3 ? 'partial' : 'complete',
+      })
+
+      const data = await analyzePerformance(scenario, transcript)
+      setFeedback(data)
+      setAnalysisStatus('completed')
+
+      if (data.overallScore >= 70) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#E6915D', '#5B8C5A', '#C9972F']
+        })
+      }
+
+      await saveSessionState({
+        score: data.overallScore,
+        feedback: data,
+        analysisStatus: 'completed',
+        analysisProvider: 'api/analyze',
+      })
+      setSaved(true)
+    } catch (err: any) {
+      console.error("Feedback error:", err)
+      setAnalysisStatus('failed')
+      const message = err?.message?.includes('503') || err?.message?.includes('high demand')
+        ? "Server sedang sibuk. Silakan tunggu sebentar dan coba lagi."
+        : err?.message || "Gagal menganalisis performa. Silakan coba lagi."
+      setError(message)
+      try {
+        await saveSessionState({
+          analysisStatus: 'failed',
+          analysisError: message,
+        })
+        setSaved(true)
+      } catch (saveErr) {
+        console.error('Failed to save failed analysis state:', saveErr)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [saveSessionState, scenario, transcript])
 
   React.useEffect(() => {
-    const getFeedback = async () => {
-      try {
-        setError(null)
-        setLoading(true)
-        const data = await analyzePerformance(scenario, transcript)
-        setFeedback(data)
-        if (data.overallScore >= 70) {
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#000', '#3B82F6', '#10B981']
-          })
-        }
-
-        // Save to Firebase if user is logged in
-        if (user && !saved) {
-          const path = 'sessions'
-          const sessionId = `session_${Date.now()}`
-          try {
-            await setDoc(doc(db, path, sessionId), {
-              scenarioId: scenario.id,
-              salespersonName,
-              transcript,
-              score: data.overallScore,
-              feedback: data,
-              userId: user.uid,
-              createdAt: serverTimestamp()
-            })
-            setSaved(true)
-          } catch (err) {
-            handleFirestoreError(err, OperationType.WRITE, path)
-          }
-        }
-      } catch (err: any) {
-        console.error("Feedback error:", err)
-        if (err?.message?.includes('503') || err?.message?.includes('high demand')) {
-          setError("Server sedang sibuk. Mohon tunggu sebentar atau coba lagi nanti.")
-        } else {
-          setError("Gagal menganalisis performa. Silakan coba lagi.")
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    getFeedback()
-  }, [scenario, transcript, user, salespersonName])
+    if (hasStartedRef.current) return
+    hasStartedRef.current = true
+    runAnalysis()
+  }, [runAnalysis])
 
   if (loading) {
     return (
@@ -90,15 +129,15 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-          className="p-4 bg-black text-white rounded-full"
+          className="p-4 bg-primary text-dark retro-panel"
         >
           <Target size={32} />
         </motion.div>
         <div className="flex items-center gap-3">
-          <h3 className="text-xl font-bold">Analyzing Sales Tactics...</h3>
+          <h3 className="text-xl font-bold font-heading">Menganalisis Taktik Sales...</h3>
           <SyncIndicator status="syncing" />
         </div>
-        <p className="text-gray-500 text-sm">Evaluating transcript against performance benchmarks.</p>
+        <p className="text-muted text-sm">Menyimpan transkrip dan mengevaluasi benchmark performa.</p>
       </div>
     )
   }
@@ -106,26 +145,26 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 text-center max-w-md mx-auto px-6">
-        <div className="p-4 bg-red-100 text-red-600 rounded-full border-4 border-black">
-          <AlertTriangle size={48} strokeWidth={3} />
+        <div className="p-4 bg-danger/10 text-danger">
+          <AlertTriangle size={48} strokeWidth={2} />
         </div>
         <div className="space-y-2">
-          <h3 className="text-2xl font-black uppercase tracking-tighter italic">Yah, Kapasitas Penuh!</h3>
-          <p className="text-gray-600 font-bold leading-tight">{error}</p>
+          <h3 className="text-2xl font-bold font-heading tracking-tight">Analisis Tidak Tersedia</h3>
+          <p className="text-muted font-medium leading-tight">{error}</p>
         </div>
         <SyncIndicator status="error" />
         <div className="flex flex-col sm:flex-row gap-4 w-full">
-          <button 
-            onClick={() => window.location.reload()}
-            className="flex-1 px-8 py-3 bg-black text-white font-black uppercase italic border-4 border-black hover:bg-white hover:text-black transition-all"
+          <button
+            onClick={runAnalysis}
+            className="flex-1 px-8 py-3 bg-primary text-dark font-semibold uppercase transition-all retro-btn retro-btn-primary"
           >
-            Refresh Halaman
+            Coba Analisis Ulang
           </button>
-          <button 
+          <button
             onClick={onHome}
-            className="flex-1 px-8 py-3 border-4 border-black font-black uppercase italic hover:bg-black hover:text-white transition-all"
+            className="flex-1 px-8 py-3 border-2 border-dark/20 font-semibold uppercase hover:bg-dark/5 transition-all retro-btn retro-btn-ghost"
           >
-            Kembali
+            Kembali ke Dashboard
           </button>
         </div>
       </div>
@@ -133,6 +172,8 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
   }
 
   if (!feedback) return null
+
+  const transcriptIncomplete = transcript.length < 3
 
   return (
     <motion.div
@@ -142,60 +183,75 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
     >
       {/* Header with sync status */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black uppercase tracking-tighter italic">HASIL ANALISIS</h2>
+        <h2 className="text-2xl font-bold font-heading tracking-tight uppercase">LAPORAN Mission</h2>
         <SyncIndicator status={saved ? 'synced' : 'syncing'} />
       </div>
 
+      {analysisStatus === 'completed' && feedback.summary && (
+        <div className="p-5 bg-primary/10 border-2 border-primary/20 text-dark">
+          <div className="text-[10px] font-bold uppercase text-primary font-heading mb-2">Ringkasan Analisis</div>
+          <p className="text-sm font-semibold leading-tight">{feedback.summary}</p>
+        </div>
+      )}
+
+      {/* Transcript warning banner */}
+      {transcriptIncomplete && (
+        <div className="p-4 bg-warning/10 border-2 border-warning/30 text-warning font-bold text-xs uppercase flex items-center gap-3" role="alert">
+          <AlertTriangle size={16} />
+          <span>Transkrip sangat pendek ({transcript.length} pertukaran). Analisis mungkin kurang akurat.</span>
+        </div>
+      )}
+
       {/* Hero Score */}
-      <div className="bg-black text-white border-8 border-black p-12 flex flex-col md:flex-row items-center gap-16 shadow-[24px_24px_0px_0px_rgba(0,0,0,0.1)]">
+      <div className="bg-surface retro-panel p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-12">
         <div className="relative">
-          <div className="w-48 h-48 border-8 border-white flex items-center justify-center flex-col transform -rotate-3 bg-black">
-            <span className="text-7xl font-black italic tracking-tighter leading-none">{feedback.overallScore}</span>
-            <span className="text-[12px] font-black uppercase tracking-widest opacity-70 mt-2">SKOR TOTAL</span>
+          <div className="w-48 h-48 bg-primary text-dark flex items-center justify-center flex-col border-2 border-dark">
+            <span className="text-7xl font-bold font-heading tracking-tight leading-none">{feedback.overallScore}</span>
+            <span className="text-[11px] font-bold uppercase text-dark/80 mt-2 font-heading">{feedback.grade || 'Score Akhir'}</span>
           </div>
-          <div className="absolute -top-4 -right-4 w-12 h-12 bg-yellow-400 border-4 border-black flex items-center justify-center text-black rotate-12">
-            <Trophy size={24} strokeWidth={3} />
+          <div className="absolute -top-3 -right-3 w-12 h-12 bg-warning text-dark flex items-center justify-center">
+            <Trophy size={24} strokeWidth={2} />
           </div>
         </div>
-        
+
         <div className="flex-1 space-y-6 text-center md:text-left">
-          <h2 className="text-6xl font-black italic uppercase tracking-tighter leading-none underline decoration-8 decoration-yellow-400 underline-offset-8">
-            Analisis <br /> Performa Anda
+          <h2 className="text-5xl font-bold font-heading uppercase tracking-tight leading-none">
+            Mission <br /> Debrief
           </h2>
-          <p className="text-xl font-bold italic opacity-80 leading-tight border-l-8 border-white pl-6">
+          <p className="text-lg font-medium text-muted leading-tight border-l-4 border-primary pl-6">
             &quot;{feedback.verdict}&quot;
           </p>
-          <div className="flex gap-6 justify-center md:justify-start pt-4">
-            <button 
+          <div className="flex gap-4 justify-center md:justify-start pt-4">
+            <button
               onClick={onRestart}
-              className="px-10 py-4 bg-white text-black border-4 border-black font-black uppercase tracking-tighter text-lg hover:bg-yellow-400 transition-all shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)] active:translate-x-2 active:translate-y-2 active:shadow-none flex items-center gap-2"
+              className="retro-btn retro-btn-primary px-8 py-3 font-bold uppercase text-sm flex items-center gap-2"
             >
-              <RefreshCcw size={20} strokeWidth={3} />
+              <RefreshCcw size={18} strokeWidth={2.5} />
               Coba Lagi
             </button>
-            <button 
+            <button
               onClick={onHome}
-              className="px-10 py-4 border-4 border-white font-black uppercase tracking-tighter text-lg hover:bg-white hover:text-black transition-all flex items-center gap-2"
+              className="retro-btn retro-btn-ghost px-8 py-3 font-bold uppercase text-sm flex items-center gap-2"
             >
-              <Home size={20} strokeWidth={3} />
-              Main Menu
+              <Home size={18} strokeWidth={2.5} />
+              Menu Utama
             </button>
           </div>
         </div>
       </div>
 
       {/* Grid Details */}
-      <div className="grid md:grid-cols-2 gap-10">
-        {/* Strengths */}
-        <section className="bg-white border-8 border-black p-8 shadow-[12px_12px_0px_0px_rgba(16,185,129,0.2)]">
-          <div className="flex items-center gap-4 mb-8 bg-green-400 border-4 border-black p-4 inline-flex">
-            <CheckCircle2 size={24} strokeWidth={3} className="text-black" />
-            <h3 className="font-black uppercase tracking-widest text-xs italic text-black">Kelebihan Anda</h3>
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Kekuatan */}
+        <section className="bg-surface retro-panel p-8">
+          <div className="flex items-center gap-3 mb-6 bg-success/15 p-3 inline-flex">
+            <CheckCircle2 size={22} strokeWidth={2} className="text-success" />
+            <h3 className="font-bold uppercase text-xs text-success font-heading">Kekuatan</h3>
           </div>
-          <ul className="space-y-6">
+          <ul className="space-y-4">
             {feedback.strengths.map((s, i) => (
-              <li key={i} className="flex gap-4 text-lg font-black italic tracking-tight leading-none uppercase">
-                <span className="text-green-500 shrink-0">#</span>
+              <li key={i} className="flex gap-3 text-sm font-semibold text-dark leading-tight">
+                <span className="text-success shrink-0 font-bold">#</span>
                 {s}
               </li>
             ))}
@@ -203,15 +259,15 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         </section>
 
         {/* Weaknesses */}
-        <section className="bg-white border-8 border-black p-8 shadow-[12px_12px_0px_0px_rgba(239,68,68,0.2)]">
-          <div className="flex items-center gap-4 mb-8 bg-red-400 border-4 border-black p-4 inline-flex">
-            <AlertTriangle size={24} strokeWidth={3} className="text-black" />
-            <h3 className="font-black uppercase tracking-widest text-xs italic text-black">Area Evaluasi</h3>
+        <section className="bg-surface retro-panel p-8">
+          <div className="flex items-center gap-3 mb-6 bg-danger/15 p-3 inline-flex">
+            <AlertTriangle size={22} strokeWidth={2} className="text-danger" />
+            <h3 className="font-bold uppercase text-xs text-danger font-heading">Area yang Perlu Ditingkatkan</h3>
           </div>
-          <ul className="space-y-6">
+          <ul className="space-y-4">
             {feedback.weaknesses.map((w, i) => (
-              <li key={i} className="flex gap-4 text-lg font-black italic tracking-tight leading-none uppercase">
-                <span className="text-red-500 shrink-0">!</span>
+              <li key={i} className="flex gap-3 text-sm font-semibold text-dark leading-tight">
+                <span className="text-danger shrink-0 font-bold">!</span>
                 {w}
               </li>
             ))}
@@ -219,22 +275,63 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         </section>
 
         {/* Actionable Tips */}
-        <section className="bg-white border-8 border-black p-8 col-span-full shadow-[12px_12px_0px_0px_rgba(59,130,246,0.2)]">
-          <div className="flex items-center gap-4 mb-10 bg-blue-500 border-4 border-black p-4 inline-flex">
-            <Lightbulb size={24} strokeWidth={3} className="text-black" />
-            <h3 className="font-black uppercase tracking-widest text-xs italic text-black">Tips Sukses Closing</h3>
+        <section className="bg-surface retro-panel p-8 col-span-full">
+          <div className="flex items-center gap-3 mb-8 bg-primary/15 p-3 inline-flex">
+            <Lightbulb size={22} strokeWidth={2} className="text-primary" />
+            <h3 className="font-bold uppercase text-xs text-primary font-heading">Tips Closing</h3>
           </div>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             {feedback.actionableTips.map((tip, i) => (
-              <div key={i} className="flex gap-6 p-6 border-4 border-black bg-blue-50 hover:bg-blue-100 transition-colors">
-                <div className="w-10 h-10 border-4 border-black bg-black text-white flex items-center justify-center shrink-0 text-xl font-black italic">
+              <div key={i} className="flex gap-4 p-5 border-2 border-primary/15 bg-primary/[0.05] hover:bg-primary/[0.08] transition-colors">
+                <div className="w-10 h-10 bg-primary text-dark flex items-center justify-center shrink-0 text-sm font-bold">
                   {i + 1}
                 </div>
-                <p className="text-lg font-bold italic uppercase tracking-tighter leading-tight">{tip}</p>
+                <p className="text-sm font-semibold text-dark leading-tight">{tip}</p>
               </div>
             ))}
           </div>
         </section>
+
+        {feedback.skillScores && feedback.skillScores.length > 0 && (
+          <section className="bg-surface retro-panel p-8 col-span-full">
+            <div className="flex items-center gap-3 mb-8 bg-warning/15 p-3 inline-flex">
+              <Target size={22} strokeWidth={2} className="text-warning" />
+              <h3 className="font-bold uppercase text-xs text-warning font-heading">Rincian Skill</h3>
+            </div>
+            <div className="grid md:grid-cols-2 gap-5">
+              {feedback.skillScores.map((skill) => (
+                <div key={skill.skill} className="p-4 border-2 border-dark/10 bg-bg space-y-2">
+                  <div className="flex justify-between text-xs font-bold uppercase font-heading">
+                    <span>{skill.skill}</span>
+                    <span>{skill.score}/100</span>
+                  </div>
+                  <div className="h-3 bg-dark/10 border border-dark/20">
+                    <div className="h-full bg-primary" style={{ width: `${skill.score}%` }} />
+                  </div>
+                  {skill.evidence && skill.evidence.length > 0 && (
+                    <p className="text-xs font-semibold text-muted leading-tight">{skill.evidence[0]}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {feedback.suggestedResponses && feedback.suggestedResponses.length > 0 && (
+          <section className="bg-surface retro-panel p-8 col-span-full">
+            <div className="flex items-center gap-3 mb-8 bg-success/15 p-3 inline-flex">
+              <Lightbulb size={22} strokeWidth={2} className="text-success" />
+              <h3 className="font-bold uppercase text-xs text-success font-heading">Respon yang Disarankan</h3>
+            </div>
+            <ul className="space-y-3">
+              {feedback.suggestedResponses.map((response, i) => (
+                <li key={i} className="p-4 border-2 border-success/15 bg-success/[0.05] text-sm font-semibold leading-tight">
+                  {response}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </motion.div>
   )

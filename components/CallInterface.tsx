@@ -5,23 +5,50 @@ import { motion, AnimatePresence } from "motion/react"
 import { SalesScenario, getGenAI } from "@/lib/gemini"
 import { getSettings } from "@/lib/firebase"
 import { Modality } from "@google/genai"
-import { PhoneOff, Mic, MicOff, Volume2, User, AlertCircle } from "lucide-react"
+import { PhoneOff, Mic, MicOff, Volume2, User, AlertCircle, RefreshCcw } from "lucide-react"
 import { floatTo16BitPCM, int16ArrayToBase64 } from "@/lib/audio-utils"
 import { SyncIndicator } from "@/components/SyncIndicator"
+import { useFrustration } from "@/hooks/useFrustration"
+import { FrustrationMeter } from "@/components/FrustrationMeter"
+import ConfirmDialog from "@/components/ConfirmDialog"
 
 interface CallInterfaceProps {
   scenario: SalesScenario
   salespersonName: string
   onFinish: (transcript: { role: 'user' | 'model'; text: string }[]) => void
   onExit: () => void
+  frustrationSensitivity?: number
 }
 
-export function CallInterface({ scenario, salespersonName, onFinish, onExit }: CallInterfaceProps) {
-  const [isConnected, setIsConnected] = React.useState(false)
+type CallStatus = 'connecting' | 'connected' | 'ai-speaking' | 'disconnected' | 'error' | 'ended'
+
+const VAD_THRESHOLD = 0.0035
+const VAD_HANGOVER_MS = 700
+
+export function CallInterface({ scenario, salespersonName, onFinish, onExit, frustrationSensitivity = 5 }: CallInterfaceProps) {
+  const [isTerhubung, setIsTerhubung] = React.useState(false)
   const [isMuted, setIsMuted] = React.useState(false)
   const [isAITalking, setIsAITalking] = React.useState(false)
+  const [isReconnecting, setIsReconnecting] = React.useState(false)
+  const [callStatus, setCallStatus] = React.useState<CallStatus>('connecting')
   const [error, setError] = React.useState<string | null>(null)
   const [transcript, setTranscript] = React.useState<{ role: 'user' | 'model'; text: string }[]>([])
+  const [showEndConfirm, setShowEndConfirm] = React.useState(false)
+
+  const { frustration, hangUp, lastReasons, analyzeMessage, reset: resetFrustration } = useFrustration(
+    { patience: scenario.patience, sensitivity: frustrationSensitivity },
+    {
+      onHangUp: () => {
+        setError("Pelanggan menutup telepon karena frustrasi!")
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            stopAudio()
+            onFinish(transcriptRef.current)
+          }
+        }, 1500)
+      }
+    }
+  )
 
   const audioContextRef = React.useRef<AudioContext | null>(null)
   const sessionRef = React.useRef<any>(null)
@@ -33,6 +60,19 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const isMountedRef = React.useRef(true)
   const lastTranscriptRef = React.useRef<{ role: 'user' | 'model'; text: string } | null>(null)
   const transcriptScrollRef = React.useRef<HTMLDivElement>(null)
+  const transcriptRef = React.useRef<{ role: 'user' | 'model'; text: string }[]>([])
+  const speechRecognitionRef = React.useRef<any>(null)
+  const shouldRestartSpeechRef = React.useRef(false)
+  const isUserEndingRef = React.useRef(false)
+  const sessionHandleRef = React.useRef<string | null>(null)
+  const reconnectCountRef = React.useRef(0)
+  const mutedRef = React.useRef(false)
+  const connectionIdRef = React.useRef(0)
+  const speechHangoverUntilRef = React.useRef(0)
+
+  React.useEffect(() => {
+    mutedRef.current = isMuted
+  }, [isMuted])
 
   const getTextFromParts = (parts?: Array<{ text?: string } | any>) => {
     if (!parts?.length) return undefined
@@ -60,6 +100,16 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       const last = prev[prev.length - 1]
       if (last?.role === role && last.text === text) return prev
       const newTranscript = [...prev, { role, text }]
+      transcriptRef.current = newTranscript
+
+      // Analyze user messages for frustration
+      if (role === 'user') {
+        const lastAiMsg = [...prev].reverse().find(m => m.role === 'model')
+        setTimeout(() => {
+          analyzeMessage(text, lastAiMsg?.text ?? null)
+        }, 0)
+      }
+
       setTimeout(() => {
         transcriptScrollRef.current?.scrollTo({
           top: transcriptScrollRef.current?.scrollHeight || 0,
@@ -70,20 +120,73 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
     })
   }
 
-  const stopAudio = React.useCallback(() => {
+  const stopAudio = React.useCallback((closeSession = true) => {
+    shouldRestartSpeechRef.current = false
+    speechRecognitionRef.current?.stop?.()
     streamRef.current?.getTracks().forEach(track => track.stop())
     processorRef.current?.disconnect()
     audioContextRef.current?.close()
-    sessionRef.current?.close()
+    if (closeSession) {
+      sessionRef.current?.close()
+    }
 
     streamRef.current = null
     processorRef.current = null
     audioContextRef.current = null
     sessionRef.current = null
+    speechRecognitionRef.current = null
 
     if (isMountedRef.current) {
-      setIsConnected(false)
+      setIsTerhubung(false)
       setIsAITalking(false)
+      if (closeSession) {
+        setCallStatus('ended')
+      }
+    }
+  }, [])
+
+  const startSpeechRecognition = React.useCallback(() => {
+    if (typeof window === 'undefined') return
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition || speechRecognitionRef.current) return
+
+    try {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = true
+      recognition.interimResults = false
+      recognition.lang = 'id-ID'
+
+      recognition.onresult = (event: any) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i]
+          if (!result?.isFinal) continue
+          const text = result[0]?.transcript?.trim()
+          if (text) appendTranscript('user', text)
+        }
+      }
+
+      recognition.onerror = (event: any) => {
+        if (event?.error !== 'no-speech') {
+          console.warn('Speech recognition error:', event?.error || event)
+        }
+      }
+
+      recognition.onend = () => {
+        if (shouldRestartSpeechRef.current && isMountedRef.current && !mutedRef.current) {
+          try {
+            recognition.start()
+          } catch {
+            // Browser may throw if recognition is already starting.
+          }
+        }
+      }
+
+      speechRecognitionRef.current = recognition
+      shouldRestartSpeechRef.current = true
+      recognition.start()
+    } catch (err) {
+      console.warn('Speech recognition unavailable:', err)
     }
   }, [])
 
@@ -94,11 +197,15 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       if (audioQueueRef.current.length === 0) {
         isPlayingRef.current = false
         setIsAITalking(false)
+        if (isTerhubung) {
+          setCallStatus('connected')
+        }
         return
       }
 
       isPlayingRef.current = true
       setIsAITalking(true)
+      setCallStatus('ai-speaking')
       const pcm16 = audioQueueRef.current.shift()!
 
       if (!audioContextRef.current) {
@@ -128,10 +235,21 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
   const startCall = React.useCallback(async () => {
     if (!isMountedRef.current) return
 
+    const connectionId = connectionIdRef.current + 1
+    connectionIdRef.current = connectionId
+    if (sessionRef.current || streamRef.current || processorRef.current || audioContextRef.current) {
+      stopAudio(true)
+    }
+
     try {
+      setError(null)
+      setIsReconnecting(false)
+      setCallStatus('connecting')
+      isUserEndingRef.current = false
       if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         if (isMountedRef.current) {
-          setError("Audio Call membutuhkan HTTPS. Pastikan Anda mengakses via HTTPS (ngrok menyediakan HTTPS).")
+          setError("Panggilan Audio membutuhkan HTTPS. Pastikan Anda mengakses via HTTPS (ngrok menyediakan HTTPS).")
+          setCallStatus('error')
         }
         return
       }
@@ -139,13 +257,15 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       const settings = await getSettings()
       if (settings.modelProvider === 'ollama') {
         if (isMountedRef.current) {
-          setError("Audio Call saat ini hanya didukung oleh Gemini. Ganti ke Gemini di Settings atau gunakan Text Chat.")
+          setError("Panggilan Audio saat ini membutuhkan Gemini. Ganti ke Gemini di Settings atau gunakan Text Chat.")
+          setCallStatus('error')
         }
         return
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
+      startSpeechRecognition()
 
       const ai = await getGenAI()
 
@@ -170,9 +290,12 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
         callbacks: {
           onopen: () => {
             console.log('Live API WebSocket connected')
-            if (!isMountedRef.current) return
+            if (!isMountedRef.current || connectionId !== connectionIdRef.current) return
 
-            setIsConnected(true)
+            setIsTerhubung(true)
+            setIsReconnecting(false)
+            setCallStatus('connected')
+            reconnectCountRef.current = 0
 
             if (!streamRef.current) return
 
@@ -181,9 +304,21 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1)
 
             processor.onaudioprocess = (e) => {
-              if (isMuted || !sessionRef.current || !isMountedRef.current) return
+              if (mutedRef.current || !sessionRef.current || !isMountedRef.current || connectionId !== connectionIdRef.current) return
 
               const inputData = e.inputBuffer.getChannelData(0)
+              let sum = 0
+              for (let i = 0; i < inputData.length; i++) {
+                sum += inputData[i] * inputData[i]
+              }
+              const rms = Math.sqrt(sum / inputData.length)
+              const now = Date.now()
+              if (rms >= VAD_THRESHOLD) {
+                speechHangoverUntilRef.current = now + VAD_HANGOVER_MS
+              } else if (now > speechHangoverUntilRef.current) {
+                return
+              }
+
               const pcm16 = floatTo16BitPCM(inputData)
               const base64Audio = int16ArrayToBase64(pcm16)
 
@@ -200,9 +335,18 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             processorRef.current = processor
           },
           onmessage: async (message: any) => {
-            if (!isMountedRef.current) return
+            if (!isMountedRef.current || connectionId !== connectionIdRef.current) return
 
             console.log('Live API message:', JSON.stringify(message, null, 2))
+
+            if (message.sessionResumptionUpdate?.newHandle) {
+              sessionHandleRef.current = message.sessionResumptionUpdate.newHandle
+            }
+
+            const inputTranscription = message.serverContent?.inputTranscription?.text?.trim()
+            if (inputTranscription) {
+              appendTranscript('user', inputTranscription)
+            }
 
             // Handle audio output
             if (message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data) {
@@ -257,20 +401,33 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
               isPlayingRef.current = false
               if (isMountedRef.current) {
                 setIsAITalking(false)
+                setCallStatus('connected')
+              }
+            }
+
+            if (message.serverContent?.generationComplete || message.serverContent?.turnComplete) {
+              if (audioQueueRef.current.length === 0 && isMountedRef.current) {
+                setIsAITalking(false)
+                setCallStatus('connected')
               }
             }
           },
           onclose: () => {
             console.log('Live API WebSocket closed')
-            if (isMountedRef.current) {
-              setIsConnected(false)
-              stopAudio()
+            if (isMountedRef.current && connectionId === connectionIdRef.current) {
+              const wasUserAkhiriing = isUserEndingRef.current
+              setIsReconnecting(false)
+              setIsTerhubung(false)
+              setIsAITalking(false)
+              stopAudio(false)
+              setCallStatus(wasUserAkhiriing ? 'ended' : 'disconnected')
             }
           },
           onerror: (err: any) => {
             console.error("Live API Error:", err)
-            if (isMountedRef.current) {
+            if (isMountedRef.current && connectionId === connectionIdRef.current) {
               setError("Gagal menyambung ke server audio: " + (err?.message || err?.toString() || 'Unknown error'))
+              setCallStatus('error')
             }
           }
         },
@@ -312,39 +469,72 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       let errorMessage = "Gagal mengakses mikrofon."
 
       if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
-        errorMessage = "Izin mikrofon ditolak. Izinkan akses mikrofon di browser Anda."
+        errorMessage = "Izin mikrofon ditolak. Harap izinkan akses mikrofon di pengaturan browser Anda."
       } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
-        errorMessage = "Mikrofon tidak ditemukan. Pastikan perangkat memiliki mikrofon."
+        errorMessage = "Mikrofon tidak ditemukan. Pastikan perangkat Anda memiliki mikrofon."
       } else if (err?.name === 'NotReadableError' || err?.name === 'TrackStartError') {
         errorMessage = "Mikrofon sedang digunakan oleh aplikasi lain."
       } else if (err?.name === 'OverconstrainedError' || err?.name === 'ConstraintNotSatisfiedError') {
-        errorMessage = "Mikrofon tidak mendukung format yang diminta."
+        errorMessage = "Mikrofon tidak mendukung format yang diperlukan."
       } else if (err?.message?.includes('secure context') || err?.message?.includes('HTTPS')) {
         errorMessage = "Audio Call membutuhkan HTTPS. Gunakan URL HTTPS dari ngrok."
       } else if (err?.message?.includes('API key') || err?.message?.includes('GEMINI')) {
-        errorMessage = "API key Gemini belum dikonfigurasi. Hubungi admin untuk setup."
+        errorMessage = "Gemini API key not configured. Contact your admin for setup."
       } else {
         errorMessage = `Error: ${err?.message || 'Unknown'} (name: ${err?.name || 'none'})`
       }
 
       if (isMountedRef.current) {
         setError(errorMessage)
+        setCallStatus('error')
       }
     }
-  }, [scenario, isMuted, stopAudio])
+  }, [scenario, stopAudio, startSpeechRecognition])
 
   React.useEffect(() => {
     isMountedRef.current = true
     Promise.resolve().then(() => startCall())
     return () => {
       isMountedRef.current = false
+      resetFrustration()
       stopAudio()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleReconnect = React.useCallback(() => {
+    isUserEndingRef.current = false
+    reconnectCountRef.current += 1
+    setIsReconnecting(true)
+    setCallStatus('connecting')
+    Promise.resolve().then(() => startCall())
+  }, [startCall])
+
+  const handleEndAndAnalyze = React.useCallback(() => {
+    isUserEndingRef.current = true
+    stopAudio()
+    onFinish(transcriptRef.current)
+  }, [onFinish, stopAudio])
+
+  const statusLabel = (() => {
+    switch (callStatus) {
+      case 'connecting': return 'Menghubungkan...'
+      case 'connected': return 'Terhubung • Ready'
+      case 'ai-speaking': return 'AI Berbicara'
+      case 'disconnected': return 'Koneksi Hilang'
+      case 'error': return 'Error Panggilan'
+      case 'ended': return 'Panggilan Selesai'
+    }
+  })()
+
+  const indicatorStatus = callStatus === 'connected'
+    ? 'synced'
+    : callStatus === 'disconnected' || callStatus === 'error'
+    ? 'error'
+    : 'syncing'
+
   return (
-    <div className="flex flex-col h-[75vh] bg-black border-4 border-black overflow-hidden relative">
+    <div className="flex flex-col h-[75vh] bg-bg border-[3px] border-dark/15 overflow-hidden relative">
       <AnimatePresence>
         {isAITalking && (
           <motion.div
@@ -352,29 +542,52 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
             animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
             exit={{ opacity: 0 }}
             transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute inset-0 bg-yellow-400 rounded-full blur-[100px] z-0"
+            className="absolute inset-0 bg-primary blur-[100px] z-0"
           />
         )}
       </AnimatePresence>
 
-      <div className="p-6 bg-white/10 backdrop-blur-md border-b-4 border-black flex items-center justify-between z-10">
+      {(isReconnecting || callStatus === 'connecting') && (
+        <div className="px-6 py-2 bg-warning text-dark font-bold text-[10px] uppercase flex items-center justify-center gap-2 z-10" role="status" aria-live="polite">
+          <div className="w-2 h-2 bg-dark animate-pulse" />
+          {isReconnecting ? 'Menghubungkan ulang ke Gemini Live...' : 'Menghubungkan ke Gemini Live...'}
+        </div>
+      )}
+
+      {callStatus === 'disconnected' && (
+        <div className="px-6 py-3 bg-danger text-white font-bold text-[10px] uppercase flex flex-col sm:flex-row sm:items-center justify-center gap-3 z-10" role="alert" aria-live="assertive">
+          <span>Koneksi Gemini Live terputus. Transkrip Anda tetap aman.</span>
+          <div className="flex items-center gap-2">
+            <button onClick={handleReconnect} className="px-3 py-2 bg-white text-danger border-2 border-white flex items-center gap-2">
+              <RefreshCcw size={12} /> Hubungkan Ulang
+            </button>
+            <button onClick={handleEndAndAnalyze} className="px-3 py-2 border-2 border-white text-white">
+              Akhiri & Analyze
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="p-6 bg-surface border-b-[3px] border-dark/15 flex items-center justify-between z-10">
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 border-4 border-black ${isAITalking ? 'bg-yellow-400' : 'bg-black'} flex items-center justify-center text-white italic font-black text-xl transition-colors`}>
+          <div className={`w-12 h-12 ${isAITalking ? 'bg-primary' : ' bg-surface'} flex items-center justify-center text-white font-bold text-xl`}>
             AI
           </div>
           <div>
-            <h3 className="font-black italic text-xl uppercase tracking-tighter leading-none text-white">{scenario.name}</h3>
+            <h3 className="font-bold text-lg uppercase tracking-tight leading-none text-white">{scenario.name}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">
-                {isConnected ? 'Connected • Panggilan Berlangsung' : 'Connecting...'}
+              <p className={`text-[10px] uppercase font-semibold ${callStatus === 'disconnected' || callStatus === 'error' ? 'text-danger' : 'text-white/40'}`}>
+                {statusLabel}
               </p>
-              <SyncIndicator status={isConnected ? (isAITalking ? 'syncing' : 'synced') : 'syncing'} />
+              <SyncIndicator status={indicatorStatus} />
+              {isTerhubung && (
+                <FrustrationMeter value={frustration} reasons={lastReasons} compact />
+              )}
             </div>
           </div>
         </div>
         <div className="flex gap-4">
            {error && (
-             <div className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-tighter">
+             <div className="flex items-center gap-2 text-danger font-bold text-xs uppercase tracking-tight">
                 <AlertCircle size={14} />
                 {error}
              </div>
@@ -385,50 +598,50 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
       <div className="flex-1 flex flex-col items-center justify-center space-y-12 z-10">
         <div className="relative">
           <motion.div
-            animate={isAITalking ? { scale: [1, 1.1, 1] } : {}}
-            transition={{ repeat: Infinity, duration: 1 }}
-            className="w-48 h-48 rounded-full border-8 border-white flex items-center justify-center overflow-hidden bg-gray-900"
+            animate={isAITalking ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            className="w-44 h-44 border-[4px] border-dark/15 flex items-center justify-center overflow-hidden bg-surface"
           >
-             <User size={80} className="text-white opacity-20" />
+             <User size={72} className="text-muted/30" />
           </motion.div>
           {isAITalking && (
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-black px-4 py-1 font-black italic uppercase text-xs border-2 border-black">
-              TALKING...
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-primary text-black px-4 py-1 font-bold uppercase text-[10px]">
+              BERBICARA...
             </div>
           )}
         </div>
 
         <div className="text-center space-y-2">
-          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{scenario.title}</h2>
-          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs italic underline decoration-yellow-400 underline-offset-4 decoration-2">
+          <h2 className="text-4xl font-bold uppercase tracking-tight text-white">{scenario.title}</h2>
+          <p className="text-white/40 font-semibold uppercase text-xs">
             Goal: {scenario.target}
           </p>
         </div>
       </div>
 
-      <div className="absolute top-32 left-8 right-8 flex flex-col gap-2 z-10 pointer-events-none">
+      <div className="absolute top-28 left-8 right-8 flex flex-col gap-2 z-10 pointer-events-none">
         <div
           ref={transcriptScrollRef}
-          className="max-h-[200px] overflow-y-auto scrollbar-hide flex flex-col gap-2 bg-black/60 backdrop-blur-md p-4 rounded-xl border-2 border-white/20 pointer-events-auto shadow-2xl"
+          className="max-h-[200px] overflow-y-auto flex flex-col gap-2 bg-bg/80 p-4 border border-dark/15 pointer-events-auto shadow-[4px_4px_0px_#000]"
         >
-           <div className="flex items-center gap-2 mb-2 sticky top-0 bg-black/60 backdrop-blur-md pb-2 border-b border-white/10">
-             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-white/60 italic">Live Transcript</span>
+           <div className="flex items-center gap-2 mb-2 sticky top-0 bg-bg/80 pb-2 border-b border-dark/15">
+             <div className="w-2 h-2 bg-danger animate-pulse" />
+             <span className="text-[10px] font-bold uppercase text-white/40">Transkrip Live</span>
            </div>
            {transcript.length === 0 ? (
-             <p className="text-[10px] font-bold text-gray-500 italic uppercase">Menunggu percakapan...</p>
+             <p className="text-[10px] font-semibold text-white/30 uppercase">Menunggu percakapan...</p>
            ) : (
              transcript.map((t, i) => (
                <motion.div
                  key={`${i}-${t.text.slice(0, 10)}`}
                  initial={{ opacity: 0, x: -10 }}
                  animate={{ opacity: 1, x: 0 }}
-                 className={`p-3 border-l-4 ${t.role === 'user' ? 'border-yellow-400 bg-yellow-400/10' : 'border-white bg-white/5'}`}
+                 className={`p-3 border-l-[3px] ${t.role === 'user' ? 'border-primary bg-primary/10' : 'border-white/30 bg-white/5'}`}
                >
-                 <p className={`text-[10px] font-black uppercase tracking-tighter ${t.role === 'user' ? 'text-yellow-400' : 'text-white'}`}>
+                 <p className={`text-[10px] font-bold uppercase tracking-tight ${t.role === 'user' ? 'text-primary' : 'text-white/70'}`}>
                     {t.role === 'user' ? salespersonName : scenario.name}
                  </p>
-                 <p className="text-sm font-medium text-white/90 leading-tight">
+                 <p className="text-sm font-medium text-white/80 leading-tight">
                     {t.text}
                  </p>
                </motion.div>
@@ -437,36 +650,55 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit }: C
         </div>
       </div>
 
-      <div className="p-12 bg-gradient-to-t from-black to-transparent flex justify-center items-center gap-12 z-10">
+      <div className="p-12 bg-gradient-to-t from-bg-dark to-transparent flex justify-center items-center gap-8 z-10">
         <button
           onClick={() => setIsMuted(!isMuted)}
-          className={`w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all ${isMuted ? 'bg-red-500 border-red-500' : 'hover:bg-white hover:text-black text-white'}`}
+          className={`w-20 h-20 border-[3px] border-dark/15 flex items-center justify-center ${isMuted ? 'bg-danger border-danger text-white' : 'hover:bg-dark/5 text-muted/70 hover:text-dark'}`}
+          aria-label={isMuted ? 'Aktifkan mikrofon' : 'Nonaktifkan mikrofon'}
         >
           {isMuted ? <MicOff size={32} /> : <Mic size={32} />}
         </button>
 
         <button
-          onClick={() => {
-            stopAudio()
-            onFinish(transcript)
-          }}
-          className="w-24 h-24 rounded-full bg-red-600 border-4 border-white flex items-center justify-center hover:bg-black transition-all shadow-[0px_0px_30px_rgba(220,38,38,0.5)]"
+          onClick={() => setShowEndConfirm(true)}
+          className="w-24 h-24 bg-danger flex items-center justify-center hover:bg-danger/80 shadow-[3px_3px_0px_rgba(0,0,0,0.8)]"
+          aria-label="Akhiri call"
         >
           <PhoneOff size={40} className="text-white" />
         </button>
 
-        <div className="w-20 h-20 flex items-center justify-center text-white opacity-50">
+        <ConfirmDialog
+          isOpen={showEndConfirm}
+          onClose={() => setShowEndConfirm(false)}
+          onConfirm={() => {
+            isUserEndingRef.current = true
+            stopAudio()
+            onFinish(transcriptRef.current)
+          }}
+          title="Akhiri Call?"
+          message="Yakin ingin mengakhiri panggilan? Analisis akan dibuat berdasarkan percakapan sejauh ini."
+          confirmLabel="Akhiri Call"
+          cancelLabel="Lanjutkan Panggilan"
+          variant="danger"
+        />
+
+        <div className="w-20 h-20 flex items-center justify-center text-white/30">
            <Volume2 size={32} />
         </div>
       </div>
 
-      <div className="px-8 py-3 bg-white/5 flex items-center justify-between text-[10px] text-gray-500 font-black uppercase tracking-widest italic z-10">
+      <div className="px-8 py-3 bg-surface flex items-center justify-between text-[10px] text-muted/50 font-bold uppercase z-10">
         <span>ENCRYPTED AI CALL</span>
         <button
-          onClick={onExit}
-          className="hover:text-white transition-colors"
+          onClick={() => {
+            isUserEndingRef.current = true
+            stopAudio()
+            onExit()
+          }}
+          className="hover:text-white/60 transition-colors"
+          aria-label="Force exit call"
         >
-          FORCE EXIT
+          KELUAR PAKSA
         </button>
       </div>
     </div>

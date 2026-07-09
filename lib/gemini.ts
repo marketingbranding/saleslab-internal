@@ -49,6 +49,11 @@ export interface SalesScenario {
   patience: number; // 1-10
   responseStyle: "To the point" | "Banyak Tanya" | "Ragu-ragu" | "Cerewet";
   firstSpeaker: "AI" | "Sales";
+  openingMessage?: string;
+  hiddenRules?: string;
+  successCriteria?: string[];
+  baseXp?: number;
+  status?: "draft" | "published" | "archived";
 }
 
 export const SCENARIOS: SalesScenario[] = [
@@ -212,6 +217,21 @@ export async function analyzePerformance(
   scenario: SalesScenario,
   transcript: { role: string; text: string }[]
 ) {
+  if (typeof window !== 'undefined') {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenario, transcript }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      throw new Error(data?.error || `Analysis failed: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
   const formattedTranscript = transcript.map(t => `${t.role.toUpperCase()}: ${t.text}`).join("\n");
 
   const prompt = `

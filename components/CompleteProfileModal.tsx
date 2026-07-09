@@ -15,12 +15,14 @@ interface CompleteProfileModalProps {
 export function CompleteProfileModal({ isOpen, user, onComplete }: CompleteProfileModalProps) {
   const [name, setName] = React.useState(user.displayName || "")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
 
     setIsSubmitting(true)
+    setError(null)
     try {
       await setDoc(doc(db, 'users', user.uid), {
         displayName: name,
@@ -31,7 +33,7 @@ export function CompleteProfileModal({ isOpen, user, onComplete }: CompleteProfi
       onComplete()
     } catch (err) {
       console.error("Error saving profile:", err)
-      alert("Failed to save profile. Please try again.")
+      setError("Gagal menyimpan profile. Silakan coba lagi.")
     } finally {
       setIsSubmitting(false)
     }
@@ -45,29 +47,34 @@ export function CompleteProfileModal({ isOpen, user, onComplete }: CompleteProfi
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/95 backdrop-blur-xl"
+            className="absolute inset-0 bg-black/95"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-white border-8 border-black p-8 shadow-[20px_20px_0px_0px_rgba(255,255,255,0.2)]"
+            className="relative w-full max-w-md bg-surface retro-dialog p-8"
           >
             <div className="mb-8">
-              <div className="inline-block bg-yellow-400 text-black px-2 py-1 text-[10px] font-black uppercase tracking-widest mb-4 border-2 border-black">
+              <div className="inline-block bg-success/10 text-success px-3 py-1 text-[10px] font-bold uppercase mb-4">
                 Pendaftaran Berhasil
               </div>
-              <h2 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-2 text-black">
+              <h2 className="text-3xl font-bold tracking-tight leading-none mb-2">
                 Siapa Nama Anda?
               </h2>
-              <p className="text-gray-500 font-bold text-sm">
+              <p className="text-muted font-medium text-sm">
                 Gunakan nama asli atau nama panggilan tim marketing agar kami bisa mencatat progres Anda.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="p-4 bg-danger/10 border-2 border-danger/30 text-danger font-bold text-xs uppercase" role="alert">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nama Lengkap</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted">Nama Lengkap</label>
                 <input
                   required
                   autoFocus
@@ -75,14 +82,14 @@ export function CompleteProfileModal({ isOpen, user, onComplete }: CompleteProfi
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Contoh: Budi Santoso"
-                  className="w-full border-4 border-black p-4 font-black uppercase text-xl outline-none focus:bg-yellow-50 transition-colors"
+                  className="w-full retro-input bg-surface p-4"
                 />
               </div>
 
               <button
                 disabled={isSubmitting || !name.trim()}
                 type="submit"
-                className="w-full bg-black text-white border-4 border-black p-5 font-black uppercase italic text-xl tracking-tighter hover:bg-yellow-400 hover:text-black transition-all active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed group"
+                className="w-full retro-button retro-button-cyan p-5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "MENYIMPAN..." : (
                   <span className="flex items-center justify-center gap-2">
