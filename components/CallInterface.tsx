@@ -22,8 +22,8 @@ interface CallInterfaceProps {
 
 type CallStatus = 'connecting' | 'connected' | 'ai-speaking' | 'disconnected' | 'error' | 'ended'
 
-const VAD_THRESHOLD = 0.0035
-const VAD_HANGOVER_MS = 700
+const VAD_THRESHOLD = 0.005
+const VAD_HANGOVER_MS = 400
 
 export function CallInterface({ scenario, salespersonName, onFinish, onExit, frustrationSensitivity = 5 }: CallInterfaceProps) {
   const [isTerhubung, setIsTerhubung] = React.useState(false)
@@ -69,10 +69,20 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
   const mutedRef = React.useRef(false)
   const connectionIdRef = React.useRef(0)
   const speechHangoverUntilRef = React.useRef(0)
+  const lastSpeechEndRef = React.useRef(0)
+  const speechActiveRef = React.useRef(false)
+  const turnFlushTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latencyTimingRef = React.useRef({ lastUserAudioSent: 0, lastAiAudioReceived: 0, lastUserSpeechEnd: 0 })
 
   React.useEffect(() => {
     mutedRef.current = isMuted
   }, [isMuted])
+
+  const logLatency = (label: string) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Timing] ${label} at ${Date.now()}`)
+    }
+  }
 
   const getTextFromParts = (parts?: Array<{ text?: string } | any>) => {
     if (!parts?.length) return undefined
@@ -96,6 +106,16 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
 
     lastTranscriptRef.current = { role, text }
 
+    if (role === 'model') {
+      const timing = latencyTimingRef.current
+      if (timing.lastUserSpeechEnd > 0) {
+        const responseLatency = Date.now() - timing.lastUserSpeechEnd
+        if (responseLatency > 1000 && process.env.NODE_ENV === 'development') {
+          console.log(`[Timing] AI response latency: ${responseLatency}ms`)
+        }
+      }
+    }
+
     setTranscript(prev => {
       const last = prev[prev.length - 1]
       if (last?.role === role && last.text === text) return prev
@@ -110,12 +130,11 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
         }, 0)
       }
 
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         transcriptScrollRef.current?.scrollTo({
           top: transcriptScrollRef.current?.scrollHeight || 0,
-          behavior: 'smooth'
         })
-      }, 0)
+      })
       return newTranscript
     })
   }
@@ -126,6 +145,10 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
     streamRef.current?.getTracks().forEach(track => track.stop())
     processorRef.current?.disconnect()
     audioContextRef.current?.close()
+    if (turnFlushTimerRef.current) {
+      clearTimeout(turnFlushTimerRef.current)
+      turnFlushTimerRef.current = null
+    }
     if (closeSession) {
       sessionRef.current?.close()
     }
@@ -289,7 +312,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
         model: "gemini-3.1-flash-live-preview",
         callbacks: {
           onopen: () => {
-            console.log('Live API WebSocket connected')
+            logLatency('WebSocket connected')
             if (!isMountedRef.current || connectionId !== connectionIdRef.current) return
 
             setIsTerhubung(true)
@@ -301,7 +324,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
 
             audioContextRef.current = new AudioContext({ sampleRate: 16000 })
             const source = audioContextRef.current.createMediaStreamSource(streamRef.current)
-            const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1)
+            const processor = audioContextRef.current.createScriptProcessor(2048, 1, 1)
 
             processor.onaudioprocess = (e) => {
               if (mutedRef.current || !sessionRef.current || !isMountedRef.current || connectionId !== connectionIdRef.current) return
@@ -313,9 +336,20 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
               }
               const rms = Math.sqrt(sum / inputData.length)
               const now = Date.now()
+              const wasSpeechActive = speechActiveRef.current
+
               if (rms >= VAD_THRESHOLD) {
+                speechActiveRef.current = true
                 speechHangoverUntilRef.current = now + VAD_HANGOVER_MS
+                lastSpeechEndRef.current = 0
               } else if (now > speechHangoverUntilRef.current) {
+                // Speech just ended — log timing
+                if (wasSpeechActive) {
+                  speechActiveRef.current = false
+                  lastSpeechEndRef.current = now
+                  latencyTimingRef.current.lastUserSpeechEnd = now
+                  logLatency('User speech ended')
+                }
                 return
               }
 
@@ -337,7 +371,16 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
           onmessage: async (message: any) => {
             if (!isMountedRef.current || connectionId !== connectionIdRef.current) return
 
-            console.log('Live API message:', JSON.stringify(message, null, 2))
+            if (message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data) {
+              // audio chunk — log size only
+              const chunkSize = message.serverContent.modelTurn.parts[0].inlineData.data.length
+              logLatency(`AI audio chunk received (${Math.round(chunkSize / 1024)}KB)`)
+            } else if (message.serverContent?.inputTranscription?.text) {
+              // user transcription — log text preview
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`[Live] Input transcription: "${message.serverContent.inputTranscription.text.slice(0, 50)}..."`)
+              }
+            }
 
             if (message.sessionResumptionUpdate?.newHandle) {
               sessionHandleRef.current = message.sessionResumptionUpdate.newHandle
@@ -415,12 +458,12 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
           onclose: () => {
             console.log('Live API WebSocket closed')
             if (isMountedRef.current && connectionId === connectionIdRef.current) {
-              const wasUserAkhiriing = isUserEndingRef.current
+              const wasUserEnding = isUserEndingRef.current
               setIsReconnecting(false)
               setIsTerhubung(false)
               setIsAITalking(false)
               stopAudio(false)
-              setCallStatus(wasUserAkhiriing ? 'ended' : 'disconnected')
+              setCallStatus(wasUserEnding ? 'ended' : 'disconnected')
             }
           },
           onerror: (err: any) => {
