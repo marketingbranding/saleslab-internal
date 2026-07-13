@@ -11,6 +11,9 @@ import { SyncIndicator } from "@/components/SyncIndicator"
 import { useFrustration } from "@/hooks/useFrustration"
 import { FrustrationMeter } from "@/components/FrustrationMeter"
 import ConfirmDialog from "@/components/ConfirmDialog"
+import { mapLegacyPersona, mapSalesScenario } from "@/lib/sos/legacy-mappers"
+import { FAB_KNOWLEDGE, HOME_KNOWLEDGE, SOS_KNOWLEDGE, SPIN_KNOWLEDGE } from "@/lib/sos/knowledge"
+import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
 
 interface CallInterfaceProps {
   scenario: SalesScenario
@@ -353,6 +356,19 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
 
       console.log('Starting Live API session with model: gemini-3.1-flash-live-preview')
 
+      const mappedScenario = mapSalesScenario(scenario)
+      const mappedPersona = mapLegacyPersona(scenario)
+      const roleplayPrompt = compileVoiceRoleplayPrompt({
+        persona: mappedPersona,
+        scenario: mappedScenario,
+        knowledge: [
+          ...SOS_KNOWLEDGE,
+          ...SPIN_KNOWLEDGE,
+          ...HOME_KNOWLEDGE,
+          ...FAB_KNOWLEDGE,
+        ],
+      })
+
       session = await ai.live.connect({
         model: "gemini-3.1-flash-live-preview",
         callbacks: {
@@ -533,19 +549,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
           },
           systemInstruction: {
             parts: [{
-              text: `
-            Anda sedang melakukan panggilan telepon sebagai ${scenario.name}.
-            PROFIL: ${scenario.consumerProfile}.
-            AGRESIVITAS: ${scenario.aggressiveness}/10.
-            KESABARAN: ${scenario.patience}/10.
-            GAYA RESPON: ${scenario.responseStyle}.
-
-            GOAL SALES: ${scenario.target}.
-
-            Berikan respon singkat dan natural layaknya di telepon.
-            JANGAN memberikan feedback atau analisis saat panggilan berlangsung.
-            Jika sales berhasil meyakinkan Anda sesuai target, akhiri panggilan dengan positif.
-          `
+              text: roleplayPrompt
             }]
           },
         },
@@ -588,6 +592,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
   }, [scenario, stopAudio])
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     isMountedRef.current = true
     Promise.resolve().then(() => startCall())
     return () => {
