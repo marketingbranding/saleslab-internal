@@ -14,6 +14,12 @@ import ConfirmDialog from "@/components/ConfirmDialog"
 import { mapLegacyPersona, mapSalesScenario } from "@/lib/sos/legacy-mappers"
 import { FAB_KNOWLEDGE, HOME_KNOWLEDGE, SOS_KNOWLEDGE, SPIN_KNOWLEDGE } from "@/lib/sos/knowledge"
 import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
+import {
+  appendNormalizedTurn,
+  createTranscriptNormalizerState,
+  normalizedTurnToLegacyTranscriptTurn,
+} from "@/lib/sos/transcript-normalizer"
+import type { TurnSource } from "@/lib/sos/types"
 
 interface CallInterfaceProps {
   scenario: SalesScenario
@@ -63,9 +69,9 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
   const activeOutputSourcesRef = React.useRef(0)
   const isSchedulingPlaybackRef = React.useRef(false)
   const isMountedRef = React.useRef(true)
-  const lastTranscriptRef = React.useRef<{ role: 'user' | 'model'; text: string } | null>(null)
   const transcriptScrollRef = React.useRef<HTMLDivElement>(null)
   const transcriptRef = React.useRef<{ role: 'user' | 'model'; text: string }[]>([])
+  const normalizedTranscriptStateRef = React.useRef(createTranscriptNormalizerState())
   const speechRecognitionRef = React.useRef<any>(null)
   const shouldRestartSpeechRef = React.useRef(false)
   const isUserEndingRef = React.useRef(false)
@@ -98,15 +104,26 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
     return textParts.length ? textParts.join(' ') : undefined
   }
 
-  const appendTranscript = (role: 'user' | 'model', text: string) => {
+  const appendTranscript = (role: 'user' | 'model', text: string, source: TurnSource = 'manual', rawRef?: string) => {
     if (!isMountedRef.current) return
 
-    const lastTranscript = lastTranscriptRef.current
-    if (lastTranscript?.role === role && lastTranscript?.text === text) {
+    const previousState = normalizedTranscriptStateRef.current
+    const nextState = appendNormalizedTurn(previousState, {
+      role: role === 'user' ? 'sales' : 'customer',
+      text,
+      source,
+      timestamp: new Date().toISOString(),
+      finalized: true,
+      rawRef,
+    })
+
+    if (nextState === previousState) {
       return
     }
 
-    lastTranscriptRef.current = { role, text }
+    normalizedTranscriptStateRef.current = nextState
+    const acceptedTurn = nextState.turns[nextState.turns.length - 1]
+    const legacyTurn = normalizedTurnToLegacyTranscriptTurn(acceptedTurn)
 
     if (role === 'model') {
       const timing = latencyTimingRef.current
@@ -119,16 +136,14 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
     }
 
     setTranscript(prev => {
-      const last = prev[prev.length - 1]
-      if (last?.role === role && last.text === text) return prev
-      const newTranscript = [...prev, { role, text }]
+      const newTranscript = [...prev, legacyTurn]
       transcriptRef.current = newTranscript
 
       // Analyze user messages for frustration
-      if (role === 'user') {
+      if (legacyTurn.role === 'user') {
         const lastAiMsg = [...prev].reverse().find(m => m.role === 'model')
         setTimeout(() => {
-          analyzeMessage(text, lastAiMsg?.text ?? null)
+          analyzeMessage(legacyTurn.text, lastAiMsg?.text ?? null)
         }, 0)
       }
 
@@ -192,7 +207,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
           const result = event.results[i]
           if (!result?.isFinal) continue
           const text = result[0]?.transcript?.trim()
-          if (text) appendTranscript('user', text)
+          if (text) appendTranscript('user', text, 'manual', 'speechRecognition')
         }
       }
 
@@ -452,7 +467,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
               if (process.env.NODE_ENV === 'development') {
                 console.log('[Live] Gemini received/transcribed user audio')
               }
-              appendTranscript('user', inputTranscription)
+              appendTranscript('user', inputTranscription, 'gemini_live_input', 'serverContent.inputTranscription')
             }
 
             // Handle audio output
@@ -476,7 +491,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
               if (part?.text?.trim() && isMountedRef.current) {
                 const text = part.text.trim()
                 console.log('AI text:', text)
-                appendTranscript('model', text)
+                appendTranscript('model', text, 'gemini_live_model', 'serverContent.modelTurn.parts')
               }
             }
 
@@ -486,7 +501,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
               if (part?.text?.trim() && isMountedRef.current) {
                 const text = part.text.trim()
                 console.log('User text:', text)
-                appendTranscript('user', text)
+                appendTranscript('user', text, 'fallback', 'serverContent.userTurn.parts')
               }
             }
 
@@ -494,13 +509,13 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
             const fallbackModelText = getTextFromParts(modelParts)
             if (fallbackModelText && isMountedRef.current) {
               console.log('AI text (fallback):', fallbackModelText)
-              appendTranscript('model', fallbackModelText)
+              appendTranscript('model', fallbackModelText, 'fallback', 'fallback.modelTurn.parts')
             }
 
             const fallbackUserText = getTextFromParts(userParts)
             if (fallbackUserText && isMountedRef.current) {
               console.log('User text (fallback):', fallbackUserText)
-              appendTranscript('user', fallbackUserText)
+              appendTranscript('user', fallbackUserText, 'fallback', 'fallback.userTurn.parts')
             }
 
             if (message.serverContent?.interrupted) {
