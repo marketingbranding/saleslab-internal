@@ -14,13 +14,14 @@ import ConfirmDialog from "@/components/ConfirmDialog"
 import { mapLegacyPersona, mapSalesScenario } from "@/lib/sos/legacy-mappers"
 import { FAB_KNOWLEDGE, HOME_KNOWLEDGE, SOS_KNOWLEDGE, SPIN_KNOWLEDGE } from "@/lib/sos/knowledge"
 import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
+import { extractDeterministicEvents } from "@/lib/sos/event-extractor"
 import {
   appendNormalizedTurn,
   combineTranscriptTextParts,
   createTranscriptNormalizerState,
   normalizedTurnToLegacyTranscriptTurn,
 } from "@/lib/sos/transcript-normalizer"
-import type { TurnSource } from "@/lib/sos/types"
+import type { RoleplayEvent, TurnSource } from "@/lib/sos/types"
 
 interface CallInterfaceProps {
   scenario: SalesScenario
@@ -41,6 +42,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
   const [error, setError] = React.useState<string | null>(null)
   const [transcript, setTranscript] = React.useState<{ role: 'user' | 'model'; text: string }[]>([])
   const [showEndConfirm, setShowEndConfirm] = React.useState(false)
+  const [roleplayEventSessionId] = React.useState(() => `voice-${Date.now()}`)
 
   const { frustration, hangUp, lastReasons, analyzeMessage, reset: resetFrustration } = useFrustration(
     { patience: scenario.patience, sensitivity: frustrationSensitivity },
@@ -73,6 +75,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
   const transcriptScrollRef = React.useRef<HTMLDivElement>(null)
   const transcriptRef = React.useRef<{ role: 'user' | 'model'; text: string }[]>([])
   const normalizedTranscriptStateRef = React.useRef(createTranscriptNormalizerState())
+  const roleplayEventsRef = React.useRef<RoleplayEvent[]>([])
   const speechRecognitionRef = React.useRef<any>(null)
   const shouldRestartSpeechRef = React.useRef(false)
   const isUserEndingRef = React.useRef(false)
@@ -113,6 +116,22 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
     normalizedTranscriptStateRef.current = nextState
     const acceptedTurn = nextState.turns[nextState.turns.length - 1]
     const legacyTurn = normalizedTurnToLegacyTranscriptTurn(acceptedTurn)
+
+    const extraction = extractDeterministicEvents(acceptedTurn, {
+      sessionId: roleplayEventSessionId,
+      previousTurns: nextState.turns.slice(0, -1),
+      existingEvents: roleplayEventsRef.current,
+    })
+
+    if (extraction.events.length > 0) {
+      roleplayEventsRef.current = [...roleplayEventsRef.current, ...extraction.events]
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[Roleplay Events]', extraction.events.map(event => ({
+          type: event.eventType,
+          turn: event.sourceTurnSequence,
+        })))
+      }
+    }
 
     if (role === 'model') {
       const timing = latencyTimingRef.current
