@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   appendNormalizedTurn,
   buildTranscriptDedupeKey,
+  combineTranscriptTextParts,
   createTranscriptNormalizerState,
   normalizeTranscriptText,
   normalizedTurnToLegacyTranscriptTurn,
@@ -112,4 +113,15 @@ test('text normalization is conservative and dedupe key is case-insensitive', ()
 
   assert.equal(normalized, 'Saya tertarik.')
   assert.equal(key, 'sales:saya tertarik')
+})
+
+test('combineTranscriptTextParts joins multiple provider text parts into one input', () => {
+  const combined = combineTranscriptTextParts([
+    { text: 'Saya tertarik.' },
+    { text: ' Tapi masih ragu.' },
+    { text: '  ' },
+    'Boleh tanya dulu?',
+  ])
+
+  assert.equal(combined, 'Saya tertarik. Tapi masih ragu. Boleh tanya dulu?')
 })

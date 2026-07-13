@@ -23,12 +23,28 @@ export interface LegacyTranscriptTurn {
   text: string
 }
 
+export type TranscriptTextPart = string | { text?: string } | null | undefined
+
 export function createTranscriptNormalizerState(): TranscriptNormalizerState {
   return { turns: [], nextSequence: 1 }
 }
 
 export function normalizeTranscriptText(text: string): string {
   return text.replace(/\s+/g, ' ').trim()
+}
+
+export function combineTranscriptTextParts(parts?: TranscriptTextPart[]): string | undefined {
+  if (!parts?.length) return undefined
+
+  const textParts = parts
+    .map(part => {
+      if (typeof part === 'string') return normalizeTranscriptText(part)
+      if (typeof part?.text === 'string') return normalizeTranscriptText(part.text)
+      return undefined
+    })
+    .filter((text): text is string => Boolean(text))
+
+  return textParts.length ? textParts.join(' ') : undefined
 }
 
 function normalizeForComparison(text: string): string {

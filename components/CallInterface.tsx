@@ -16,6 +16,7 @@ import { FAB_KNOWLEDGE, HOME_KNOWLEDGE, SOS_KNOWLEDGE, SPIN_KNOWLEDGE } from "@/
 import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
 import {
   appendNormalizedTurn,
+  combineTranscriptTextParts,
   createTranscriptNormalizerState,
   normalizedTurnToLegacyTranscriptTurn,
 } from "@/lib/sos/transcript-normalizer"
@@ -90,18 +91,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
     if (process.env.NODE_ENV === 'development') {
       console.log(`[Timing] ${label} at ${Date.now()}`)
     }
-  }
-
-  const getTextFromParts = (parts?: Array<{ text?: string } | any>) => {
-    if (!parts?.length) return undefined
-    const textParts = parts
-      .map(part => {
-        if (typeof part?.text === 'string') return part.text.trim()
-        if (typeof part === 'string') return part.trim()
-        return undefined
-      })
-      .filter((text): text is string => !!text)
-    return textParts.length ? textParts.join(' ') : undefined
   }
 
   const appendTranscript = (role: 'user' | 'model', text: string, source: TurnSource = 'manual', rawRef?: string) => {
@@ -485,37 +474,20 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
               }
             }
 
-            // Extract AI text from parts
+            // Extract AI text from combined parts once per provider message
             const modelParts = message.serverContent?.modelTurn?.parts || []
-            for (const part of modelParts) {
-              if (part?.text?.trim() && isMountedRef.current) {
-                const text = part.text.trim()
-                console.log('AI text:', text)
-                appendTranscript('model', text, 'gemini_live_model', 'serverContent.modelTurn.parts')
-              }
+            const modelText = combineTranscriptTextParts(modelParts)
+            if (modelText && isMountedRef.current) {
+              console.log('AI text:', modelText)
+              appendTranscript('model', modelText, 'gemini_live_model', 'serverContent.modelTurn.parts')
             }
 
-            // Extract user text from parts
+            // Extract user text from combined fallback parts once per provider message
             const userParts = message.serverContent?.userTurn?.parts || []
-            for (const part of userParts) {
-              if (part?.text?.trim() && isMountedRef.current) {
-                const text = part.text.trim()
-                console.log('User text:', text)
-                appendTranscript('user', text, 'fallback', 'serverContent.userTurn.parts')
-              }
-            }
-
-            // Fallback extraction
-            const fallbackModelText = getTextFromParts(modelParts)
-            if (fallbackModelText && isMountedRef.current) {
-              console.log('AI text (fallback):', fallbackModelText)
-              appendTranscript('model', fallbackModelText, 'fallback', 'fallback.modelTurn.parts')
-            }
-
-            const fallbackUserText = getTextFromParts(userParts)
-            if (fallbackUserText && isMountedRef.current) {
-              console.log('User text (fallback):', fallbackUserText)
-              appendTranscript('user', fallbackUserText, 'fallback', 'fallback.userTurn.parts')
+            const userText = combineTranscriptTextParts(userParts)
+            if (userText && isMountedRef.current) {
+              console.log('User text:', userText)
+              appendTranscript('user', userText, 'fallback', 'serverContent.userTurn.parts')
             }
 
             if (message.serverContent?.interrupted) {
