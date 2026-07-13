@@ -216,6 +216,15 @@ test('applyHiddenInformationRevealKeys appends unique keys only and stores no va
   assert.equal(same, next)
 })
 
+test('applyHiddenInformationRevealKeys ignores empty, existing, and duplicate input keys while preserving first occurrence order', () => {
+  const state = createInitialRoleplayState()
+  const withExisting = { ...state, revealedInformation: ['existing'] }
+  const next = applyHiddenInformationRevealKeys(withExisting, ['income', 'income', '', 'housing', 'income', 'existing'])
+
+  assert.deepEqual(next.revealedInformation, ['existing', 'income', 'housing'])
+  assert.deepEqual(withExisting.revealedInformation, ['existing'])
+})
+
 test('input items, events, and state are not mutated', () => {
   const hiddenItems = [item({ revealWhen: ['trust>=60'] })]
   const events = [event('probe-1', 'PROBING_STARTED', 1)]

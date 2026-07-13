@@ -199,7 +199,12 @@ export function evaluateHiddenInformation(
 }
 
 export function applyHiddenInformationRevealKeys(state: RoleplayState, keys: string[]): RoleplayState {
-  const uniqueNewKeys = keys.filter(key => key && !state.revealedInformation.includes(key))
+  const seenNewKeys = new Set<string>()
+  const uniqueNewKeys = keys.filter(key => {
+    if (!key || state.revealedInformation.includes(key) || seenNewKeys.has(key)) return false
+    seenNewKeys.add(key)
+    return true
+  })
   if (uniqueNewKeys.length === 0) return state
 
   return {
