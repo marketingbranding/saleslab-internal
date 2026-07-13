@@ -57,6 +57,14 @@ test('customer objection triggers OBJECTION_RAISED with topic', () => {
   assert.equal(objection.topic, 'price')
 })
 
+test('tapi alone does not trigger objection without another concern indicator', () => {
+  const neutral = extract(turn(1, 'customer', 'Saya kerja di toko, tapi rumah saya dekat.'))
+  const concern = extract(turn(2, 'customer', 'Tapi saya takut cicilannya berat.'))
+
+  assert.equal(eventTypes(neutral).includes('OBJECTION_RAISED'), false)
+  assert.equal(eventTypes(concern).includes('OBJECTION_RAISED'), true)
+})
+
 test('customer concrete interest triggers BUYING_SIGNAL_DETECTED', () => {
   const events = extract(turn(1, 'customer', 'Saya tertarik, kapan bisa survey?'))
 
@@ -89,6 +97,29 @@ test('document manipulation triggers event with negation exclusion', () => {
 
   assert.ok(eventTypes(unsafe).includes('DOCUMENT_MANIPULATION_SUGGESTED'))
   assert.equal(eventTypes(safe).includes('DOCUMENT_MANIPULATION_SUGGESTED'), false)
+})
+
+test('document manipulation exclusion only applies to direct negation of manipulation', () => {
+  const safeWarnings = [
+    'Jangan mengubah slip gaji.',
+    'Slip gaji tidak boleh diedit.',
+    'Dokumen dilarang dimanipulasi.',
+    'Hindari merekayasa mutasi rekening.',
+  ]
+  const unsafeSuggestions = [
+    'Jangan khawatir, slip gajinya kita edit saja.',
+    'Jangan bilang bank, cicilannya kita sembunyikan.',
+    'Tidak boleh ketahuan, rekeningnya kita edit.',
+    'Tenang saja, kita akal-akali dokumennya.',
+  ]
+
+  for (const [index, text] of safeWarnings.entries()) {
+    assert.equal(eventTypes(extract(turn(index + 10, 'sales', text))).includes('DOCUMENT_MANIPULATION_SUGGESTED'), false)
+  }
+
+  for (const [index, text] of unsafeSuggestions.entries()) {
+    assert.equal(eventTypes(extract(turn(index + 20, 'sales', text))).includes('DOCUMENT_MANIPULATION_SUGGESTED'), true)
+  }
 })
 
 test('clear coercive language triggers PRESSURE_TACTIC', () => {

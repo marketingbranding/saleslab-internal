@@ -106,7 +106,7 @@ const solutionIndicators = [
 ]
 
 const objectionIndicators = [
-  'tapi', 'saya takut', 'saya khawatir', 'saya ragu', 'mahal', 'belum siap',
+  'saya takut', 'saya khawatir', 'saya ragu', 'mahal', 'belum siap',
   'tidak yakin', 'enggak yakin', 'nggak yakin', 'saya pikir dulu', 'harus tanya pasangan',
   'lokasinya jauh', 'cicilannya berat', 'takut ditolak', 'dokumennya susah',
 ]
@@ -142,7 +142,12 @@ const documentManipulationIndicators = [
   'buat surat palsu', 'naikkan penghasilan', 'sembunyikan cicilan', 'hapus riwayat',
   'akal-akali dokumen', 'manipulasi data', 'slip gajinya kita edit', 'slip gaji kita edit',
 ]
-const documentManipulationExclusions = ['jangan', 'tidak boleh', 'dilarang', 'hindari']
+const documentManipulationNegationPatterns = [
+  /jangan\s+(mengubah|ubah|membuat|buat|mengedit|edit|merekayasa|rekayasa|memanipulasi|manipulasi|menyembunyikan|sembunyikan|menghapus|hapus|akal-akali)/,
+  /(slip gaji|dokumen|rekening|mutasi|data|cicilan|riwayat)[^.!?]{0,24}\s+tidak boleh\s+(diubah|diedit|dibuat|direkayasa|dimanipulasi|disembunyikan|dihapus|diakal-akali)/,
+  /(slip gaji|dokumen|rekening|mutasi|data|cicilan|riwayat)[^.!?]{0,24}\s+dilarang\s+(diubah|diedit|dibuat|direkayasa|dimanipulasi|disembunyikan|dihapus|diakal-akali)/,
+  /hindari\s+(mengubah|ubah|membuat|buat|mengedit|edit|merekayasa|rekayasa|memanipulasi|manipulasi|menyembunyikan|sembunyikan|menghapus|hapus|akal-akali)/,
+]
 
 const pressureIndicators = [
   'harus booking sekarang', 'kalau tidak sekarang hangus', 'transfer sekarang juga',
@@ -158,6 +163,19 @@ function inferObjectionTopic(text: string): string {
   if (text.includes('pikir dulu') || text.includes('belum siap')) return 'timing'
   if (text.includes('ragu') || text.includes('khawatir') || text.includes('takut')) return 'trust'
   return 'other'
+}
+
+function detectObjection(text: string): DetectionResult {
+  const matches = includesAny(text, objectionIndicators)
+  return {
+    matched: matches.length > 0,
+    topic: matches.length > 0 ? inferObjectionTopic(text) : undefined,
+    payload: matches.length > 0 ? { matchedIndicators: matches } : undefined,
+  }
+}
+
+function isDirectDocumentManipulationWarning(text: string): boolean {
+  return documentManipulationNegationPatterns.some(pattern => pattern.test(text))
 }
 
 const eventRules: EventRule[] = [
@@ -219,7 +237,7 @@ const eventRules: EventRule[] = [
     allowedRoles: ['customer'],
     severity: 'MODERATE',
     confidence: 0.85,
-    detect: text => ({ matched: includesAny(text, objectionIndicators).length > 0, topic: inferObjectionTopic(text) }),
+    detect: text => detectObjection(text),
   },
   {
     eventType: 'BUYING_SIGNAL_DETECTED',
@@ -262,7 +280,7 @@ const eventRules: EventRule[] = [
     severity: 'CRITICAL',
     confidence: 0.98,
     detect: text => {
-      if (includesAny(text, documentManipulationExclusions).length > 0) return { matched: false }
+      if (isDirectDocumentManipulationWarning(text)) return { matched: false }
       const matchedPhrase = firstMatch(text, documentManipulationIndicators)
       return { matched: Boolean(matchedPhrase), payload: matchedPhrase ? { matchedPhrase } : undefined }
     },
