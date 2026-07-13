@@ -15,13 +15,14 @@ import { mapLegacyPersona, mapSalesScenario } from "@/lib/sos/legacy-mappers"
 import { FAB_KNOWLEDGE, HOME_KNOWLEDGE, SOS_KNOWLEDGE, SPIN_KNOWLEDGE } from "@/lib/sos/knowledge"
 import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
 import { extractDeterministicEvents } from "@/lib/sos/event-extractor"
+import { createInitialRoleplayState, reduceRoleplayEvents } from "@/lib/sos/state-reducer"
 import {
   appendNormalizedTurn,
   combineTranscriptTextParts,
   createTranscriptNormalizerState,
   normalizedTurnToLegacyTranscriptTurn,
 } from "@/lib/sos/transcript-normalizer"
-import type { RoleplayEvent, TurnSource } from "@/lib/sos/types"
+import type { RoleplayEvent, RoleplayState, TurnSource } from "@/lib/sos/types"
 
 interface CallInterfaceProps {
   scenario: SalesScenario
@@ -76,6 +77,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
   const transcriptRef = React.useRef<{ role: 'user' | 'model'; text: string }[]>([])
   const normalizedTranscriptStateRef = React.useRef(createTranscriptNormalizerState())
   const roleplayEventsRef = React.useRef<RoleplayEvent[]>([])
+  const roleplayStateRef = React.useRef<RoleplayState>(createInitialRoleplayState({ scenarioId: scenario.id }))
   const speechRecognitionRef = React.useRef<any>(null)
   const shouldRestartSpeechRef = React.useRef(false)
   const isUserEndingRef = React.useRef(false)
@@ -125,11 +127,18 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
 
     if (extraction.events.length > 0) {
       roleplayEventsRef.current = [...roleplayEventsRef.current, ...extraction.events]
+      roleplayStateRef.current = reduceRoleplayEvents(roleplayStateRef.current, extraction.events)
       if (process.env.NODE_ENV === 'development') {
         console.debug('[Roleplay Events]', extraction.events.map(event => ({
           type: event.eventType,
           turn: event.sourceTurnSequence,
         })))
+        console.debug('[Roleplay State]', {
+          stage: roleplayStateRef.current.stage,
+          trust: roleplayStateRef.current.trust,
+          readiness: roleplayStateRef.current.readiness,
+          home: roleplayStateRef.current.home,
+        })
       }
     }
 
@@ -381,6 +390,13 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
 
       const mappedScenario = mapSalesScenario(scenario)
       const mappedPersona = mapLegacyPersona(scenario)
+      if (roleplayStateRef.current.processedEventIds.length === 0) {
+        roleplayStateRef.current = createInitialRoleplayState({
+          scenarioId: mappedScenario.id,
+          personaId: mappedPersona.id,
+          initialTrust: mappedPersona.trustStart,
+        })
+      }
       const roleplayPrompt = compileVoiceRoleplayPrompt({
         persona: mappedPersona,
         scenario: mappedScenario,

@@ -77,6 +77,8 @@ export type EventSeverity = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
 
 export type EvaluationRating = 'Excellent' | 'Strong' | 'Competent' | 'Needs Improvement' | 'Not Ready'
 
+export type ConversationStage = 'opening' | 'discovery' | 'solution' | 'objection' | 'closing' | 'committed'
+
 export interface HiddenInformation {
   key: string
   value: string
@@ -144,6 +146,23 @@ export interface Scenario {
 }
 
 export interface RoleplayState {
+  scenarioId?: string
+  personaId?: string
+  stage: ConversationStage
+  home: {
+    housingDiscovered: boolean
+    occupationDiscovered: boolean
+    moneyDiscovered: boolean
+    eligibilityDiscovered: boolean
+    completedCount: number
+    completionRatio: number
+  }
+  metrics: {
+    objectionCount: number
+    buyingSignalCount: number
+    closingAttemptCount: number
+    nextStepAgreementCount: number
+  }
   trust: number
   patience: number
   readiness: number
@@ -156,6 +175,16 @@ export interface RoleplayState {
   unresolvedConcerns: string[]
   buyingSignals: string[]
   complianceFlags: string[]
+  compliance: {
+    guaranteeLanguageCount: number
+    documentManipulationCount: number
+    pressureTacticCount: number
+    highestSeverity?: EventSeverity
+    criticalViolationDetected: boolean
+  }
+  lastEventType?: RoleplayEventType
+  lastEventTurnSequence?: number
+  processedEventIds: string[]
 }
 
 export interface NormalizedTurn {
