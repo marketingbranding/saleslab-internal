@@ -3,6 +3,16 @@ import type { Difficulty, Gender, Persona, Scenario } from './types'
 
 const DEFAULT_EVALUATION_PROFILE = 'default_sos_kpr'
 
+// Legacy scenarios only expose 1-10 aggressiveness/patience. Skepticism and
+// trustStart do not exist in the old model, so Phase 2A uses explicit
+// difficulty-based defaults instead of deriving them from aggressiveness.
+const DIFFICULTY_BEHAVIOR_DEFAULTS: Record<Difficulty, { skepticism: number; trustStart: number }> = {
+  easy: { skepticism: 35, trustStart: 55 },
+  medium: { skepticism: 55, trustStart: 40 },
+  hard: { skepticism: 75, trustStart: 25 },
+  expert: { skepticism: 90, trustStart: 15 },
+}
+
 function mapDifficulty(difficulty: SalesScenario['difficulty'] | string | undefined): Difficulty {
   if (difficulty === 'Easy') return 'easy'
   if (difficulty === 'Hard') return 'hard'
@@ -54,6 +64,9 @@ export function mapSalesScenario(scenario: SalesScenario): Scenario {
 }
 
 export function mapLegacyPersona(scenario: SalesScenario): Persona {
+  const difficulty = mapDifficulty(scenario.difficulty)
+  const behaviorDefaults = DIFFICULTY_BEHAVIOR_DEFAULTS[difficulty]
+
   return {
     id: `legacy-persona-${scenario.id}`,
     name: scenario.name,
@@ -65,23 +78,16 @@ export function mapLegacyPersona(scenario: SalesScenario): Persona {
     communicationStyle: scenario.responseStyle,
     patience: scaleTenPointValue(scenario.patience, 5),
     aggressiveness: scaleTenPointValue(scenario.aggressiveness, 5),
-    skepticism: scaleTenPointValue(scenario.aggressiveness, 5),
-    trustStart: Math.max(0, Math.min(100, 100 - scaleTenPointValue(scenario.aggressiveness, 5))),
-    hiddenInformation: scenario.hiddenRules
-      ? [{
-          key: 'legacy_hidden_rules',
-          value: scenario.hiddenRules,
-          revealWhen: ['internal behavior guidance only'],
-          neverRevealWhen: ['shown directly to trainee'],
-          importance: 'critical',
-        }]
-      : [],
+    skepticism: behaviorDefaults.skepticism,
+    trustStart: behaviorDefaults.trustStart,
+    hiddenInformation: [],
     objections: [],
     buyingSignals: [],
     walkAwayConditions: ['Sales makes unrealistic guarantees', 'Sales applies excessive pressure'],
-    difficulty: mapDifficulty(scenario.difficulty),
+    difficulty,
     legacy: {
       consumerProfile: scenario.consumerProfile,
+      hiddenRules: scenario.hiddenRules,
       responseStyle: scenario.responseStyle,
       firstSpeaker: scenario.firstSpeaker,
     },
