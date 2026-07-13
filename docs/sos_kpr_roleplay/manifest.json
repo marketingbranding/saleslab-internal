@@ -1,0 +1,21 @@
+{
+  "name": "SOS KPR Subsidi AI Roleplay Knowledge Pack",
+  "version": "2.0",
+  "files": [
+    "00_README.md",
+    "01_DOMAIN_MODEL.md",
+    "02_SOS_FRAMEWORK.md",
+    "03_SPIN_HOME_PROBING.md",
+    "04_FAB_PRESENTATION.md",
+    "05_OBJECTION_HANDLING.md",
+    "06_NEGOTIATION.md",
+    "07_CLOSING_AND_AFTER_SALES.md",
+    "08_PERSONA_SCHEMA.md",
+    "09_SCENARIO_SCHEMA.md",
+    "10_ROLEPLAY_ENGINE_RULES.md",
+    "11_EVALUATION_RUBRIC.md",
+    "12_EVENT_AND_STATE_MODEL.md",
+    "13_IMPLEMENTATION_PLAN.md",
+    "14_AGENT_PROMPT.md"
+  ]
+}

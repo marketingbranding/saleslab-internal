@@ -1,90 +1,57 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, Antigravity, etc.) when working with code in this repository.
+## Project Facts
 
-## Repository Overview
+- This is a single Next.js App Router app, not the Laravel app described in parts of `docs/`; trust `package.json`, `next.config.ts`, Firebase config, and actual source over conflicting planning docs.
+- Use npm because `package-lock.json` is present. There are no test, formatter, or typecheck scripts in `package.json`.
+- Main entrypoints: `app/layout.tsx` wraps everything in `AuthProvider`; `app/page.tsx` is the client-side app shell and navigation state machine; `app/api/analyze/route.ts` is the only API route.
+- Import aliases use `@/*` from repo root via `tsconfig.json`.
 
-A collection of skills for Claude.ai and Claude Code for senior software engineers. Skills are packaged instructions and scripts that extend Claude and your coding agents capabilities.
+## Commands
 
-## OpenCode Integration
+- Install: `npm install`
+- Dev server: `npm run dev`
+- Production build: `npm run build`
+- Start built app: `npm run start`
+- Lint: `npm run lint`
+- Typecheck when needed: `npx tsc --noEmit`
+- Run lint separately before build; `next.config.ts` sets `eslint.ignoreDuringBuilds: true`, so `npm run build` will not catch lint failures.
+- `npm run clean` maps to `next clean`; verify it before relying on it because it is not a standard Next 15 command.
 
-OpenCode uses a **skill-driven execution model** powered by the `skill` tool and this repository's `/skills` directory.
+## Environment And Services
 
-### Core Rules
+- Required env for Gemini call mode: `NEXT_PUBLIC_GEMINI_API_KEY`.
+- Analysis route prefers `GROQ_API_KEY`; without it, it falls back to `GEMINI_API_KEY` or `NEXT_PUBLIC_GEMINI_API_KEY`.
+- Text roleplay provider is selected from Firestore `settings/global`: `ollama`, `openrouter`, or `gemini`. The current `lib/gemini.ts` text path uses OpenRouter when configured, otherwise Ollama; call mode uses Gemini.
+- Ollama browser calls require CORS: run `OLLAMA_ORIGINS="*" ollama serve` and keep `ollamaUrl` reachable from the browser.
+- Firebase initializes from `firebase-applet-config.json` and explicitly uses `firestoreDatabaseId`; Firestore rules live at `config/firestore.rules` and `firebase.json` points to that same database.
+- Do not commit secrets from `.env.local`; `.env.example` is the documented template.
 
-- If a task matches a skill, you MUST invoke it
-- Skills are located in `skills/<skill-name>/SKILL.md`
-- Never implement directly if a skill applies
-- Always follow the skill instructions exactly (do not partially apply them)
+## Source Map
 
-### Intent → Skill Mapping
+- `lib/firebase.ts`: Firebase app/auth/firestore initialization, Google login/logout, settings fetch, Firestore error reporting.
+- `lib/AuthContext.tsx`: auth/profile listener used globally by `app/layout.tsx`.
+- `lib/gemini.ts`: built-in scenarios, provider routing for roleplay, and client wrapper for `/api/analyze`.
+- `components/CallInterface.tsx`: microphone/Web Audio/Gemini Live call flow; be careful with refs and cleanup when editing.
+- `components/FeedbackView.tsx`: saves session state to Firestore, calls analysis, and persists analysis success/failure.
+- `components/admin/*`: admin dashboard, scenario/persona builders, and AI settings UI.
 
-The agent should automatically map user intent to skills:
+## Data And Auth Rules
 
-- Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
-- Planning / breakdown → `planning-and-task-breakdown`
-- Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
-- Refactoring / simplification → `code-simplification`
-- API or interface design → `api-and-interface-design`
-- UI work → `frontend-ui-engineering`
+- Admin checks are duplicated in UI (`app/page.tsx`) and Firestore rules (`config/firestore.rules`); keep them in sync when changing admin access.
+- Firestore collections used by the app include `scenarios`, `personas`, `sessions`, `settings/global`, `users`, and `admins`.
+- Scenario IDs and session IDs must satisfy the Firestore rule regex `^[a-zA-Z0-9_\-]+$` and be 128 chars or less.
+- `sessions` writes require `userId == request.auth.uid` and a numeric `score`, including intermediate failed/processing analysis states.
+- `settings/global` is admin-only to read and write, so non-admin UI must tolerate missing or denied settings reads.
 
-### Lifecycle Mapping (Implicit Commands)
+## UI Conventions
 
-OpenCode does not support slash commands like `/spec` or `/plan`.
+- Tailwind v4 is configured through `app/globals.css` with `@theme`; shared retro primitives are CSS classes like `retro-panel`, `retro-btn`, `retro-input`, and `retro-badge`.
+- The visual language is square-corner retro editorial: Georgia headings, Inter body, IBM Plex Mono numerics, hard 2px borders, and offset shadows. Preserve it instead of introducing rounded-card SaaS defaults.
+- Components commonly use `motion/react` and `lucide-react`; keep client components marked with `'use client'` when they use hooks, browser APIs, Firebase auth listeners, or animations.
 
-Instead, the agent must internally follow this lifecycle:
+## Verification Notes
 
-- DEFINE → `spec-driven-development`
-- PLAN → `planning-and-task-breakdown`
-- BUILD → `incremental-implementation` + `test-driven-development`
-- VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
-
-### Execution Model
-
-For every request:
-
-1. Determine if any skill applies (even 1% chance)
-2. Invoke the appropriate skill using the `skill` tool
-3. Follow the skill workflow strictly
-4. Only proceed to implementation after required steps (spec, plan, etc.) are complete
-
-### Anti-Rationalization
-
-The following thoughts are incorrect and must be ignored:
-
-- "This is too small for a skill"
-- "I can just quickly implement this"
-- "I’ll gather context first"
-
-Correct behavior:
-
-- Always check for and use skills first
-
-This ensures OpenCode behaves similarly to Claude Code with full workflow enforcement.
-
-## Orchestration: Personas, Skills, and Commands
-
-This repo has three composable layers. They have different jobs and should not be confused:
-
-- **Skills** (`skills/<name>/SKILL.md`) — workflows with steps and exit criteria. The *how*. Mandatory hops when an intent matches.
-- **Personas** (`agents/<role>.md`) — roles with a perspective and an output format. The *who*.
-- **Slash commands** (`.claude/commands/*.md`) — user-facing entry points. The *when*. The orchestration layer.
-
-Composition rule: **the user (or a slash command) is the orchestrator. Personas do not invoke other personas.** A persona may invoke skills.
-
-The only multi-persona orchestration pattern this repo endorses is **parallel fan-out with a merge step** — used by `/ship` to run `code-reviewer`, `security-auditor`, and `test-engineer` concurrently and synthesize their reports. Do not build a "router" persona that decides which other persona to call; that's the job of slash commands and intent mapping.
-
-See [docs/agents.md](docs/agents.md) for the decision matrix and [references/orchestration-patterns.md](references/orchestration-patterns.md) for the full pattern catalog.
-
-**Claude Code interop:** the personas in `agents/` work as Claude Code subagents (auto-discovered from this plugin's `agents/` directory) and as Agent Teams teammates (referenced by name when spawning). Two platform constraints align with our rules: subagents cannot spawn other subagents, and teams cannot nest. Plugin agents silently ignore the `hooks`, `mcpServers`, and `permissionMode` frontmatter fields.
-
-## Creating a New Skill
-
-> **Before you start:** run the pre-flight checks in [CONTRIBUTING.md](CONTRIBUTING.md#before-proposing-a-new-skill), search the catalog, check open PRs (`gh pr list --state open`), confirm the idea fits [docs/skill-anatomy.md](docs/skill-anatomy.md), and justify the gap in your PR description. Most new-skill ideas overlap an existing skill or an open PR; prefer extending an existing skill over adding a near-duplicate. CONTRIBUTING.md is the single source of truth for this workflow.
-
-Skills in this repo are markdown-first: each lives at `skills/<kebab-case-name>/SKILL.md` with YAML frontmatter (`name`, `description`) and follows the section anatomy (Overview, When to Use, Process, Common Rationalizations, Red Flags, Verification). Add a `scripts/` directory only when the skill ships runnable helpers; most skills are markdown only, and there are no per-skill zip packages.
-
-For the full format, naming conventions, frontmatter rules, supporting-file thresholds, and writing principles, see [docs/skill-anatomy.md](docs/skill-anatomy.md), the single source of truth for skill structure. Do not restate that guidance here, link to it.
+- There is no CI workflow in this repo. For code changes, run at least `npm run lint` and usually `npx tsc --noEmit` plus `npm run build` when behavior or framework boundaries changed.
+- For Firebase/rules changes, inspect both `firebase.json` and `config/firestore.rules`; no emulator or rules test harness is configured.
+- Voice and microphone behavior needs manual browser verification; automated tests do not cover Web Audio, SpeechRecognition, or Gemini Live sessions.
