@@ -15,6 +15,7 @@ import { mapLegacyPersona, mapSalesScenario } from "@/lib/sos/legacy-mappers"
 import { SOS_STATIC_KNOWLEDGE } from "@/lib/sos/knowledge"
 import { selectKnowledge } from "@/lib/sos/knowledge-selector"
 import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
+import { applyVoicePromptBudget } from "@/lib/sos/prompt-budget"
 import { extractDeterministicEvents } from "@/lib/sos/event-extractor"
 import { createInitialRoleplayState, reduceRoleplayEvents } from "@/lib/sos/state-reducer"
 import { deriveInitialRoleplayState } from "@/lib/sos/initial-state"
@@ -417,10 +418,15 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
         scenario: mappedScenario,
         state: derivedInitialState,
       })
-      const roleplayPrompt = compileVoiceRoleplayPrompt({
+      const budgetResult = applyVoicePromptBudget({
         persona: mappedPersona,
         scenario: mappedScenario,
         knowledge: knowledgeSelection.selected,
+      })
+      const roleplayPrompt = compileVoiceRoleplayPrompt({
+        persona: mappedPersona,
+        scenario: mappedScenario,
+        knowledge: budgetResult.knowledge,
       })
 
       session = await ai.live.connect({
