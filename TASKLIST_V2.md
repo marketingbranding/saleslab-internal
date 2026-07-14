@@ -5,9 +5,9 @@
 Completion date: `2026-07-14`
 
 - `FT-001 Evidence Validator` — completed.
-- `FT-002 Evaluation Context Builder` — completed by this task.
-- `FT-003 Backward-Compatible Evaluator API` — next.
-- `FT-004 Minimal Compliance Caps` — pending.
+- `FT-002 Evaluation Context Builder` — completed.
+- `FT-003 Backward-Compatible Evaluator API` — completed.
+- `FT-004 Minimal Compliance Caps` — next.
 - `FT-005 Trial Report Integration` — pending.
 - `FT-006 Manual Trial QA` — pending.
 
@@ -239,9 +239,9 @@ Completion date: `2026-07-14`
 - Tests: golden transcript tests with expected hard caps and evidence references.
 - Migration impact: high; affects feedback and score semantics.
 - Status: partially completed.
-- Implementation: Deterministic evaluator context now assembles sanitized turns, events, final state, sufficiency, HOME, and aggregate summaries.
-- Verification: Evaluation-context tests pass with the full SOS suite.
-- Remaining: LLM review, weighted scoring, hard caps, API compatibility, and feedback integration are pending.
+- Implementation: Deterministic legacy request reconstruction, evaluator context prompt, validated evidence normalization, backward-compatible response, and optional trial V2 diagnostics are implemented.
+- Verification: Evaluator reconstruction, prompt, result normalization, full SOS tests, lint, typecheck, and build pass on `2026-07-14`.
+- Remaining: Deterministic weighted scoring, compliance hard caps, `FeedbackView` V2 rendering, persistence, and full evaluation profiles are pending.
 
 #### Task V-002
 
