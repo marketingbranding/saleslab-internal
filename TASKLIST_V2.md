@@ -1,5 +1,16 @@
 # TASKLIST_V2.md
 
+## Current Delivery Priority — Leadership Trial Fast Track
+
+Completion date: `2026-07-14`
+
+- `FT-001 Evidence Validator` — completed.
+- `FT-002 Evaluation Context Builder` — completed by this task.
+- `FT-003 Backward-Compatible Evaluator API` — next.
+- `FT-004 Minimal Compliance Caps` — pending.
+- `FT-005 Trial Report Integration` — pending.
+- `FT-006 Manual Trial QA` — pending.
+
 ## Epic 1 — Domain Foundation
 
 ### Feature 1.1 — Core SOS Types
@@ -13,7 +24,10 @@
 - Acceptance criteria: types represent fields from `docs/sos_kpr_roleplay/08_PERSONA_SCHEMA.md`, `09_SCENARIO_SCHEMA.md`, `11_EVALUATION_RUBRIC.md`, and `12_EVENT_AND_STATE_MODEL.md`.
 - Tests: type-level compile check via `npx tsc --noEmit` after implementation.
 - Migration impact: none if added as new types only.
-- Status: pending.
+- Status: completed.
+- Implementation: Core SOS types are defined in `lib/sos/types.ts`.
+- Verification: TypeScript compilation and SOS domain tests pass.
+- Remaining: Runtime adoption outside the implemented voice/evaluation foundations is tracked separately.
 
 #### Task D-002
 
@@ -24,7 +38,10 @@
 - Acceptance criteria: all current `SCENARIOS` fields map without data loss; missing SOS fields receive explicit defaults.
 - Tests: mapper unit tests for all built-in `SCENARIOS`.
 - Migration impact: keeps old Firestore scenarios usable.
-- Status: pending.
+- Status: completed.
+- Implementation: `mapSalesScenario` and `mapLegacyPersona` provide current legacy fallback mapping.
+- Verification: Legacy mapper tests pass, including identity, goals, persona scales, and hidden-rule isolation.
+- Remaining: Broader persisted-data migration belongs to `M-002`.
 
 ## Epic 2 — Knowledge Engine
 
@@ -39,7 +56,10 @@
 - Acceptance criteria: every static slice has ID, title, category, version, content summary, and selection tags.
 - Tests: static validation test ensures IDs and selection tags are present.
 - Migration impact: none.
-- Status: pending.
+- Status: partially completed.
+- Implementation: Small structured SOS, SPIN, HOME, and FAB entries exist in `lib/sos/knowledge.ts`.
+- Verification: Static knowledge metadata tests pass.
+- Remaining: Version metadata plus product, policy, regulation, objection, closing, and rubric content are not implemented.
 
 ### Feature 2.2 — Knowledge Selection
 
@@ -52,7 +72,10 @@
 - Acceptance criteria: first-call, objection, closing, and after-sales examples select different knowledge sets.
 - Tests: selector unit tests for scenario examples from `docs/sos_kpr_roleplay/09_SCENARIO_SCHEMA.md`.
 - Migration impact: none.
-- Status: pending.
+- Status: completed.
+- Implementation: Initial deterministic selector uses scenario, persona, and initial-state signals with capped results.
+- Verification: Knowledge selector tests pass for targeting, ordering, dedupe, limits, and privacy-safe reasons.
+- Remaining: Product, policy, regulation, and freshness selection is deferred.
 
 ## Epic 3 — Prompt Compiler
 
@@ -67,7 +90,10 @@
 - Acceptance criteria: compiler sections match `ARCHITECTURE_V2.md` and include prompt version metadata.
 - Tests: snapshot-style prompt tests after test runner exists.
 - Migration impact: low; compiler can be introduced before runtime integration.
-- Status: pending.
+- Status: partially completed.
+- Implementation: Shared voice and evaluation prompt functions exist; voice is integrated with Gemini Live.
+- Verification: Prompt compiler and production build pass.
+- Remaining: Text/admin variants, evaluation runtime integration, and prompt versioning are pending.
 
 #### Task P-002
 
@@ -78,7 +104,10 @@
 - Acceptance criteria: oversized retrieved knowledge produces warnings and deterministic trimming order.
 - Tests: unit tests for trimming missing/stale/oversized contexts.
 - Migration impact: none.
-- Status: pending.
+- Status: partially completed.
+- Implementation: Deterministic voice character budgeting and optional-knowledge trimming are implemented.
+- Verification: Prompt budget tests pass for limits, warnings, dedupe, and required-context overflow.
+- Remaining: Text, evaluation, and admin-preview budgeting are pending.
 
 ## Epic 4 — Transcript Normalization
 
@@ -93,7 +122,10 @@
 - Acceptance criteria: current `{ role, text }[]` transcripts can normalize into stable turns.
 - Tests: unit tests for legacy transcript normalization.
 - Migration impact: old sessions remain readable.
-- Status: pending.
+- Status: completed.
+- Implementation: Voice turns use `NormalizedTurn`; legacy `{ role, text }[]` conversion remains compatible.
+- Verification: Transcript normalization and conversion tests pass.
+- Remaining: Text-roleplay integration is deferred.
 
 #### Task T-002
 
@@ -104,7 +136,10 @@
 - Acceptance criteria: exact duplicates and near-duplicate provider chunks collapse without deleting legitimate repeated answers.
 - Tests: unit tests using duplicated Gemini Live-like chunks.
 - Migration impact: low; can initially run alongside current transcript array.
-- Status: pending.
+- Status: completed.
+- Implementation: Current Gemini Live input/model/fallback paths use deterministic five-second deduplication.
+- Verification: Exact, formatting, cross-source, role, and later-repetition tests pass.
+- Remaining: Complex partial-turn merging is intentionally deferred.
 
 ## Epic 5 — Roleplay State Engine
 
@@ -119,7 +154,10 @@
 - Acceptance criteria: reducer handles all event categories from `docs/sos_kpr_roleplay/12_EVENT_AND_STATE_MODEL.md`.
 - Tests: reducer unit tests for trust increase/decrease, HOME coverage, closing, and compliance transitions.
 - Migration impact: medium; existing frustration meter can be bridged later.
-- Status: pending.
+- Status: completed.
+- Implementation: Deterministic event-driven roleplay reducer tracks stage, HOME, counters, trust/readiness, and compliance.
+- Verification: State reducer tests pass for ordering, idempotency, monotonic stage, and bounded values.
+- Remaining: Frustration synchronization and broader event coverage are deferred.
 
 ### Feature 5.2 — Initial State
 
@@ -132,7 +170,10 @@
 - Acceptance criteria: legacy `patience` 1-10 maps to 0-100 and persona trust defaults are explicit.
 - Tests: unit tests for easy/medium/hard persona defaults.
 - Migration impact: low.
-- Status: pending.
+- Status: completed.
+- Implementation: Initial state derives from mapped persona/scenario scales, urgency, stage, and difficulty.
+- Verification: Initial-state matrix, malformed input, legacy scale, and immutability tests pass.
+- Remaining: Dynamic difficulty and frustration synchronization are deferred.
 
 ## Epic 6 — Hidden Information Engine
 
@@ -147,7 +188,10 @@
 - Acceptance criteria: hidden info is not included in trainee-visible data and becomes prompt-eligible only after valid triggers.
 - Tests: unit tests for reveal, never-reveal, and trust-threshold scenarios.
 - Migration impact: medium; persona admin data model expands.
-- Status: pending.
+- Status: partially completed.
+- Implementation: Deterministic reveal eligibility, blocking, idempotency, and key-only state updates exist.
+- Verification: Hidden-information engine tests pass for conditions, blocks, duplicate keys, and privacy.
+- Remaining: Verbal delivery, admin configuration, audit persistence, and scenario overrides are pending.
 
 ## Epic 7 — Semantic Event System
 
@@ -162,7 +206,10 @@
 - Acceptance criteria: customer speech and event JSON remain separate; invalid events are rejected before state changes.
 - Tests: event validation tests for all event enum values.
 - Migration impact: medium; new event persistence later.
-- Status: pending.
+- Status: partially completed.
+- Implementation: Deterministic live event extraction and internal voice-flow integration exist.
+- Verification: Event extraction tests pass for supported flow, HOME, objection, buying, and risk events.
+- Remaining: LLM post-turn extraction, evaluator fallback, persistence, and complete enum coverage are deferred.
 
 #### Task E-002
 
@@ -173,7 +220,10 @@
 - Acceptance criteria: prohibited phrases from `docs/sos_kpr_roleplay/05_OBJECTION_HANDLING.md` emit compliance events.
 - Tests: detector unit tests with Indonesian examples.
 - Migration impact: none until wired.
-- Status: pending.
+- Status: completed.
+- Implementation: Current deterministic detector scope covers guarantee, manipulation, pressure, closing, HOME/SPIN, and related flow signals.
+- Verification: Detector role, exclusion, dedupe, and multiple-event tests pass.
+- Remaining: Additional detector categories should be added only with explicit evidence and tests.
 
 ## Epic 8 — Evaluation Engine
 
@@ -188,7 +238,10 @@
 - Acceptance criteria: evaluator output includes SOS fields and current backward-compatible fields.
 - Tests: golden transcript tests with expected hard caps and evidence references.
 - Migration impact: high; affects feedback and score semantics.
-- Status: pending.
+- Status: partially completed.
+- Implementation: Deterministic evaluator context now assembles sanitized turns, events, final state, sufficiency, HOME, and aggregate summaries.
+- Verification: Evaluation-context tests pass with the full SOS suite.
+- Remaining: LLM review, weighted scoring, hard caps, API compatibility, and feedback integration are pending.
 
 #### Task V-002
 
@@ -199,7 +252,10 @@
 - Acceptance criteria: scores without evidence are invalid or review-required.
 - Tests: validation tests for missing/invalid evidence.
 - Migration impact: medium.
-- Status: pending.
+- Status: completed.
+- Implementation: Evidence normalization, dimension validation, turn grounding, deterministic IDs, and batch dedupe exist.
+- Verification: Evaluation-evidence tests pass for canonical/snake-case inputs, references, duplicates, privacy, and determinism.
+- Remaining: Production evaluator integration remains part of `FT-003`.
 
 ## Epic 9 — Compliance Engine
 
@@ -215,6 +271,9 @@
 - Tests: unit tests for cap precedence and multiple violations.
 - Migration impact: high; scores may be lower than current generic evaluator.
 - Status: pending.
+- Implementation: Deterministic compliance events and state flags exist, but score caps do not.
+- Verification: Compliance event detector and state aggregation tests pass.
+- Remaining: Implement and integrate hard-cap calculation in `FT-004`.
 
 ## Epic 10 — Persistence and Migration
 
@@ -270,7 +329,10 @@
 - Acceptance criteria: tests can run deterministically for mappers, selectors, compiler, reducer, hidden info, events, compliance, and evaluation validation.
 - Tests: meta task; verified by running selected test command after implementation.
 - Migration impact: none.
-- Status: pending.
+- Status: completed.
+- Implementation: `tsx` and npm scripts execute all SOS TypeScript tests.
+- Verification: `npm run test:sos` executes 141 tests successfully on `2026-07-14`.
+- Remaining: CI integration is not configured.
 
 ### Feature 12.2 — Rollout Plan
 

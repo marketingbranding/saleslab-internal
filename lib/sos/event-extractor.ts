@@ -141,6 +141,7 @@ const documentManipulationIndicators = [
   'ubah slip gaji', 'buat slip gaji', 'edit rekening', 'rekayasa mutasi', 'pinjam rekening',
   'buat surat palsu', 'naikkan penghasilan', 'sembunyikan cicilan', 'hapus riwayat',
   'akal-akali dokumen', 'manipulasi data', 'slip gajinya kita edit', 'slip gaji kita edit',
+  'cicilannya kita sembunyikan', 'rekeningnya kita edit',
 ]
 const documentManipulationNegationPatterns = [
   /jangan\s+(mengubah|ubah|membuat|buat|mengedit|edit|merekayasa|rekayasa|memanipulasi|manipulasi|menyembunyikan|sembunyikan|menghapus|hapus|akal-akali)/,
