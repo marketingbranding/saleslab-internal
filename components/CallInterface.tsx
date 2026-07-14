@@ -79,6 +79,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
   const isMountedRef = React.useRef(true)
   const transcriptScrollRef = React.useRef<HTMLDivElement>(null)
   const transcriptRef = React.useRef<{ role: 'user' | 'model'; text: string }[]>([])
+  const outputTranscriptionBufferRef = React.useRef('')
   const normalizedTranscriptStateRef = React.useRef(createTranscriptNormalizerState())
   const roleplayEventsRef = React.useRef<RoleplayEvent[]>([])
   const roleplayStateRef = React.useRef<RoleplayState>(createInitialRoleplayState({ scenarioId: scenario.id }))
@@ -352,6 +353,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
       setCallStatus('connecting')
       isUserEndingRef.current = false
       audioQueueRef.current = []
+      outputTranscriptionBufferRef.current = ''
       isPlayingRef.current = false
       nextPlaybackTimeRef.current = 0
       activeOutputSourcesRef.current = 0
@@ -510,6 +512,11 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
               appendTranscript('user', inputTranscription, 'gemini_live_input', 'serverContent.inputTranscription')
             }
 
+            const outputTranscription = message.serverContent?.outputTranscription?.text
+            if (typeof outputTranscription === 'string') {
+              outputTranscriptionBufferRef.current += outputTranscription
+            }
+
             // Handle audio output
             if (message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data) {
               const base64Audio = message.serverContent.modelTurn.parts[0].inlineData.data
@@ -540,6 +547,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
             }
 
             if (message.serverContent?.interrupted) {
+              outputTranscriptionBufferRef.current = ''
               audioQueueRef.current = []
               isPlayingRef.current = false
               if (isMountedRef.current) {
@@ -549,6 +557,13 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
             }
 
             if (message.serverContent?.generationComplete || message.serverContent?.turnComplete) {
+              if (message.serverContent?.turnComplete) {
+                const completedOutputTranscription = outputTranscriptionBufferRef.current.trim()
+                outputTranscriptionBufferRef.current = ''
+                if (completedOutputTranscription) {
+                  appendTranscript('model', completedOutputTranscription, 'gemini_live_model', 'serverContent.outputTranscription')
+                }
+              }
               if (audioQueueRef.current.length === 0 && isMountedRef.current) {
                 setIsAITalking(false)
                 setCallStatus('connected')
@@ -576,6 +591,8 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
         },
         config: {
           responseModalities: [Modality.AUDIO],
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: {
