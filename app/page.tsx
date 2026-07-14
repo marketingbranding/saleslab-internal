@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { SCENARIOS, SalesScenario } from '@/lib/gemini'
 import { ScenarioCard } from '@/components/ScenarioCard'
 import { ScenarioBriefing } from '@/components/ScenarioBriefing'
@@ -25,6 +25,7 @@ import { SettingsScreen } from '@/components/SettingsScreen'
 import { TrainingScreen } from '@/components/TrainingScreen'
 import { CompleteProfileModal } from '@/components/CompleteProfileModal'
 import { LoginScreen } from '@/components/LoginScreen'
+import type { LoginVisualState } from '@/components/LoginScreen'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { SyncIndicator, useSyncStatus } from '@/components/SyncIndicator'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -36,6 +37,8 @@ import { loginWithGoogle, logout, db, handleFirestoreError, OperationType } from
 import { collection, query, where, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 
 type Step = 'selection' | 'training' | 'history' | 'performance' | 'achievements' | 'profile' | 'settings' | 'admin' | 'briefing' | 'roleplay' | 'transition' | 'report' | 'dashboard'
+type LoginTransitionState = LoginVisualState | 'complete'
+type EntryMode = 'login' | 'restored'
 
 interface SessionData {
   id: string
@@ -60,6 +63,10 @@ interface SessionData {
 export default function Home() {
   const { user, profile, loading: authLoading, syncStatus: authSyncStatus } = useAuth()
   const [isLoggingIn, setIsLoggingIn] = React.useState(false)
+  const [loginTransitionState, setLoginTransitionState] = React.useState<LoginTransitionState>('resolving')
+  const [entryMode, setEntryMode] = React.useState<EntryMode>('restored')
+  const loginInitiatedRef = React.useRef(false)
+  const shouldReduceMotion = useReducedMotion()
   const [customScenarios, setCustomScenarios] = React.useState<SalesScenario[]>([])
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isAllScenariosModalOpen, setIsAllScenariosModalOpen] = React.useState(false)
@@ -107,6 +114,72 @@ export default function Home() {
 
   React.useEffect(() => {
     setIsMounted(true)
+  }, [])
+
+  React.useEffect(() => {
+    if (!isMounted) return
+
+    if (authLoading) {
+      const nextState: LoginTransitionState = isLoggingIn || loginInitiatedRef.current ? 'authenticating' : 'resolving'
+      if (loginTransitionState !== nextState) setLoginTransitionState(nextState)
+      return
+    }
+
+    if (!user) {
+      const nextState: LoginTransitionState = isLoggingIn ? 'authenticating' : 'login'
+      if (loginTransitionState !== nextState) setLoginTransitionState(nextState)
+      return
+    }
+
+    if (loginTransitionState !== 'entering' && loginTransitionState !== 'complete') {
+      setEntryMode(loginInitiatedRef.current ? 'login' : 'restored')
+      setLoginTransitionState('entering')
+    }
+  }, [authLoading, isLoggingIn, isMounted, loginTransitionState, user])
+
+  React.useEffect(() => {
+    if (loginTransitionState !== 'entering') return
+    const fallbackDelay = shouldReduceMotion ? 400 : entryMode === 'restored' ? 650 : 1100
+    const timer = setTimeout(() => {
+      setLoginTransitionState('complete')
+      loginInitiatedRef.current = false
+    }, fallbackDelay)
+    return () => clearTimeout(timer)
+  }, [entryMode, loginTransitionState, shouldReduceMotion])
+
+  const handleLogin = React.useCallback(() => {
+    if (isLoggingIn) return
+
+    loginInitiatedRef.current = true
+    setIsLoggingIn(true)
+    setLoginTransitionState('authenticating')
+    loginWithGoogle()
+      .then(result => {
+        if (!result) {
+          loginInitiatedRef.current = false
+          setLoginTransitionState('login')
+        }
+      })
+      .catch(err => {
+        loginInitiatedRef.current = false
+        setLoginTransitionState('login')
+        if (err.code !== 'auth/cancelled-popup-request' && err.code !== 'auth/popup-closed-by-user') {
+          setNotification({ message: 'Login gagal. Silakan coba lagi.', type: 'error' })
+        }
+      })
+      .finally(() => setIsLoggingIn(false))
+  }, [isLoggingIn])
+
+  const handleLoginExitComplete = React.useCallback(() => {
+    setLoginTransitionState('complete')
+    loginInitiatedRef.current = false
+  }, [])
+
+  const handleLogout = React.useCallback(() => {
+    loginInitiatedRef.current = false
+    setEntryMode('restored')
+    setLoginTransitionState('resolving')
+    return logout()
   }, [])
 
   React.useEffect(() => {
@@ -482,46 +555,18 @@ export default function Home() {
   }
 
   const effectiveSalespersonName = profile?.displayName || salespersonName
-
-  if (!isMounted) {
-    return (
-      <main className="min-h-screen bg-bg text-dark font-body" suppressHydrationWarning>
-        <div className="flex items-center justify-center min-h-screen" suppressHydrationWarning>
-          <div className="text-2xl font-bold uppercase font-heading" suppressHydrationWarning>Memuat...</div>
-        </div>
-      </main>
-    )
-  }
-
-  if (!user && !authLoading) {
-    return (
-      <LoginScreen
-        onLogin={() => {
-          setIsLoggingIn(true)
-          loginWithGoogle()
-            .catch(err => {
-              if (err.code !== 'auth/cancelled-popup-request' && err.code !== 'auth/popup-closed-by-user') {
-                setNotification({ message: "Error login: " + err.message, type: 'error' })
-              }
-            })
-            .finally(() => setIsLoggingIn(false))
-        }}
-        isLoading={isLoggingIn}
-      />
-    )
-  }
-
-  if (user && !authLoading && !profile) {
-    return (
-      <CompleteProfileModal
-        isOpen={true}
-        user={user}
-        onComplete={() => {
-          setTimeout(() => setStep('selection'), 100)
-        }}
-      />
-    )
-  }
+  const authResolving = !isMounted || authLoading
+  const appReady = Boolean(user && !authResolving)
+  const showLoginOverlay = !appReady || loginTransitionState !== 'complete'
+  const loginVisualState: LoginVisualState = authResolving
+    ? isLoggingIn || loginTransitionState === 'authenticating' ? 'authenticating' : 'resolving'
+    : loginTransitionState === 'entering'
+      ? 'entering'
+      : isLoggingIn || loginTransitionState === 'authenticating'
+        ? 'authenticating'
+        : user && loginTransitionState !== 'complete'
+          ? 'resolving'
+          : 'login'
 
   const isFullscreen = step === 'roleplay' || step === 'transition'
 
@@ -948,20 +993,55 @@ export default function Home() {
   )
 
   return (
-    <AppLayout
-      activeStep={step}
-      onNavigate={handleNavigate}
-      isAdmin={isAdmin}
-      userName={profile?.displayName || undefined}
-      level={gamification.level}
-      xp={gamification.xpCurrent}
-      xpNext={gamification.xpNext}
-      streak={gamification.streakDays}
-      onLogout={() => logout()}
-      syncStatus={syncStatus}
-      fullscreen={isFullscreen}
-    >
-      {content}
-    </AppLayout>
+    <div className="relative min-h-screen bg-bg">
+      {appReady && (
+        <motion.div
+          className={`app-entry-layer ${showLoginOverlay ? 'pointer-events-none' : ''}`}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: shouldReduceMotion ? 0.18 : entryMode === 'restored' ? 0.3 : 0.65, ease: 'easeOut' }}
+          aria-hidden={showLoginOverlay || undefined}
+          inert={showLoginOverlay || undefined}
+        >
+          <AppLayout
+            activeStep={step}
+            onNavigate={handleNavigate}
+            isAdmin={isAdmin}
+            userName={profile?.displayName || undefined}
+            level={gamification.level}
+            xp={gamification.xpCurrent}
+            xpNext={gamification.xpNext}
+            streak={gamification.streakDays}
+            onLogout={handleLogout}
+            syncStatus={syncStatus}
+            fullscreen={isFullscreen}
+          >
+            {content}
+          </AppLayout>
+        </motion.div>
+      )}
+
+      {appReady && loginTransitionState === 'complete' && user && !profile && (
+        <CompleteProfileModal
+          isOpen={true}
+          user={user}
+          onComplete={() => {
+            setTimeout(() => setStep('selection'), 100)
+          }}
+        />
+      )}
+
+      <AnimatePresence>
+        {showLoginOverlay && (
+          <LoginScreen
+            key="crt-login-overlay"
+            onLogin={handleLogin}
+            visualState={loginVisualState}
+            restoredSession={entryMode === 'restored'}
+            onExitComplete={handleLoginExitComplete}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   )
 }

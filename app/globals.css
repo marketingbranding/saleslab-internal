@@ -272,6 +272,313 @@
   .z-overlay { z-index: 90; }
   .z-modal { z-index: 100; }
   .z-modal-top { z-index: 110; }
+
+  .crt-login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    background:
+      linear-gradient(rgba(36, 52, 71, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(36, 52, 71, 0.035) 1px, transparent 1px),
+      var(--color-bg);
+    background-size: 24px 24px;
+    transform-origin: center;
+  }
+
+  .crt-workstation {
+    width: min(44rem, calc(100vw - 1.5rem));
+    max-height: calc(100dvh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .crt-frame {
+    position: relative;
+    width: 100%;
+    padding: 1.15rem;
+    border: 3px solid var(--color-dark);
+    background: var(--color-navy);
+    box-shadow: 8px 8px 0 var(--color-dark);
+  }
+
+  .crt-frame-label {
+    margin-bottom: 0.65rem;
+    color: rgba(255, 255, 255, 0.56);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .crt-bezel {
+    padding: 0.75rem;
+    border: 2px solid #111820;
+    background: #151d26;
+    box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.035);
+  }
+
+  .crt-screen {
+    position: relative;
+    min-height: 25rem;
+    overflow: hidden;
+    border: 2px solid #0d1515;
+    color: #f4d8b7;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(230, 145, 93, 0.13), transparent 58%),
+      linear-gradient(180deg, #172827 0%, #101b1c 100%);
+    box-shadow:
+      inset 0 0 3rem rgba(0, 0, 0, 0.72),
+      inset 0 0 0.75rem rgba(230, 145, 93, 0.14);
+    animation: crt-idle-flicker 7s linear infinite;
+  }
+
+  .crt-scanlines,
+  .crt-vignette,
+  .crt-noise-line,
+  .crt-glitch-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .crt-scanlines {
+    z-index: 4;
+    opacity: 0.42;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      rgba(0, 0, 0, 0.11) 3px,
+      rgba(0, 0, 0, 0.11) 4px
+    );
+  }
+
+  .crt-vignette {
+    z-index: 5;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.42) 100%);
+    box-shadow: inset 0 0 2rem rgba(0, 0, 0, 0.35);
+  }
+
+  .crt-noise-line {
+    z-index: 6;
+    height: 2px;
+    opacity: 0.2;
+    background: rgba(255, 208, 158, 0.7);
+    animation: crt-noise-scan 5.5s linear infinite;
+  }
+
+  .crt-glitch-layer {
+    z-index: 7;
+    opacity: 0;
+    mix-blend-mode: screen;
+  }
+
+  .crt-glitch-layer-a {
+    background: linear-gradient(to bottom, transparent 30%, rgba(255, 73, 73, 0.22) 31% 35%, transparent 36% 62%, rgba(255, 73, 73, 0.16) 63% 67%, transparent 68%);
+  }
+
+  .crt-glitch-layer-b {
+    background: linear-gradient(to bottom, transparent 18%, rgba(76, 218, 255, 0.2) 19% 23%, transparent 24% 73%, rgba(76, 218, 255, 0.16) 74% 78%, transparent 79%);
+  }
+
+  .crt-terminal-content {
+    position: relative;
+    z-index: 3;
+    min-height: 25rem;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    font-family: var(--font-mono);
+    text-shadow: 0 0 7px rgba(230, 145, 93, 0.34);
+  }
+
+  .crt-terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(230, 145, 93, 0.38);
+  }
+
+  .crt-terminal-header h1 {
+    color: #f4d8b7;
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    letter-spacing: 0.055em;
+  }
+
+  .crt-terminal-header p {
+    margin-top: 0.15rem;
+    color: rgba(244, 216, 183, 0.67);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .crt-terminal-mark {
+    display: flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(230, 145, 93, 0.62);
+    color: var(--color-primary);
+  }
+
+  .crt-terminal-lines {
+    min-height: 7.6rem;
+    padding: 1rem 0;
+    color: rgba(244, 216, 183, 0.8);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.65;
+  }
+
+  .crt-terminal-lines span,
+  .crt-terminal-lines b {
+    color: var(--color-primary);
+  }
+
+  .crt-status {
+    display: flex;
+    min-height: 2rem;
+    align-items: center;
+    gap: 0.55rem;
+    border-top: 1px solid rgba(230, 145, 93, 0.24);
+    border-bottom: 1px solid rgba(230, 145, 93, 0.24);
+    color: #f4d8b7;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .crt-status span {
+    width: 0.55rem;
+    height: 0.55rem;
+    background: var(--color-warning);
+    box-shadow: 0 0 8px currentColor;
+  }
+
+  .crt-status .crt-status-ready { background: var(--color-success); }
+  .crt-status .crt-status-active { animation: crt-status-pulse 1s steps(2, end) infinite; }
+
+  .crt-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .crt-login-button {
+    min-height: 3rem;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    border: 2px solid #f4d8b7;
+    background: var(--color-primary);
+    color: #111820;
+    box-shadow: 3px 3px 0 rgba(244, 216, 183, 0.72);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.035em;
+  }
+
+  .crt-login-button:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 rgba(244, 216, 183, 0.72);
+  }
+
+  .crt-login-button:disabled { cursor: wait; opacity: 0.76; }
+
+  .crt-skip-button {
+    min-height: 2.75rem;
+    color: rgba(244, 216, 183, 0.72);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .crt-loading-block {
+    width: 0.7rem;
+    height: 0.7rem;
+    background: currentColor;
+    animation: crt-status-pulse 0.7s steps(2, end) infinite;
+  }
+
+  .crt-terminal-content footer {
+    margin-top: auto;
+    padding-top: 0.7rem;
+    color: rgba(244, 216, 183, 0.48);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .crt-controls {
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+  }
+
+  .crt-controls span {
+    width: 0.65rem;
+    height: 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: var(--color-primary);
+  }
+
+  .crt-controls div {
+    width: 4rem;
+    height: 0.4rem;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .crt-stand {
+    width: 38%;
+    height: 0.85rem;
+    border: 3px solid var(--color-dark);
+    border-top: 0;
+    background: var(--color-navy);
+    box-shadow: 5px 5px 0 var(--color-dark);
+  }
+
+  .crt-entering {
+    will-change: transform, opacity;
+  }
+
+  .crt-entering .crt-screen {
+    animation: crt-entry-pulse 0.32s steps(2, end) 1;
+  }
+
+  .crt-entering .crt-terminal-content {
+    animation: crt-rgb-text 0.32s steps(2, end) 1;
+  }
+
+  .crt-entering .crt-glitch-layer-a {
+    animation: crt-glitch-a 0.32s steps(2, end) 1;
+  }
+
+  .crt-entering .crt-glitch-layer-b {
+    animation: crt-glitch-b 0.32s steps(2, end) 1;
+  }
+
+  .app-entry-layer {
+    min-height: 100vh;
+    transform-origin: center;
+  }
 }
 
 @keyframes blink {
@@ -284,9 +591,79 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes crt-idle-flicker {
+  0%, 18%, 21%, 56%, 100% { opacity: 1; }
+  19%, 57% { opacity: 0.985; }
+}
+
+@keyframes crt-noise-scan {
+  from { transform: translateY(-2px); }
+  to { transform: translateY(25rem); }
+}
+
+@keyframes crt-status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes crt-entry-pulse {
+  0% { filter: brightness(1); }
+  38% { filter: brightness(1.28) saturate(1.08); }
+  65% { filter: brightness(1.05); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes crt-rgb-text {
+  0%, 35%, 100% { text-shadow: 0 0 7px rgba(230, 145, 93, 0.34); transform: translateX(0); }
+  44% { text-shadow: -2px 0 rgba(255, 64, 64, 0.55), 2px 0 rgba(61, 209, 255, 0.55); transform: translateX(-1px); }
+  60% { text-shadow: 2px 0 rgba(255, 64, 64, 0.45), -2px 0 rgba(61, 209, 255, 0.45); transform: translateX(1px); }
+}
+
+@keyframes crt-glitch-a {
+  0%, 38%, 100% { opacity: 0; transform: translateX(0); }
+  44% { opacity: 0.7; transform: translateX(-3px); }
+  58% { opacity: 0.34; transform: translateX(2px); }
+}
+
+@keyframes crt-glitch-b {
+  0%, 42%, 100% { opacity: 0; transform: translateX(0); }
+  49% { opacity: 0.64; transform: translateX(3px); }
+  66% { opacity: 0.28; transform: translateX(-2px); }
+}
+
+@media (max-width: 639px) {
+  .crt-login-overlay { padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem max(0.5rem, env(safe-area-inset-bottom)); }
+  .crt-workstation { width: min(100%, 23.5rem); max-height: calc(100dvh - 1rem); }
+  .crt-frame { padding: 0.65rem; box-shadow: 5px 5px 0 var(--color-dark); }
+  .crt-frame-label { margin-bottom: 0.4rem; font-size: 0.625rem; }
+  .crt-bezel { padding: 0.4rem; }
+  .crt-screen,
+  .crt-terminal-content { min-height: min(27rem, calc(100dvh - 6.5rem)); }
+  .crt-terminal-content { padding: 0.9rem; }
+  .crt-terminal-header { gap: 0.6rem; padding-bottom: 0.6rem; }
+  .crt-terminal-header p { font-size: 0.6875rem; }
+  .crt-terminal-lines { min-height: 6.7rem; padding: 0.7rem 0; font-size: 0.6875rem; line-height: 1.5; }
+  .crt-actions { align-items: stretch; flex-direction: column; gap: 0.4rem; margin-top: 0.7rem; }
+  .crt-login-button { width: 100%; flex: none; }
+  .crt-skip-button { min-height: 2.25rem; }
+  .crt-controls { height: 1.35rem; padding-top: 0.5rem; }
+  .crt-stand { height: 0.6rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition: none !important;
+  }
+
+  .crt-noise-line,
+  .crt-glitch-layer {
+    display: none;
+  }
+
+  .crt-screen,
+  .crt-terminal-content,
+  .crt-status span {
+    animation: none !important;
   }
 }
