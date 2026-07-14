@@ -49,6 +49,21 @@ test('customer HOME statements trigger correct discovery events', () => {
   assert.ok(eventTypes(extract(turn(4, 'customer', 'Saya belum pernah punya rumah.'))).includes('ELIGIBILITY_INFO_DISCOVERED'))
 })
 
+test('generic financing and BI checking concerns do not complete HOME money or eligibility', () => {
+  const financingConcern = eventTypes(extract(turn(1, 'customer', 'Saya takut cicilannya terlalu berat.')))
+  const checkingConcern = eventTypes(extract(turn(2, 'customer', 'Saya khawatir BI checking bermasalah.')))
+
+  assert.equal(financingConcern.includes('MONEY_INFO_DISCOVERED'), false)
+  assert.equal(checkingConcern.includes('ELIGIBILITY_INFO_DISCOVERED'), false)
+  assert.equal(financingConcern.includes('OBJECTION_RAISED'), true)
+  assert.equal(checkingConcern.includes('OBJECTION_RAISED'), true)
+})
+
+test('concrete first-person financial facts still complete HOME money', () => {
+  assert.ok(eventTypes(extract(turn(1, 'customer', 'Cicilan saya satu juta per bulan.'))).includes('MONEY_INFO_DISCOVERED'))
+  assert.ok(eventTypes(extract(turn(2, 'customer', 'Saya punya cicilan motor.'))).includes('MONEY_INFO_DISCOVERED'))
+})
+
 test('customer objection triggers OBJECTION_RAISED with topic', () => {
   const events = extract(turn(1, 'customer', 'Saya takut cicilannya terlalu berat.'))
   const objection = events.find(event => event.eventType === 'OBJECTION_RAISED')

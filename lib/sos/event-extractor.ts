@@ -96,8 +96,14 @@ const probingIndicators = [
 
 const housingIndicators = ['tinggal dengan orang tua', 'masih kontrak', 'masih ngontrak', 'kos', 'rumah keluarga', 'belum punya rumah', 'sudah punya rumah']
 const occupationIndicators = ['saya kerja', 'pekerjaan saya', 'karyawan', 'pegawai', 'ojol', 'driver', 'pedagang', 'usaha', 'freelance', 'honorer', 'wiraswasta']
-const moneyIndicators = ['penghasilan saya', 'gaji saya', 'pendapatan', 'per bulan', 'cicilan', 'angsuran', 'utang', 'hutang', 'pengeluaran']
-const eligibilityIndicators = ['belum pernah punya rumah', 'sudah punya rumah', 'belum pernah dapat subsidi', 'pernah menerima subsidi', 'sudah menikah', 'belum menikah', 'ktp', 'kk', 'npwp', 'slik', 'bi checking']
+const moneyIndicators = [
+  'penghasilan saya', 'gaji saya', 'pendapatan saya', 'cicilan saya', 'angsuran saya',
+  'utang saya', 'hutang saya', 'pengeluaran saya', 'saya punya cicilan', 'saya memiliki cicilan',
+]
+const eligibilityIndicators = [
+  'belum pernah punya rumah', 'sudah punya rumah', 'belum pernah dapat subsidi',
+  'pernah menerima subsidi', 'sudah menikah', 'belum menikah',
+]
 
 const solutionIndicators = [
   'solusinya', 'yang bisa dilakukan', 'opsinya', 'bisa menggunakan', 'bisa disiapkan',
