@@ -103,7 +103,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
       case 'identity':
         return (
           <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Name *</label>
                 <input value={data.name} onChange={e => update({ name: e.target.value })} placeholder="e.g. Mrs. Siti" className="retro-input bg-surface p-4" required />
@@ -116,17 +116,17 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Age</label>
                 <input type="number" value={data.age} onChange={e => update({ age: parseInt(e.target.value) || 0 })} className="retro-input bg-surface p-4" />
               </div>
-              <div className="space-y-2 col-span-2">
+              <div className="space-y-2 sm:col-span-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Occupation</label>
                 <input value={data.occupation} onChange={e => update({ occupation: e.target.value })} placeholder="e.g. Teacher" className="retro-input bg-surface p-4" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Family Status</label>
                 <input value={data.familyStatus} onChange={e => update({ familyStatus: e.target.value })} placeholder="e.g. Married, 2 kids" className="retro-input bg-surface p-4" />
@@ -150,7 +150,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
               <label className="text-[10px] font-bold uppercase text-muted font-heading">Current Situation</label>
               <textarea value={data.currentSituation} onChange={e => update({ currentSituation: e.target.value })} rows={2} placeholder="What's happening now?" className="retro-input bg-surface p-4 resize-none" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Goals</label>
                 <textarea value={data.goals} onChange={e => update({ goals: e.target.value })} rows={2} placeholder="What do they want?" className="retro-input bg-surface p-4 resize-none" />
@@ -207,7 +207,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
       case 'speech':
         return (
           <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Speech Style</label>
                 <select value={data.speechStyle} onChange={e => update({ speechStyle: e.target.value })} className="retro-input bg-surface p-4">
@@ -227,7 +227,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Formality</label>
                 <select value={data.formality} onChange={e => update({ formality: e.target.value })} className="retro-input bg-surface p-4">
@@ -284,7 +284,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
               <label className="text-[10px] font-bold uppercase text-muted font-heading">Hidden Instructions for AI</label>
               <textarea value={data.hiddenInstructions} onChange={e => update({ hiddenInstructions: e.target.value })} rows={4} placeholder="Internal behavior instructions for this persona..." className="retro-input bg-surface p-4 resize-none border-warning/50 bg-warning/5" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">What Persona KNOWS</label>
                 <textarea value={data.personaKnowledge} onChange={e => update({ personaKnowledge: e.target.value })} rows={3} placeholder="Information the persona has..." className="retro-input bg-surface p-4 resize-none" />
@@ -322,7 +322,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -334,7 +334,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative w-full max-w-3xl max-h-[90vh] bg-surface retro-panel overflow-hidden flex flex-col"
       >
-        <div className="p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
+        <div className="p-4 sm:p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
           <h3 className="text-lg font-bold font-heading">
             {editingPersona ? 'Edit Persona' : 'New Persona'}
           </h3>
@@ -348,7 +348,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-3 py-2.5 text-[9px] font-bold uppercase font-heading whitespace-nowrap border-b-2 -mb-[2px] transition-none ${
+              className={`min-h-11 flex items-center gap-1.5 px-3 py-2.5 text-[11px] font-bold uppercase font-heading whitespace-nowrap border-b-2 -mb-[2px] transition-none ${
                 tab === t.key ? 'border-primary bg-primary/10 text-dark' : 'border-transparent text-muted hover:text-dark'
               }`}
             >
@@ -357,10 +357,10 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-w-0">
           {renderTab()}
 
-          <div className="flex gap-3 pt-4 border-t-2 border-dark/15">
+          <div className="flex flex-col min-[360px]:flex-row gap-3 pt-4 border-t-2 border-dark/15">
             <button type="submit" className="retro-btn retro-btn-primary flex items-center gap-2 text-[11px] flex-1 justify-center">
               <Save size={16} /> {editingPersona ? 'Update Persona' : 'Create Persona'}
             </button>

@@ -81,7 +81,7 @@ export function AppLayout({
           sidebarOpen={sidebarOpen}
         />
 
-        <main id="main-content" className="flex-1 px-6 lg:px-10 py-8 pb-24 lg:pb-8" tabIndex={-1}>
+        <main id="main-content" className="flex-1 px-4 sm:px-6 lg:px-10 py-6 sm:py-8 pb-32 sm:pb-40 lg:pb-8" tabIndex={-1}>
           {children}
         </main>
       </div>

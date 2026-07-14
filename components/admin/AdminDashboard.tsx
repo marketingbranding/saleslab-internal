@@ -88,66 +88,66 @@ export function AdminDashboard({ sessions, totalUsers, loading }: AdminDashboard
   return (
     <div className="space-y-8">
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="p-5 retro-panel bg-primary text-dark">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="p-4 sm:p-5 retro-panel bg-primary text-dark min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <Users size={16} />
-            <span className="text-[10px] font-bold uppercase text-dark/60 font-heading">Total Users</span>
+            <span className="text-[11px] font-bold uppercase text-dark/70 font-heading">Total Pengguna</span>
           </div>
           <div className="text-3xl font-bold font-heading">{totalUsers}</div>
         </div>
 
-        <div className="p-5 retro-panel bg-surface">
+        <div className="p-4 sm:p-5 retro-panel bg-surface min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <Activity size={16} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase text-muted font-heading">Sessions Today</span>
+            <span className="text-[11px] font-bold uppercase text-muted font-heading">Sesi Hari Ini</span>
           </div>
           <div className="text-3xl font-bold font-heading">{sessionsToday.length}</div>
         </div>
 
-        <div className="p-5 retro-panel bg-surface">
+        <div className="p-4 sm:p-5 retro-panel bg-surface min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <BarChart3 size={16} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase text-muted font-heading">Avg Score</span>
+            <span className="text-[11px] font-bold uppercase text-muted font-heading">Skor Rata-rata</span>
           </div>
           <div className="text-3xl font-bold font-heading">{avgScore}</div>
         </div>
 
-        <div className="p-5 retro-panel bg-surface">
+        <div className="p-4 sm:p-5 retro-panel bg-surface min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <Zap size={16} className="text-warning" />
-            <span className="text-[10px] font-bold uppercase text-muted font-heading">Weakest Skill</span>
+            <span className="text-[11px] font-bold uppercase text-muted font-heading">Skill Terlemah</span>
           </div>
-          <div className="text-lg font-bold font-heading truncate">
+          <div className="text-lg font-bold font-heading break-words">
             {weakestSkill ? `${weakestSkill.key} (${weakestSkill.avg})` : 'N/A'}
           </div>
         </div>
 
-        <div className="p-5 retro-panel bg-surface">
+        <div className="p-4 sm:p-5 retro-panel bg-surface min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle size={16} className="text-danger" />
-            <span className="text-[10px] font-bold uppercase text-muted font-heading">Failed Analysis</span>
+            <span className="text-[11px] font-bold uppercase text-muted font-heading">Analisis Gagal</span>
           </div>
           <div className="text-3xl font-bold font-heading text-danger">{failedAnalysis}</div>
         </div>
 
-        <div className="p-5 retro-panel bg-surface">
+        <div className="p-4 sm:p-5 retro-panel bg-surface min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <Target size={16} className="text-primary" />
-            <span className="text-[10px] font-bold uppercase text-muted font-heading">Most Used</span>
+            <span className="text-[11px] font-bold uppercase text-muted font-heading">Paling Sering Dipakai</span>
           </div>
-          <div className="text-lg font-bold font-heading truncate">
+          <div className="text-lg font-bold font-heading break-all sm:break-words">
             {mostUsedScenario ? `${mostUsedScenario[0]} (${mostUsedScenario[1]})` : 'N/A'}
           </div>
         </div>
       </div>
 
       {/* This Week */}
-      <div className="p-5 retro-panel bg-surface">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="p-4 sm:p-5 retro-panel bg-surface">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <Calendar size={16} className="text-primary" />
-          <span className="text-[10px] font-bold uppercase text-muted font-heading">This Week</span>
-          <span className="text-xs font-bold ml-auto">{sessionsThisWeek.length} sessions</span>
+          <span className="text-[11px] font-bold uppercase text-muted font-heading">Minggu Ini</span>
+          <span className="text-xs font-bold ml-auto">{sessionsThisWeek.length} sesi</span>
         </div>
         <div className="h-16 flex items-end gap-1">
           {Array.from({ length: 7 }, (_, i) => {
@@ -172,10 +172,10 @@ export function AdminDashboard({ sessions, totalUsers, loading }: AdminDashboard
             return (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full bg-primary/20" style={{ height: `${(count / maxSessions) * 100}%`, minHeight: count > 0 ? '8px' : '0' }} />
-                <span className="text-[8px] font-bold text-muted">
+                <span className="text-[10px] font-bold text-muted">
                   {day.toLocaleDateString('id-ID', { weekday: 'short' })}
                 </span>
-                <span className="text-[8px] font-bold">{count}</span>
+                <span className="text-[10px] font-bold">{count}</span>
               </div>
             )
           })}
@@ -186,16 +186,16 @@ export function AdminDashboard({ sessions, totalUsers, loading }: AdminDashboard
       <div className="space-y-4">
         <h3 className="text-sm font-bold uppercase font-heading flex items-center gap-2">
           <TrendingUp size={16} className="text-primary" />
-          Recent Sessions
+          Sesi Terbaru
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b-2 border-dark/15">
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">User</th>
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden sm:table-cell">Score</th>
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden md:table-cell">Status</th>
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden lg:table-cell">Time</th>
+                <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading">Pengguna</th>
+                <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading hidden sm:table-cell">Skor</th>
+                <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading hidden md:table-cell">Status</th>
+                <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading hidden lg:table-cell">Waktu</th>
               </tr>
             </thead>
             <tbody>
@@ -213,7 +213,7 @@ export function AdminDashboard({ sessions, totalUsers, loading }: AdminDashboard
                     <span className={`px-2 py-0.5 font-bold text-[10px] font-heading ${
                       session.feedback ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
                     }`}>
-                      {session.feedback ? 'Analyzed' : 'Pending'}
+                      {session.feedback ? 'Dianalisis' : 'Tertunda'}
                     </span>
                   </td>
                   <td className="p-3 text-xs text-muted font-semibold hidden lg:table-cell">
@@ -223,7 +223,7 @@ export function AdminDashboard({ sessions, totalUsers, loading }: AdminDashboard
               ))}
               {recentSessions.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-6 text-center text-muted font-semibold">No sessions yet</td>
+                  <td colSpan={4} className="p-6 text-center text-muted font-semibold">Belum ada sesi</td>
                 </tr>
               )}
             </tbody>

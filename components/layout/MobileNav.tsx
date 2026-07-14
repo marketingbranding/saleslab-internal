@@ -21,7 +21,7 @@ const MOBILE_ITEMS = [
 export function MobileNav({ activeStep, onNavigate, isAdmin }: MobileNavProps) {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t-2 border-dark/15 safe-bottom" aria-label="Navigasi seluler">
-      <div className="grid grid-cols-4 py-1 px-1">
+      <div className="grid grid-cols-4 sm:grid-cols-8 py-1 px-1">
         {MOBILE_ITEMS.map((item) => {
           const Icon = item.icon
           const isActive = activeStep === item.step

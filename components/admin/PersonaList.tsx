@@ -53,7 +53,7 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative w-full sm:flex-1 sm:max-w-sm">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
@@ -65,7 +65,7 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
         </div>
         <button
           onClick={() => { setEditingPersona(null); setBuilderOpen(true) }}
-          className="retro-btn retro-btn-primary flex items-center gap-2 text-[10px]"
+          className="retro-btn retro-btn-primary min-h-11 w-full sm:w-auto flex items-center justify-center gap-2 text-xs"
         >
           <Plus size={14} /> Persona Baru
         </button>
@@ -74,15 +74,15 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
       {/* Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((persona) => (
-          <div key={persona.id} className="p-5 retro-panel bg-surface space-y-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <h4 className="font-bold font-heading">{persona.name}</h4>
-                <p className="text-[10px] font-bold uppercase text-muted font-heading">
+          <div key={persona.id} className="p-4 sm:p-5 retro-panel bg-surface space-y-3 min-w-0">
+            <div className="flex flex-wrap items-start justify-between gap-2 min-w-0">
+              <div className="min-w-0 flex-1">
+                <h4 className="font-bold font-heading break-words">{persona.name}</h4>
+                <p className="text-[11px] font-bold uppercase text-muted font-heading break-words">
                   {persona.gender} • {persona.occupation || 'N/A'}
                 </p>
               </div>
-              <div className={`px-2 py-0.5 text-[10px] font-bold font-heading border-2 ${
+              <div className={`shrink-0 px-2 py-1 text-[11px] font-bold font-heading border-2 ${
                 persona.personality === 'Friendly' ? 'bg-success/10 text-success border-success/20'
                 : persona.personality === 'Aggressive' ? 'bg-danger/10 text-danger border-danger/20'
                 : 'bg-warning/10 text-warning border-warning/20'
@@ -90,21 +90,21 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
                 {persona.personality}
               </div>
             </div>
-            <div className="flex gap-2 text-[10px] font-semibold text-muted">
+            <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-semibold text-muted">
               <span>S: {persona.speechStyle}</span>
               <span>|</span>
               <span>Agg: {persona.aggressiveness}/10</span>
               <span>|</span>
               <span>Pat: {persona.patience}/10</span>
             </div>
-            <div className="flex gap-1 pt-2">
-              <button onClick={() => { setEditingPersona(persona); setBuilderOpen(true) }} className="flex-1 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-dark font-bold text-[10px] uppercase font-heading flex items-center justify-center gap-1">
+            <div className="grid grid-cols-[minmax(0,1fr)_44px_44px] gap-2 pt-2">
+              <button onClick={() => { setEditingPersona(persona); setBuilderOpen(true) }} className="min-h-11 bg-primary/10 text-primary hover:bg-primary hover:text-dark font-bold text-xs uppercase font-heading flex items-center justify-center gap-1">
                 <Edit3 size={12} /> Edit
               </button>
-              <button onClick={() => handleDuplicate(persona)} className="px-3 bg-dark/5 text-muted hover:bg-dark/20" title="Duplicate" aria-label={`Duplicate ${persona.name}`}>
+              <button onClick={() => handleDuplicate(persona)} className="h-11 bg-dark/5 text-muted hover:bg-dark/20 flex items-center justify-center" title="Duplikasi" aria-label={`Duplikasi ${persona.name}`}>
                 <Copy size={14} />
               </button>
-              <button onClick={() => handleDelete(persona.id)} disabled={deletingId === persona.id} className="px-3 bg-danger/10 text-danger hover:bg-danger hover:text-surface" title="Delete" aria-label={`Delete ${persona.name}`}>
+              <button onClick={() => handleDelete(persona.id)} disabled={deletingId === persona.id} className="h-11 bg-danger/10 text-danger hover:bg-danger hover:text-surface flex items-center justify-center disabled:opacity-50" title="Hapus" aria-label={`Hapus ${persona.name}`}>
                 <Trash2 size={14} />
               </button>
             </div>

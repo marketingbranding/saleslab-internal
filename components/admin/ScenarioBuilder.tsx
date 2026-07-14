@@ -90,7 +90,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
               <label className="text-[10px] font-bold uppercase text-muted font-heading">Description *</label>
               <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Scenario background..." className="retro-input bg-surface p-4 resize-none" required />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Difficulty</label>
                 <select value={difficulty} onChange={e => setDifficulty(e.target.value as any)} className="retro-input bg-surface p-4">
@@ -110,7 +110,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
       case 'persona':
         return (
           <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Persona Name *</label>
                 <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Pak Budi" className="retro-input bg-surface p-4" required />
@@ -132,7 +132,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
                 <option value="Cerewet">Cerewet</option>
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Aggressiveness ({aggressiveness}/10)</label>
                 <input type="range" min="1" max="10" value={aggressiveness} onChange={e => setAggressiveness(parseInt(e.target.value))} className="w-full" />
@@ -273,7 +273,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -286,7 +286,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
         className="relative w-full max-w-3xl max-h-[90vh] bg-surface retro-panel overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
+        <div className="p-4 sm:p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
           <h3 className="text-lg font-bold font-heading">
             {editingScenario ? 'Edit Scenario' : 'New Scenario'}
           </h3>
@@ -301,7 +301,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-3 py-2.5 text-[9px] font-bold uppercase font-heading whitespace-nowrap border-b-2 -mb-[2px] transition-none ${
+              className={`min-h-11 flex items-center gap-1.5 px-3 py-2.5 text-[11px] font-bold uppercase font-heading whitespace-nowrap border-b-2 -mb-[2px] transition-none ${
                 tab === t.key ? 'border-primary bg-primary/10 text-dark' : 'border-transparent text-muted hover:text-dark'
               }`}
             >
@@ -311,11 +311,11 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-w-0">
           {renderTab()}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t-2 border-dark/15">
+          <div className="flex flex-col min-[360px]:flex-row gap-3 pt-4 border-t-2 border-dark/15">
             <button
               type="submit"
               className="retro-btn retro-btn-primary flex items-center gap-2 text-[11px] flex-1 justify-center"

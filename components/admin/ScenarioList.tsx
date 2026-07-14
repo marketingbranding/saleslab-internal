@@ -58,7 +58,7 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading }: ScenarioL
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative w-full sm:flex-1 sm:max-w-sm">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
@@ -70,22 +70,66 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading }: ScenarioL
         </div>
         <button
           onClick={() => { setEditingScenario(null); setBuilderOpen(true) }}
-          className="retro-btn retro-btn-primary flex items-center gap-2 text-[10px]"
+          className="retro-btn retro-btn-primary min-h-11 w-full sm:w-auto flex items-center justify-center gap-2 text-xs"
         >
           <Plus size={14} /> Skenario Baru
         </button>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-3">
+        {filtered.map((scenario) => (
+          <article key={scenario.id} className="p-4 retro-panel bg-surface space-y-4 min-w-0">
+            <div className="flex items-start justify-between gap-3 min-w-0">
+              <div className="min-w-0">
+                <h3 className="font-bold text-base font-heading break-words">{scenario.title}</h3>
+                <p className="text-xs font-semibold text-muted break-words mt-1">{scenario.name}</p>
+              </div>
+              <span className={`shrink-0 px-2 py-1 font-bold text-[11px] font-heading border-2 ${difficultyColor(scenario.difficulty)}`}>
+                {scenario.difficulty}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => { setEditingScenario(scenario); setBuilderOpen(true) }}
+                className="min-h-11 bg-primary/10 text-primary hover:bg-primary hover:text-dark flex items-center justify-center"
+                aria-label={`Edit ${scenario.title}`}
+              >
+                <Edit3 size={16} />
+              </button>
+              <button
+                onClick={() => handleDuplicate(scenario)}
+                className="min-h-11 bg-dark/5 text-muted hover:bg-dark/20 flex items-center justify-center"
+                aria-label={`Duplikasi ${scenario.title}`}
+              >
+                <Copy size={16} />
+              </button>
+              <button
+                onClick={() => handleDelete(scenario.id)}
+                disabled={deletingId === scenario.id}
+                className="min-h-11 bg-danger/10 text-danger hover:bg-danger hover:text-surface flex items-center justify-center disabled:opacity-50"
+                aria-label={`Hapus ${scenario.title}`}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </article>
+        ))}
+        {filtered.length === 0 && (
+          <div className="p-6 text-center text-muted font-semibold border-2 border-dashed border-dark/15">Tidak ada skenario</div>
+        )}
+      </div>
+
+      {/* Tablet and desktop table */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b-2 border-dark/15">
-              <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Title</th>
-              <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden sm:table-cell">Difficulty</th>
-              <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden md:table-cell">Persona</th>
-              <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden lg:table-cell">First Speaker</th>
-              <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Actions</th>
+              <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading">Judul</th>
+              <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading">Kesulitan</th>
+              <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading hidden md:table-cell">Persona</th>
+              <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading hidden lg:table-cell">Pembicara Pertama</th>
+              <th className="p-3 text-[11px] font-bold uppercase text-muted font-heading">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -103,7 +147,7 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading }: ScenarioL
                   <div className="flex gap-1">
                     <button
                       onClick={() => { setEditingScenario(scenario); setBuilderOpen(true) }}
-                      className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-dark"
+                      className="h-11 w-11 bg-primary/10 text-primary hover:bg-primary hover:text-dark flex items-center justify-center"
                       title="Edit"
                       aria-label={`Edit ${scenario.title}`}
                     >
@@ -111,7 +155,7 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading }: ScenarioL
                     </button>
                     <button
                       onClick={() => handleDuplicate(scenario)}
-                      className="p-2 bg-dark/5 text-muted hover:bg-dark/20"
+                      className="h-11 w-11 bg-dark/5 text-muted hover:bg-dark/20 flex items-center justify-center"
                       title="Duplicate"
                       aria-label={`Duplicate ${scenario.title}`}
                     >
@@ -120,7 +164,7 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading }: ScenarioL
                     <button
                       onClick={() => handleDelete(scenario.id)}
                       disabled={deletingId === scenario.id}
-                      className="p-2 bg-danger/10 text-danger hover:bg-danger hover:text-surface"
+                      className="h-11 w-11 bg-danger/10 text-danger hover:bg-danger hover:text-surface flex items-center justify-center"
                       title="Delete"
                       aria-label={`Delete ${scenario.title}`}
                     >
