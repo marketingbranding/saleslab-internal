@@ -3,28 +3,20 @@
 import * as React from "react"
 import { motion } from "motion/react"
 import { SalesScenario, analyzePerformance } from "@/lib/gemini"
-import { Trophy, Target, AlertTriangle, Lightbulb, CheckCircle2, Home, RefreshCcw } from "lucide-react"
+import { Trophy, Target, AlertTriangle, Lightbulb, CheckCircle2, Home, RefreshCcw, ShieldAlert, CircleCheck, CircleDashed } from "lucide-react"
 import confetti from "canvas-confetti"
 import { db } from "@/lib/firebase"
 import { doc, setDoc, serverTimestamp } from "firebase/firestore"
 import { useAuth } from "@/lib/AuthContext"
 import { SyncIndicator } from "@/components/SyncIndicator"
-
-interface FeedbackData {
-  overallScore: number
-  grade?: string
-  summary?: string
-  strengths: string[]
-  weaknesses: string[]
-  keyObjectionsHandled: string[]
-  missedOpportunities: string[]
-  verdict: string
-  actionableTips: string[]
-  skillScores?: Array<{ skill: string; score: number; evidence?: string[] }>
-  suggestedResponses?: string[]
-  recommendedNextScenario?: string | null
-  actionPlan?: string[]
-}
+import type { TrialFeedbackData } from "@/lib/sos/evaluation/client-types"
+import {
+  allHomeCategoryPresentations,
+  evaluationRuleLabel,
+  evaluationSeverityLabel,
+  knownMissingHomeCategories,
+  uniqueTranscriptReasonLabels,
+} from "@/lib/sos/evaluation/presentation"
 
 interface FeedbackViewProps {
   scenario: SalesScenario
@@ -36,7 +28,7 @@ interface FeedbackViewProps {
 
 export function FeedbackView({ scenario, salespersonName, transcript, onRestart, onHome }: FeedbackViewProps) {
   const { user } = useAuth()
-  const [feedback, setFeedback] = React.useState<FeedbackData | null>(null)
+  const [feedback, setFeedback] = React.useState<TrialFeedbackData | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [saved, setSaved] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -51,7 +43,7 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
     return sessionIdRef.current
   }, [])
 
-  const saveSessionState = React.useCallback(async (payload: Record<string, any>) => {
+  const saveSessionState = React.useCallback(async (payload: Record<string, unknown>) => {
     if (!user) return
     await setDoc(doc(db, 'sessions', ensureSessionId()), {
       scenarioId: scenario.id,
@@ -173,7 +165,44 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
 
   if (!feedback) return null
 
-  const transcriptIncomplete = transcript.length < 3
+  const evaluationV2 = feedback.evaluationV2
+  const v2SufficiencyKnown = typeof evaluationV2?.transcriptSufficient === 'boolean'
+  const transcriptIncomplete = v2SufficiencyKnown
+    ? evaluationV2.transcriptSufficient === false
+    : transcript.length < 3
+  const transcriptWarnings = evaluationV2?.transcriptSufficient === false
+    ? uniqueTranscriptReasonLabels(evaluationV2.insufficiencyReasons)
+    : [`Transkrip sangat pendek (${transcript.length} pertukaran). Analisis mungkin kurang akurat.`]
+  const scoreAdjustment = evaluationV2?.scoreAdjustment
+  const appliedRules = Array.isArray(scoreAdjustment?.appliedRules) ? scoreAdjustment.appliedRules : []
+  const visibleRules = appliedRules.slice(0, 5)
+  const hiddenRuleCount = Math.max(0, appliedRules.length - visibleRules.length)
+  const scoreCapped = scoreAdjustment?.capped === true
+  const controllingRuleLabel = evaluationRuleLabel(
+    scoreAdjustment?.controllingRuleId || appliedRules[0]?.ruleId || ''
+  )
+  const originalScore = typeof scoreAdjustment?.originalScore === 'number'
+    ? scoreAdjustment.originalScore
+    : feedback.overallScore
+  const effectiveMaxScore = typeof scoreAdjustment?.effectiveMaxScore === 'number'
+    ? scoreAdjustment.effectiveMaxScore
+    : 100
+  const home = evaluationV2?.home
+  const hasHomeDetails = Array.isArray(home?.missingCategories)
+  const missingHomeCategories = new Set(knownMissingHomeCategories(home?.missingCategories))
+  const homeCategories = allHomeCategoryPresentations()
+  const homeCompletedCount = typeof home?.completedCount === 'number' && Number.isFinite(home.completedCount)
+    ? Math.max(0, Math.min(4, Math.round(home.completedCount)))
+    : Math.max(0, 4 - missingHomeCategories.size)
+  const skillScores = Array.isArray(feedback.skillScores) ? feedback.skillScores : []
+  const strengths = Array.isArray(feedback.strengths) ? feedback.strengths : []
+  const weaknesses = Array.isArray(feedback.weaknesses) ? feedback.weaknesses : []
+  const actionableTips = Array.isArray(feedback.actionableTips) ? feedback.actionableTips : []
+  const suggestedResponses = Array.isArray(feedback.suggestedResponses) ? feedback.suggestedResponses : []
+  const evidenceAccepted = evaluationV2?.evidenceDiagnostics?.accepted
+  const evidenceRejected = evaluationV2?.evidenceDiagnostics?.rejected
+  const showEvidenceQuality = (typeof evidenceAccepted === 'number' && evidenceAccepted > 0) ||
+    (typeof evidenceRejected === 'number' && evidenceRejected > 0)
 
   return (
     <motion.div
@@ -196,9 +225,14 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
 
       {/* Transcript warning banner */}
       {transcriptIncomplete && (
-        <div className="p-4 bg-warning/10 border-2 border-warning/30 text-warning font-bold text-xs uppercase flex items-center gap-3" role="alert">
-          <AlertTriangle size={16} />
-          <span>Transkrip sangat pendek ({transcript.length} pertukaran). Analisis mungkin kurang akurat.</span>
+        <div className="p-4 bg-warning/10 border-2 border-warning/40 text-dark flex items-start gap-3" role="alert">
+          <AlertTriangle size={18} className="text-warning shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="space-y-1">
+            <h3 className="font-heading text-sm font-bold uppercase">Bukti Percakapan Terbatas</h3>
+            <ul className="space-y-1 text-sm font-semibold leading-tight text-dark/80">
+              {transcriptWarnings.map(message => <li key={message}>{message}</li>)}
+            </ul>
+          </div>
         </div>
       )}
 
@@ -208,6 +242,9 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
           <div className="w-48 h-48 bg-primary text-dark flex items-center justify-center flex-col border-2 border-dark">
             <span className="text-7xl font-bold font-heading tracking-tight leading-none">{feedback.overallScore}</span>
             <span className="text-[11px] font-bold uppercase text-dark/80 mt-2 font-heading">{feedback.grade || 'Score Akhir'}</span>
+            {scoreCapped && (
+              <span className="text-[11px] font-bold text-dark/70 mt-1 font-mono">Skor awal: {originalScore}</span>
+            )}
           </div>
           <div className="absolute -top-3 -right-3 w-12 h-12 bg-warning text-dark flex items-center justify-center">
             <Trophy size={24} strokeWidth={2} />
@@ -240,48 +277,127 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         </div>
       </div>
 
+      {appliedRules.length > 0 && (
+        <section
+          className={`retro-panel p-5 sm:p-7 space-y-5 ${scoreCapped ? 'bg-danger/10' : 'bg-warning/10'}`}
+          role={scoreCapped ? 'alert' : undefined}
+          aria-labelledby="score-adjustment-title"
+        >
+          <div className="flex items-start gap-4">
+            <div className={`p-3 border-2 border-dark shrink-0 ${scoreCapped ? 'bg-danger text-surface' : 'bg-warning text-dark'}`}>
+              <ShieldAlert size={24} aria-hidden="true" />
+            </div>
+            <div className="space-y-2 min-w-0">
+              <h3 id="score-adjustment-title" className="font-heading text-lg font-bold uppercase">
+                {scoreCapped ? 'Penyesuaian Skor' : 'Temuan Penting'}
+              </h3>
+              <p className="text-sm font-semibold leading-snug text-dark/80">
+                {scoreCapped
+                  ? `Skor disesuaikan dari ${originalScore} menjadi ${feedback.overallScore}, dengan batas maksimum ${effectiveMaxScore}, karena ${controllingRuleLabel.toLowerCase()}.`
+                  : `Evaluasi menemukan ${appliedRules.length} temuan. Skor akhir sudah berada di bawah batas yang berlaku sehingga tidak dikurangi lagi.`}
+              </p>
+            </div>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {visibleRules.map((rule, index) => {
+              const sourceTurns = Array.isArray(rule.sourceTurnSequences)
+                ? [...new Set(rule.sourceTurnSequences.filter(sequence => Number.isInteger(sequence) && sequence > 0))].slice(0, 5)
+                : []
+              return (
+                <li key={`${rule.ruleId}-${index}`} className="border-2 border-dark/20 bg-surface p-4 space-y-1">
+                  <div className="text-sm font-bold leading-tight">{evaluationRuleLabel(rule.ruleId)}</div>
+                  <div className="text-xs font-semibold text-muted leading-relaxed">
+                    {evaluationSeverityLabel(rule.severity)} · Batas skor {rule.maxScore}
+                    {sourceTurns.length > 0 ? ` · Turn ${sourceTurns.join(', ')}` : ''}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+          {hiddenRuleCount > 0 && (
+            <p className="text-xs font-bold uppercase text-muted">+{hiddenRuleCount} temuan lainnya</p>
+          )}
+        </section>
+      )}
+
+      {home && (
+        <section className="bg-surface retro-panel p-5 sm:p-8 space-y-6" aria-labelledby="home-coverage-title">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 border-b-2 border-dark/15 pb-4">
+            <div>
+              <div className="text-[10px] font-bold uppercase text-primary font-heading mb-1">Discovery Coverage</div>
+              <h3 id="home-coverage-title" className="text-xl font-bold uppercase">Kelengkapan Kualifikasi HOME</h3>
+            </div>
+            <div className="font-mono text-sm font-bold">{homeCompletedCount} dari 4 area tergali</div>
+          </div>
+          {hasHomeDetails && (
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {homeCategories.map(category => {
+                const missing = missingHomeCategories.has(category.key)
+                return (
+                  <li key={category.key} className="border-2 border-dark/15 bg-bg p-4 flex items-start gap-3">
+                    {missing
+                      ? <CircleDashed size={19} className="text-warning shrink-0 mt-0.5" aria-hidden="true" />
+                      : <CircleCheck size={19} className="text-success shrink-0 mt-0.5" aria-hidden="true" />}
+                    <div>
+                      <div className="text-sm font-bold">{category.label}</div>
+                      <div className="text-xs text-muted font-semibold">{category.description}</div>
+                      <div className={`text-[10px] font-bold uppercase mt-2 ${missing ? 'text-warning' : 'text-success'}`}>
+                        {missing ? 'Belum tergali' : 'Tergali'}
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          <p className="text-xs font-semibold text-muted leading-relaxed">
+            HOME mengukur kelengkapan penggalian kebutuhan, bukan keputusan persetujuan bank.
+          </p>
+        </section>
+      )}
+
       {/* Grid Details */}
       <div className="grid md:grid-cols-2 gap-8">
         {/* Kekuatan */}
-        <section className="bg-surface retro-panel p-8">
+        {strengths.length > 0 && <section className="bg-surface retro-panel p-8">
           <div className="flex items-center gap-3 mb-6 bg-success/15 p-3 inline-flex">
             <CheckCircle2 size={22} strokeWidth={2} className="text-success" />
             <h3 className="font-bold uppercase text-xs text-success font-heading">Kekuatan</h3>
           </div>
           <ul className="space-y-4">
-            {feedback.strengths.map((s, i) => (
+            {strengths.map((s, i) => (
               <li key={i} className="flex gap-3 text-sm font-semibold text-dark leading-tight">
                 <span className="text-success shrink-0 font-bold">#</span>
                 {s}
               </li>
             ))}
           </ul>
-        </section>
+        </section>}
 
         {/* Weaknesses */}
-        <section className="bg-surface retro-panel p-8">
+        {weaknesses.length > 0 && <section className="bg-surface retro-panel p-8">
           <div className="flex items-center gap-3 mb-6 bg-danger/15 p-3 inline-flex">
             <AlertTriangle size={22} strokeWidth={2} className="text-danger" />
             <h3 className="font-bold uppercase text-xs text-danger font-heading">Area yang Perlu Ditingkatkan</h3>
           </div>
           <ul className="space-y-4">
-            {feedback.weaknesses.map((w, i) => (
+            {weaknesses.map((w, i) => (
               <li key={i} className="flex gap-3 text-sm font-semibold text-dark leading-tight">
                 <span className="text-danger shrink-0 font-bold">!</span>
                 {w}
               </li>
             ))}
           </ul>
-        </section>
+        </section>}
 
         {/* Actionable Tips */}
-        <section className="bg-surface retro-panel p-8 col-span-full">
+        {actionableTips.length > 0 && <section className="bg-surface retro-panel p-8 col-span-full">
           <div className="flex items-center gap-3 mb-8 bg-primary/15 p-3 inline-flex">
             <Lightbulb size={22} strokeWidth={2} className="text-primary" />
             <h3 className="font-bold uppercase text-xs text-primary font-heading">Tips Closing</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
-            {feedback.actionableTips.map((tip, i) => (
+            {actionableTips.map((tip, i) => (
               <div key={i} className="flex gap-4 p-5 border-2 border-primary/15 bg-primary/[0.05] hover:bg-primary/[0.08] transition-colors">
                 <div className="w-10 h-10 bg-primary text-dark flex items-center justify-center shrink-0 text-sm font-bold">
                   {i + 1}
@@ -290,41 +406,73 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
               </div>
             ))}
           </div>
-        </section>
+        </section>}
 
-        {feedback.skillScores && feedback.skillScores.length > 0 && (
+        {skillScores.length > 0 && (
           <section className="bg-surface retro-panel p-8 col-span-full">
             <div className="flex items-center gap-3 mb-8 bg-warning/15 p-3 inline-flex">
               <Target size={22} strokeWidth={2} className="text-warning" />
               <h3 className="font-bold uppercase text-xs text-warning font-heading">Rincian Skill</h3>
             </div>
+            {showEvidenceQuality && (
+              <div className="mb-6 border-l-4 border-success bg-success/[0.07] px-4 py-3 text-xs font-semibold leading-relaxed">
+                {typeof evidenceAccepted === 'number' && evidenceAccepted > 0 && (
+                  <span>Evaluasi menggunakan {evidenceAccepted} bukti percakapan yang tervalidasi.</span>
+                )}
+                {typeof evidenceRejected === 'number' && evidenceRejected > 0 && (
+                  <span className="block">{evidenceRejected} referensi yang tidak sesuai transkrip telah diabaikan.</span>
+                )}
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-5">
-              {feedback.skillScores.map((skill) => (
+              {skillScores.map((skill) => {
+                const score = Number.isFinite(skill.score) ? Math.max(0, Math.min(100, skill.score)) : 0
+                const evidence = Array.isArray(skill.evidence)
+                  ? skill.evidence.filter(item => typeof item === 'string' && item.trim()).slice(0, 3)
+                  : []
+                return (
                 <div key={skill.skill} className="p-4 border-2 border-dark/10 bg-bg space-y-2">
                   <div className="flex justify-between text-xs font-bold uppercase font-heading">
                     <span>{skill.skill}</span>
-                    <span>{skill.score}/100</span>
+                    <span>{score}/100</span>
                   </div>
-                  <div className="h-3 bg-dark/10 border border-dark/20">
-                    <div className="h-full bg-primary" style={{ width: `${skill.score}%` }} />
+                  <div
+                    className="h-3 bg-dark/10 border border-dark/20"
+                    role="progressbar"
+                    aria-label={`Skor ${skill.skill}`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={score}
+                  >
+                    <div className="h-full bg-primary" style={{ width: `${score}%` }} />
                   </div>
-                  {skill.evidence && skill.evidence.length > 0 && (
-                    <p className="text-xs font-semibold text-muted leading-tight">{skill.evidence[0]}</p>
+                  {evidence.length > 0 && (
+                    <div className="pt-2 space-y-2">
+                      <div className="text-[10px] font-bold uppercase font-heading text-muted">Bukti percakapan</div>
+                      <ul className="space-y-2">
+                        {evidence.map((item, index) => (
+                          <li key={`${item}-${index}`} className="flex gap-2 text-xs font-semibold text-muted leading-tight">
+                            <span className="text-primary font-bold shrink-0" aria-hidden="true">#</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
-              ))}
+              )})}
             </div>
           </section>
         )}
 
-        {feedback.suggestedResponses && feedback.suggestedResponses.length > 0 && (
+        {suggestedResponses.length > 0 && (
           <section className="bg-surface retro-panel p-8 col-span-full">
             <div className="flex items-center gap-3 mb-8 bg-success/15 p-3 inline-flex">
               <Lightbulb size={22} strokeWidth={2} className="text-success" />
               <h3 className="font-bold uppercase text-xs text-success font-heading">Respon yang Disarankan</h3>
             </div>
             <ul className="space-y-3">
-              {feedback.suggestedResponses.map((response, i) => (
+              {suggestedResponses.map((response, i) => (
                 <li key={i} className="p-4 border-2 border-success/15 bg-success/[0.05] text-sm font-semibold leading-tight">
                   {response}
                 </li>

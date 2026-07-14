@@ -8,8 +8,8 @@ Completion date: `2026-07-14`
 - `FT-002 Evaluation Context Builder` — completed.
 - `FT-003 Backward-Compatible Evaluator API` — completed.
 - `FT-004 Minimal Compliance Caps` — completed.
-- `FT-005 Trial Report Integration` — next.
-- `FT-006 Manual Trial QA` — pending.
+- `FT-005 Trial Report Integration` — completed.
+- `FT-006 Manual Trial QA` — next.
 
 ## Epic 1 — Domain Foundation
 
@@ -239,9 +239,9 @@ Completion date: `2026-07-14`
 - Tests: golden transcript tests with expected hard caps and evidence references.
 - Migration impact: high; affects feedback and score semantics.
 - Status: partially completed.
-- Implementation: Deterministic legacy reconstruction, context prompt, evidence normalization, backward-compatible response, leadership-trial score caps, and V2 diagnostics are implemented.
-- Verification: Evaluator pipeline, score-adjustment tests, full SOS tests, lint, typecheck, and build pass on `2026-07-14`.
-- Remaining: Full weighted scoring, final rubric-approved cap values, `FeedbackView` V2 rendering, persistence, and configurable evaluation profiles are pending.
+- Implementation: The leadership-trial pipeline now includes V2 feedback rendering, transcript sufficiency messaging, deterministic score-cap explanations, HOME discovery coverage, expanded validated skill evidence, and legacy response fallback.
+- Verification: Presentation helper tests, full SOS tests, lint, typecheck, build, and desktop/mobile browser QA pass on `2026-07-14`.
+- Remaining: Complete weighted rubric, configurable evaluation profiles, best and critical moment presentation, persisted V2 session contract, and the long-term post-trial report redesign are pending.
 
 #### Task V-002
 

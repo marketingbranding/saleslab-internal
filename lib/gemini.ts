@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { getSettings } from "./firebase";
 import { callOllama, OllamaMessage } from "./ollama";
+import type { TrialFeedbackData } from "./sos/evaluation/client-types";
 
 export async function callOpenRouter(apiKey: string, model: string, messages: { role: string; content: string }[], signal?: AbortSignal): Promise<string> {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -216,7 +217,7 @@ export async function getConsumerResponse(
 export async function analyzePerformance(
   scenario: SalesScenario,
   transcript: { role: string; text: string }[]
-) {
+): Promise<TrialFeedbackData> {
   if (typeof window !== 'undefined') {
     const response = await fetch('/api/analyze', {
       method: 'POST',
@@ -229,7 +230,7 @@ export async function analyzePerformance(
       throw new Error(data?.error || `Analysis failed: ${response.status}`);
     }
 
-    return response.json();
+    return response.json() as Promise<TrialFeedbackData>;
   }
 
   const formattedTranscript = transcript.map(t => `${t.role.toUpperCase()}: ${t.text}`).join("\n");
@@ -275,7 +276,7 @@ export async function analyzePerformance(
       if (!response.ok) throw new Error(`Groq error: ${response.status}`);
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content || "";
-      return JSON.parse(content.replace(/```json|```/g, '').trim());
+      return JSON.parse(content.replace(/```json|```/g, '').trim()) as TrialFeedbackData;
     } catch (e: any) {
       console.warn("Groq analysis failed, falling back to Gemini:", e?.message);
     }
@@ -283,7 +284,7 @@ export async function analyzePerformance(
 
   // Fallback: Gemini
   const ai = await getGenAI();
-  const generate = async (retryCount = 0): Promise<any> => {
+  const generate = async (retryCount = 0): Promise<TrialFeedbackData> => {
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.0-flash",
@@ -291,7 +292,7 @@ export async function analyzePerformance(
         config: { temperature: 0.7 },
       });
       const cleaned = (response.text || '').replace(/```json|```/g, '').trim();
-      return JSON.parse(cleaned);
+      return JSON.parse(cleaned) as TrialFeedbackData;
     } catch (e: any) {
       const msg = e?.message || '';
       if (retryCount < 3 && (msg.includes('503') || msg.includes('429') || msg.includes('capacity') || msg.includes('RESOURCE_EXHAUSTED'))) {
