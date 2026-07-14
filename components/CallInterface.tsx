@@ -12,7 +12,8 @@ import { useFrustration } from "@/hooks/useFrustration"
 import { FrustrationMeter } from "@/components/FrustrationMeter"
 import ConfirmDialog from "@/components/ConfirmDialog"
 import { mapLegacyPersona, mapSalesScenario } from "@/lib/sos/legacy-mappers"
-import { FAB_KNOWLEDGE, HOME_KNOWLEDGE, SOS_KNOWLEDGE, SPIN_KNOWLEDGE } from "@/lib/sos/knowledge"
+import { SOS_STATIC_KNOWLEDGE } from "@/lib/sos/knowledge"
+import { selectKnowledge } from "@/lib/sos/knowledge-selector"
 import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
 import { extractDeterministicEvents } from "@/lib/sos/event-extractor"
 import { createInitialRoleplayState, reduceRoleplayEvents } from "@/lib/sos/state-reducer"
@@ -402,22 +403,24 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
 
       const mappedScenario = mapSalesScenario(scenario)
       const mappedPersona = mapLegacyPersona(scenario)
+      const derivedInitialState = deriveInitialRoleplayState({
+        persona: mappedPersona,
+        scenario: mappedScenario,
+      })
       hiddenInformationConfigRef.current = mappedPersona.hiddenInformation
       if (roleplayStateRef.current.processedEventIds.length === 0) {
-        roleplayStateRef.current = deriveInitialRoleplayState({
-          persona: mappedPersona,
-          scenario: mappedScenario,
-        })
+        roleplayStateRef.current = derivedInitialState
       }
+      const knowledgeSelection = selectKnowledge({
+        knowledge: SOS_STATIC_KNOWLEDGE,
+        persona: mappedPersona,
+        scenario: mappedScenario,
+        state: derivedInitialState,
+      })
       const roleplayPrompt = compileVoiceRoleplayPrompt({
         persona: mappedPersona,
         scenario: mappedScenario,
-        knowledge: [
-          ...SOS_KNOWLEDGE,
-          ...SPIN_KNOWLEDGE,
-          ...HOME_KNOWLEDGE,
-          ...FAB_KNOWLEDGE,
-        ],
+        knowledge: knowledgeSelection.selected,
       })
 
       session = await ai.live.connect({
