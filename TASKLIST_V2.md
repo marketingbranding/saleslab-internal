@@ -6,14 +6,14 @@ Fast-track implementation completion date: `2026-07-14`
 
 Latest QA date: `2026-07-14`
 
-Trial readiness: `NO-GO` - real signed-in voice, Firestore persistence, reconnect, and uninterrupted leadership rehearsal remain unverified. See `docs/LEADERSHIP_TRIAL_QA.md`.
+Trial readiness: `NO-GO` - signed-in voice, report, Firestore, retry merge, and privacy checks passed; the deployed HOME false-positive fix remains manually unverified, reconnect was skipped, and the uninterrupted leadership rehearsal was skipped. See `docs/LEADERSHIP_TRIAL_QA.md`.
 
 - `FT-001 Evidence Validator` — completed.
 - `FT-002 Evaluation Context Builder` — completed.
 - `FT-003 Backward-Compatible Evaluator API` — completed.
 - `FT-004 Minimal Compliance Caps` — completed.
 - `FT-005 Trial Report Integration` — completed.
-- `FT-006 Manual Trial QA` — in progress; automated, provider-backed, and controlled browser checks completed, but required human-operated end-to-end cases are blocked.
+- `FT-006 Manual Trial QA` — in progress; operator-assisted core flow passed, but HOME regression, reconnect, and QA-18 remain not tested.
 
 ## Post-Trial Roadmap Resume Point
 
