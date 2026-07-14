@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { motion, AnimatePresence } from "motion/react"
 import { AlertTriangle, Target } from "lucide-react"
 
@@ -24,6 +25,9 @@ export default function ConfirmDialog({
   cancelLabel = 'Batal',
   variant = 'default'
 }: ConfirmDialogProps) {
+  const titleId = React.useId()
+  const descriptionId = React.useId()
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -40,6 +44,10 @@ export default function ConfirmDialog({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={descriptionId}
           >
             {/* Icon Area */}
             <div className={`flex justify-center mb-6 ${variant === 'danger' ? 'bg-danger/10 p-4' : 'bg-primary/10 p-4'}`}>
@@ -51,24 +59,26 @@ export default function ConfirmDialog({
             </div>
 
             {/* Title */}
-            <h2 className="text-lg font-bold uppercase text-center mb-4">
+            <h2 id={titleId} className="text-lg font-bold uppercase text-center mb-4">
               {title}
             </h2>
 
             {/* Message */}
-            <p className="text-sm text-muted text-center mb-8">
+            <p id={descriptionId} className="text-sm text-muted text-center mb-8">
               {message}
             </p>
 
             {/* Buttons */}
             <div className="flex gap-4 justify-center">
               <button
+                type="button"
                 onClick={onClose}
                 className="retro-btn px-6 py-3 border-2 border-dark/20 text-sm hover:bg-dark/5"
               >
                 {cancelLabel}
               </button>
               <button
+                type="button"
                 onClick={() => {
                   onConfirm()
                   onClose()

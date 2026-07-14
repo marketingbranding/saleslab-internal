@@ -9,6 +9,7 @@ import { handleFirestoreError, OperationType } from '@/lib/firebase'
 import { BarChart2, Calendar, Trophy, ChevronRight, User, Trash2 } from 'lucide-react'
 import { SalesScenario } from '@/lib/gemini'
 import { SyncIndicator } from '@/components/SyncIndicator'
+import ConfirmDialog from '@/components/ConfirmDialog'
 
 interface DashboardProps {
   onBack: () => void
@@ -43,10 +44,7 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
   const [viewMode, setViewMode] = React.useState<'personal' | 'all'>(isAdmin ? 'all' : 'personal')
   const [searchTerm, setSearchTerm] = React.useState('')
   const [deleteError, setDeleteError] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    console.log("Dashboard mounted, isAdmin:", isAdmin, "User:", user?.email)
-  }, [isAdmin, user])
+  const [pendingDeleteSessionId, setPendingDeleteSessionId] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     if (!user) return
@@ -85,12 +83,18 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     setDeleteError(null)
+    setPendingDeleteSessionId(sessionId)
+  }
 
+  const confirmDeleteSession = async () => {
+    if (!pendingDeleteSessionId) return
     try {
-      await deleteDoc(doc(db, 'sessions', sessionId))
+      await deleteDoc(doc(db, 'sessions', pendingDeleteSessionId))
     } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `sessions/${sessionId}`)
-      setDeleteError('Gagal menghapus sesi. Cek konsol.')
+      handleFirestoreError(err, OperationType.DELETE, `sessions/${pendingDeleteSessionId}`)
+      setDeleteError('Gagal menghapus sesi. Silakan coba lagi.')
+    } finally {
+      setPendingDeleteSessionId(null)
     }
   }
 
@@ -133,16 +137,16 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
         <div>
           <button
             onClick={onBack}
-            className="text-[10px] font-bold uppercase text-muted hover:text-dark mb-2 flex items-center gap-1 font-heading"
+            className="text-xs font-bold uppercase text-muted hover:text-dark mb-2 flex items-center gap-1 font-heading"
           >
-            <ChevronRight size={12} className="rotate-180" /> Balik ke Menu
+            <ChevronRight size={12} className="rotate-180" /> Kembali ke Menu
           </button>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl sm:text-3xl font-bold font-heading">DASHBOARD KITA</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold font-heading">DASHBOARD TIM</h2>
             <SyncIndicator status={loading ? 'syncing' : 'synced'} />
           </div>
           {isAdmin && viewMode === 'all' && (
-            <span className="text-[10px] font-bold uppercase bg-primary text-dark px-2.5 py-0.5 mt-1 inline-block font-heading">ADMIN VIEW</span>
+            <span className="text-[11px] font-bold uppercase bg-primary text-dark px-2.5 py-1 mt-1 inline-block font-heading">TAMPILAN ADMIN</span>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -150,20 +154,20 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
             <div className="flex bg-surface border-2 border-dark/15 p-1">
               <button
                 onClick={() => setViewMode('all')}
-                className={`px-4 py-1.5 font-bold text-[10px] uppercase font-heading ${viewMode === 'all' ? 'bg-primary text-dark' : 'text-muted hover:text-dark'}`}
+                className={`px-4 py-2 font-bold text-[11px] uppercase font-heading ${viewMode === 'all' ? 'bg-primary text-dark' : 'text-muted hover:text-dark'}`}
               >
-                All Users
+                Semua Sales
               </button>
               <button
                 onClick={() => setViewMode('personal')}
-                className={`px-4 py-1.5 font-bold text-[10px] uppercase font-heading ${viewMode === 'personal' ? 'bg-primary text-dark' : 'text-muted hover:text-dark'}`}
+                className={`px-4 py-2 font-bold text-[11px] uppercase font-heading ${viewMode === 'personal' ? 'bg-primary text-dark' : 'text-muted hover:text-dark'}`}
               >
-                Personal
+                Pribadi
               </button>
             </div>
           )}
           <div className="flex items-center gap-2 px-4 py-2 bg-warning/10 border-2 border-warning/20 text-warning font-bold text-xs uppercase font-heading">
-            <Trophy size={14} /> Skor Rata-rata: {avgScore}
+            <Trophy size={14} /> Skor Rata-rata: {loading ? '...' : avgScore}
           </div>
         </div>
       </div>
@@ -173,11 +177,11 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
           {deleteError}
         </div>
       )}
-      {isAdmin && viewMode === 'all' && (
+      {!loading && isAdmin && viewMode === 'all' && (
         <div className="flex flex-col sm:flex-row gap-4">
           <input
             type="text"
-            placeholder="Cari nama salesperson..."
+            placeholder="Cari nama sales..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 p-4 retro-input bg-surface font-semibold text-sm"
@@ -186,10 +190,19 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading ? (
+          [...Array(3)].map((_, index) => (
+            <div key={index} className="p-6 bg-surface retro-panel space-y-4 min-h-[160px] animate-pulse" aria-hidden="true">
+              <div className="h-7 w-7 bg-dark/10" />
+              <div className="h-10 w-24 bg-dark/10" />
+              <div className="h-3 w-32 bg-dark/10" />
+            </div>
+          ))
+        ) : (<>
         <div className="p-6 bg-primary text-dark space-y-3 retro-panel">
           <BarChart2 className="text-dark/80" size={28} />
           <div className="text-4xl font-bold font-heading">{sessions.length}</div>
-          <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Total Missions</div>
+          <div className="text-xs font-bold uppercase text-dark/70 font-heading">Total Latihan</div>
         </div>
 
         <div className="p-6 bg-surface retro-panel space-y-3">
@@ -197,24 +210,25 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
           <div className="text-4xl font-bold text-dark font-heading">
             {sessions.length > 0 ? new Date(sessions[0].createdAt?.toDate()).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : '-'}
           </div>
-          <div className="text-[10px] font-bold uppercase text-muted font-heading">Last Mission</div>
+          <div className="text-xs font-bold uppercase text-muted font-heading">Latihan Terakhir</div>
         </div>
 
         <div className="p-6 bg-surface retro-panel space-y-3">
           <User className="text-primary" size={28} />
           <div className="text-lg font-bold text-dark truncate font-heading">
-            {isAdmin && viewMode === 'all' ? `${uniqueSalespeople} Salespeople` : (user?.displayName || user?.email?.split('@')[0] || 'User')}
+            {isAdmin && viewMode === 'all' ? `${uniqueSalespeople} Sales` : (user?.displayName || user?.email?.split('@')[0] || 'Pengguna')}
           </div>
-          <div className="text-[10px] font-bold uppercase text-muted font-heading">
-            {isAdmin && viewMode === 'all' ? 'Total Sales Tertunda' : 'Profil Aktif'}
+          <div className="text-xs font-bold uppercase text-muted font-heading">
+            {isAdmin && viewMode === 'all' ? 'Jumlah Sales' : 'Profil Aktif'}
           </div>
         </div>
+        </>)}
       </div>
 
-      {isAdmin && viewMode === 'all' && (
+      {!loading && isAdmin && viewMode === 'all' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-6 bg-surface retro-panel space-y-5">
-            <h3 className="text-lg font-bold font-heading uppercase border-b border-dark/10 pb-2">Top Objections (Global)</h3>
+            <h3 className="text-lg font-bold font-heading uppercase border-b border-dark/10 pb-2">Keberatan Teratas</h3>
             <div className="space-y-3">
               {(() => {
                 const objections = filteredSessions.flatMap(s => s.feedback?.keyObjectionsHandled || []);
@@ -226,18 +240,18 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                   .map(([obj, count], i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 truncate">
-                        <div className="w-6 h-6 bg-primary text-dark flex items-center justify-center font-bold text-[10px] shrink-0">{i + 1}</div>
-                        <span className="font-semibold text-xs truncate">{obj}</span>
+                        <div className="w-7 h-7 bg-primary text-dark flex items-center justify-center font-bold text-xs shrink-0">{i + 1}</div>
+                        <span className="font-semibold text-sm truncate">{obj}</span>
                       </div>
-                      <span className="text-[10px] font-bold text-muted">{count}x</span>
+                      <span className="text-xs font-bold text-muted">{count}x</span>
                     </div>
                   ));
               })()}
-              {filteredSessions.length === 0 && <p className="text-muted text-sm">Belum ada data objection.</p>}
+              {filteredSessions.length === 0 && <p className="text-muted text-sm">Belum ada data keberatan.</p>}
             </div>
           </div>
           <div className="p-6 bg-surface retro-panel space-y-5">
-            <h3 className="text-lg font-bold font-heading uppercase border-b border-dark/10 pb-2">Common Weaknesses</h3>
+            <h3 className="text-lg font-bold font-heading uppercase border-b border-dark/10 pb-2">Kekurangan Umum</h3>
             <div className="space-y-3">
               {(() => {
                 const weaknesses = filteredSessions.flatMap(s => s.feedback?.weaknesses || []);
@@ -249,10 +263,10 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                   .map(([weak, count], i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 truncate">
-                        <div className="w-6 h-6 bg-danger text-surface flex items-center justify-center font-bold text-[10px] shrink-0">{i + 1}</div>
-                        <span className="font-semibold text-xs truncate">{weak}</span>
+                        <div className="w-7 h-7 bg-danger text-surface flex items-center justify-center font-bold text-xs shrink-0">{i + 1}</div>
+                        <span className="font-semibold text-sm truncate">{weak}</span>
                       </div>
-                      <span className="text-[10px] font-bold text-muted">{count}x</span>
+                      <span className="text-xs font-bold text-muted">{count}x</span>
                     </div>
                   ));
               })()}
@@ -262,16 +276,16 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
         </div>
       )}
 
-      {isAdmin && viewMode === 'all' && (
+      {!loading && isAdmin && viewMode === 'all' && (
         <div className="space-y-5">
-          <h3 className="text-xl font-bold font-heading uppercase border-b border-dark/10 pb-2">Sales Leaderboard</h3>
+          <h3 className="text-xl font-bold font-heading uppercase border-b border-dark/10 pb-2">Peringkat Sales</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {leaderboard.map((item, i) => (
               <div key={item.name} className="p-4 bg-surface retro-panel flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-[10px] font-bold uppercase text-muted font-heading">#{i + 1}</span>
-                    <div className={`px-2 py-0.5 font-bold text-[10px] font-heading ${
+                    <span className="text-[11px] font-bold uppercase text-muted font-heading">#{i + 1}</span>
+                    <div className={`px-2 py-0.5 font-bold text-[11px] font-heading ${
                       item.avg >= 80 ? 'bg-success/10 text-success' : item.avg >= 60 ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger'
                     }`}>
                       AVG: {item.avg}
@@ -280,11 +294,11 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                   <div className="text-base font-bold uppercase truncate leading-none font-heading">{item.name}</div>
                 </div>
                 <div className="mt-4 flex justify-between items-end">
-                  <div className="text-[10px] font-bold uppercase text-muted leading-none font-heading">
-                    {item.total} Missions
+                  <div className="text-[11px] font-bold uppercase text-muted leading-none font-heading">
+                    {item.total} Latihan
                   </div>
-                  <div className="text-[8px] font-semibold text-muted/50 leading-none">
-                    Last: {item.lastSeen?.toDate().toLocaleDateString('id-ID')}
+                  <div className="text-[11px] font-semibold text-muted leading-none">
+                    Terakhir: {item.lastSeen?.toDate().toLocaleDateString('id-ID')}
                   </div>
                 </div>
               </div>
@@ -294,14 +308,20 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
       )}
 
       <div className="space-y-5">
-        <h3 className="text-xl font-bold font-heading uppercase border-b border-dark/10 pb-2">Mission History</h3>
+        <h3 className="text-xl font-bold font-heading uppercase border-b border-dark/10 pb-2">Riwayat Latihan</h3>
         {loading ? (
-          <div className="flex justify-center p-12">
-            <div className="w-8 h-8 border-[3px] border-dark/20 border-t-primary animate-spin"></div>
+          <div className="grid lg:grid-cols-2 gap-4" aria-label="Memuat riwayat latihan" role="status">
+            {[0, 1].map(item => (
+              <div key={item} className="h-[84px] bg-surface retro-panel p-4 animate-pulse">
+                <div className="h-3 w-28 bg-dark/10 mb-3" />
+                <div className="h-5 w-48 bg-dark/10" />
+              </div>
+            ))}
           </div>
         ) : filteredSessions.length === 0 ? (
-          <div className="p-12 border-2 border-dashed border-dark/15 text-center">
-            <p className="font-semibold text-muted">Belum ada riwayat simulasi sesuai pencarian. Gas latihan!</p>
+          <div className="p-10 sm:p-12 border-2 border-dashed border-dark/15 text-center space-y-2">
+            <p className="font-bold text-dark">Belum ada sesi latihan.</p>
+            <p className="font-medium text-sm text-muted">Mulai roleplay pertama untuk melihat perkembangan performa.</p>
           </div>
         ) : (
           <div className="grid lg:grid-cols-2 gap-4">
@@ -309,10 +329,20 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
               <div
                 key={session.id}
                 onClick={() => setSelectedSession(session)}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedSession(session)
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Buka hasil latihan ${session.salespersonName}`}
                 className="p-4 bg-surface retro-panel hover:bg-primary/5 flex items-center justify-between cursor-pointer group"
               >
                 <div>
-                  <div className="text-[10px] font-bold text-muted uppercase mb-1 font-heading">
+                  <div className="text-[11px] font-bold text-muted uppercase mb-1 font-heading">
                     {session.createdAt?.toDate().toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
                   </div>
                   <div className="text-base font-bold truncate max-w-[250px] font-heading">
@@ -328,9 +358,9 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                     {isAdmin && (
                     <button
                       onClick={(e) => handleDeleteSession(session.id, e)}
-                      className="p-2 border-2 border-danger/30 bg-danger/10 hover:bg-danger hover:text-surface group/del"
+                      className="h-11 w-11 border-2 border-danger/30 bg-danger/10 hover:bg-danger hover:text-surface group/del flex items-center justify-center"
                       title="Hapus Sesi"
-                      aria-label={`Delete session for ${session.salespersonName}`}
+                      aria-label={`Hapus sesi ${session.salespersonName}`}
                     >
                       <Trash2 size={14} className="group-hover/del:scale-110 transition-transform" />
                     </button>
@@ -361,15 +391,16 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
             <div className="p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
               <div>
                 <h3 className="text-xl font-bold font-heading">HASIL SIMULASI</h3>
-                <p className="text-[10px] font-bold uppercase text-dark/60 font-heading">
+                <p className="text-[11px] font-bold uppercase text-dark/70 font-heading">
                   {selectedSession.salespersonName} • {selectedSession.createdAt?.toDate().toLocaleString('id-ID')}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedSession(null)}
                 className="bg-dark/20 text-dark p-2 hover:bg-dark/30 font-bold text-xs"
+                aria-label="Tutup detail hasil simulasi"
               >
-                CLOSE
+                TUTUP
               </button>
             </div>
 
@@ -378,7 +409,7 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
               {/* Score Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-surface p-6 border border-dark/10">
                 <div className="space-y-3">
-                  <div className="text-[10px] font-bold uppercase text-muted font-heading">Skor Keseluruhan</div>
+                  <div className="text-xs font-bold uppercase text-muted font-heading">Skor Keseluruhan</div>
                   <div className={`text-7xl font-bold font-heading ${
                     selectedSession.score >= 80 ? 'text-success' : selectedSession.score >= 60 ? 'text-warning' : 'text-danger'
                   }`}>
@@ -413,12 +444,12 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
               {/* Analysis Details */}
               {selectedSession.feedback?.salesPathEvaluation && (
                 <div className="p-6 bg-surface border-2 border-dark/15">
-                  <h4 className="text-xs font-bold uppercase text-dark mb-4 font-heading">Sales Path Checklist</h4>
+                  <h4 className="text-xs font-bold uppercase text-dark mb-4 font-heading">Checklist Alur Sales</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {Object.entries(selectedSession.feedback.salesPathEvaluation).map(([stage, status]) => (
                       <div key={stage} className="flex flex-col gap-1">
-                        <span className="text-[8px] font-bold uppercase text-muted font-heading">{stage}</span>
-                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 inline-block text-center font-heading ${
+                        <span className="text-[11px] font-bold uppercase text-muted font-heading">{stage}</span>
+                        <span className={`text-[11px] font-bold uppercase px-2 py-0.5 inline-block text-center font-heading ${
                           status === 'Good' ? 'bg-success/10 text-success' : status === 'Fair' ? 'bg-warning/10 text-warning' : status === 'Poor' ? 'bg-danger/10 text-danger' : 'bg-surface text-muted'
                         }`}>
                           {status}
@@ -431,7 +462,7 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
 
               <div className="grid md:grid-cols-2 gap-6 bg-bg text-dark p-6">
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase text-warning inline-block px-2.5 py-1 font-heading">Objections Handled</h4>
+                  <h4 className="text-xs font-bold uppercase text-warning inline-block px-2.5 py-1 font-heading">Keberatan yang Ditangani</h4>
                   <ul className="space-y-1">
                     {selectedSession.feedback?.keyObjectionsHandled?.map((obj, i) => (
                       <li key={i} className="text-sm font-semibold flex gap-2">
@@ -441,7 +472,7 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                   </ul>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase bg-dark/10 text-dark inline-block px-2.5 py-1 font-heading">Opportunities Missed</h4>
+                  <h4 className="text-xs font-bold uppercase bg-dark/10 text-dark inline-block px-2.5 py-1 font-heading">Peluang yang Terlewat</h4>
                   <ul className="space-y-1">
                     {selectedSession.feedback?.missedOpportunities?.map((opp, i) => (
                       <li key={i} className="text-sm font-semibold flex gap-2 opacity-80">
@@ -454,7 +485,7 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
 
               {/* Tips Section */}
               <div className="p-6 bg-primary/5 border-2 border-primary/15">
-                <h4 className="text-xs font-bold uppercase text-primary mb-3 font-heading">Pro Tips</h4>
+                <h4 className="text-xs font-bold uppercase text-primary mb-3 font-heading">Tips Praktis</h4>
                 <ul className="space-y-2">
                   {selectedSession.feedback?.actionableTips.map((tip, i) => (
                     <li key={i} className="font-semibold text-sm flex gap-2 text-dark">
@@ -473,8 +504,8 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
                       <div className={`max-w-[85%] p-4 font-semibold text-sm border-2 ${
                         msg.role === 'user' ? 'bg-primary/10 text-dark border-primary/20' : 'bg-surface text-dark border-dark/10'
                       }`}>
-                        <div className="text-[10px] font-bold uppercase mb-1 text-muted font-heading">
-                          {msg.role === 'user' ? selectedSession.salespersonName : 'Customer'}
+                        <div className="text-[11px] font-bold uppercase mb-1 text-muted font-heading">
+                          {msg.role === 'user' ? selectedSession.salespersonName : 'Konsumen'}
                         </div>
                         {msg.text}
                       </div>
@@ -486,6 +517,17 @@ export function Dashboard({ onBack, isAdmin }: DashboardProps) {
           </motion.div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingDeleteSessionId !== null}
+        onClose={() => setPendingDeleteSessionId(null)}
+        onConfirm={confirmDeleteSession}
+        title="Hapus sesi latihan?"
+        message="Data sesi dan hasil evaluasinya akan dihapus. Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Hapus Sesi"
+        cancelLabel="Batal"
+        variant="danger"
+      />
     </div>
   )
 }

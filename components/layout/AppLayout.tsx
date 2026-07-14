@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { MobileNav } from './MobileNav'
@@ -42,6 +42,17 @@ export function AppLayout({
     setSidebarOpen(false)
   }
 
+  useEffect(() => {
+    if (!sidebarOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSidebarOpen(false)
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [sidebarOpen])
+
   if (fullscreen) {
     return (
       <div className="min-h-screen bg-bg">
@@ -52,7 +63,7 @@ export function AppLayout({
 
   return (
     <div className="min-h-screen bg-bg">
-      <a href="#main-content" className="skip-link" aria-label="Skip to main content">
+      <a href="#main-content" className="skip-link" aria-label="Langsung ke konten utama">
         Langsung ke Konten
       </a>
       <Sidebar activeStep={activeStep} onNavigate={handleNavigate} isAdmin={isAdmin} isMobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />

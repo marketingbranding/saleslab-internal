@@ -16,21 +16,25 @@ interface HeaderProps {
 }
 
 export function Header({ userName, level = 1, xp = 0, xpNext = 100, streak = 0, onLogout, syncStatus = 'synced', onToggleSidebar, sidebarOpen }: HeaderProps) {
-  const xpPercent = Math.min(Math.round((xp / xpNext) * 100), 100)
+  const safeXp = Number.isFinite(xp) ? Math.max(0, xp) : 0
+  const safeXpNext = Number.isFinite(xpNext) && xpNext > 0 ? xpNext : 1
+  const xpPercent = Math.min(Math.max(Math.round((safeXp / safeXpNext) * 100), 0), 100)
 
   return (
-    <header className="h-16 bg-surface border-b-2 border-dark/15 flex items-center justify-between px-6 lg:px-8 sticky top-0 z-header">
+    <header className="h-16 bg-surface border-b-2 border-dark/15 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-header">
       {/* Left: brand (mobile only) + hamburger */}
       <div className="lg:hidden flex items-center gap-2">
         <button
           onClick={onToggleSidebar}
           className="p-2 -ml-2 text-muted hover:text-dark"
           aria-label={sidebarOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+          aria-expanded={Boolean(sidebarOpen)}
+          aria-controls="app-sidebar"
         >
           {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
         <h1 className="text-lg font-bold font-heading uppercase tracking-tight">SalesLab</h1>
-        <span className="text-[8px] font-bold bg-warning text-dark px-1.5 py-0.5 uppercase">Internal</span>
+        <span className="text-[11px] font-bold bg-warning text-dark px-1.5 py-0.5 uppercase">Internal</span>
       </div>
 
       {/* Right: user info */}
@@ -41,24 +45,32 @@ export function Header({ userName, level = 1, xp = 0, xpNext = 100, streak = 0, 
         {streak > 0 && (
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-warning/10 border border-warning/30">
             <span className="text-sm font-bold font-mono numeric text-warning">{streak}</span>
-            <span className="text-[9px] font-bold uppercase text-muted">hari streak</span>
+            <span className="text-[11px] font-bold uppercase text-muted">hari beruntun</span>
           </div>
         )}
 
         {/* XP */}
         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-dark/5 border border-dark/15">
-          <div className="w-20 h-2 bg-dark/10 relative overflow-hidden">
+          <div
+            className="w-20 h-2 bg-dark/10 relative overflow-hidden"
+            role="progressbar"
+            aria-label="Progres XP"
+            aria-valuemin={0}
+            aria-valuemax={safeXpNext}
+            aria-valuenow={Math.min(safeXp, safeXpNext)}
+            aria-valuetext={`${safeXp} dari ${safeXpNext} XP`}
+          >
             <div
               className="absolute inset-y-0 left-0 bg-primary transition-all"
               style={{ width: `${xpPercent}%` }}
             />
           </div>
-          <span className="text-[10px] font-bold font-mono numeric text-muted">{xp}/{xpNext} XP</span>
+          <span className="text-[11px] font-bold font-mono numeric text-muted">{safeXp}/{safeXpNext} XP</span>
         </div>
 
         {/* Level */}
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-navy text-white">
-          <span className="text-[10px] font-bold uppercase font-heading">Lv.{level}</span>
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-navy text-white">
+          <span className="text-[11px] font-bold uppercase font-heading">Lv.{level}</span>
         </div>
 
         {/* User */}

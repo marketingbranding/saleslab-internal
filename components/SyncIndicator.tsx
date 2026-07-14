@@ -62,12 +62,12 @@ export function SyncIndicator({ status, className = '' }: SyncIndicatorProps) {
       aria-label={config.label}
     >
       {config.icon}
-      <span className="text-[9px] font-bold uppercase tracking-wider leading-none">
+      <span className="text-[11px] font-bold uppercase tracking-wider leading-none">
         {status === 'syncing' ? '...' : 'OK'}
       </span>
 
       {showTooltip && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-dark text-surface text-[10px] font-bold whitespace-nowrap">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-dark text-surface text-[11px] font-bold whitespace-nowrap">
           {config.label}
         </div>
       )}

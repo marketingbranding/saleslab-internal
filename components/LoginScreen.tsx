@@ -11,26 +11,49 @@ interface LoginScreenProps {
 
 const BOOT_LINES = [
   { text: "SALES_LAB INTERNAL v2.5", delay: 0 },
-  { text: "INITIALIZING TRAINING MODULES...", delay: 600 },
-  { text: "LOADING AI PERSONAS... OK", delay: 1200 },
-  { text: "CONNECTING TO TRAINING HUB... OK", delay: 1800 },
-  { text: "SYSTEM READY", delay: 2400 },
+  { text: "INITIALIZING TRAINING MODULES...", delay: 250 },
+  { text: "LOADING AI PERSONAS... OK", delay: 500 },
+  { text: "CONNECTING TO TRAINING HUB... OK", delay: 750 },
+  { text: "SYSTEM READY", delay: 1000 },
 ]
+
+const BOOT_STORAGE_KEY = 'saleslab_boot_seen'
 
 export function LoginScreen({ onLogin, isLoading }: LoginScreenProps) {
   const [bootComplete, setBootComplete] = React.useState(false)
   const [visibleLines, setVisibleLines] = React.useState<number>(0)
 
+  const finishBoot = React.useCallback(() => {
+    setVisibleLines(BOOT_LINES.length)
+    setBootComplete(true)
+    try {
+      window.sessionStorage.setItem(BOOT_STORAGE_KEY, 'true')
+    } catch {
+      // The login remains usable when browser storage is unavailable.
+    }
+  }, [])
+
   React.useEffect(() => {
+    try {
+      const bootSeen = window.sessionStorage.getItem(BOOT_STORAGE_KEY) === 'true'
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (bootSeen || prefersReducedMotion) {
+        const immediateTimer = setTimeout(finishBoot, 0)
+        return () => clearTimeout(immediateTimer)
+      }
+    } catch {
+      // Continue with the short boot sequence when storage cannot be read.
+    }
+
     const timers: NodeJS.Timeout[] = []
     BOOT_LINES.forEach((line, i) => {
       const timer = setTimeout(() => setVisibleLines(i + 1), line.delay)
       timers.push(timer)
     })
-    const bootTimer = setTimeout(() => setBootComplete(true), 3200)
+    const bootTimer = setTimeout(finishBoot, 1200)
     timers.push(bootTimer)
     return () => timers.forEach(clearTimeout)
-  }, [])
+  }, [finishBoot])
 
   return (
     <div className="fixed inset-0 z-[200] bg-bg flex items-center justify-center overflow-hidden">
@@ -44,7 +67,7 @@ export function LoginScreen({ onLogin, isLoading }: LoginScreenProps) {
                 key={i}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-[11px] font-bold uppercase font-mono"
+                className="text-xs font-bold uppercase font-mono"
               >
                 <span className="text-primary">&gt;</span>{" "}
                 <span className={i === BOOT_LINES.length - 1 ? 'text-success' : 'text-muted'}>
@@ -53,11 +76,20 @@ export function LoginScreen({ onLogin, isLoading }: LoginScreenProps) {
               </motion.div>
             ))}
             {!bootComplete && (
-              <motion.span
-                animate={{ opacity: [1, 0] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-                className="inline-block w-2 h-3 bg-primary"
-              />
+              <div className="flex items-center justify-between gap-4 pt-2">
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                  className="inline-block w-2 h-3 bg-primary"
+                />
+                <button
+                  type="button"
+                  onClick={finishBoot}
+                  className="text-xs font-bold uppercase text-muted underline decoration-2 underline-offset-4 hover:text-dark"
+                >
+                  Lewati
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -68,7 +100,6 @@ export function LoginScreen({ onLogin, isLoading }: LoginScreenProps) {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
               className="bg-surface retro-panel p-8 text-center space-y-8"
             >
               {/* Logo */}
@@ -80,14 +111,14 @@ export function LoginScreen({ onLogin, isLoading }: LoginScreenProps) {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold font-heading uppercase tracking-tight">SalesLab</h1>
-                  <div className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 bg-warning/10 text-warning text-[10px] font-bold uppercase font-heading">
-                    <Zap size={10} /> Internal Training
+                  <div className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-warning/10 text-warning text-xs font-bold uppercase font-heading">
+                    <Zap size={12} /> Latihan Internal
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs font-bold uppercase text-muted">
-                AI Roleplay Training Simulator
+              <p className="text-sm font-bold uppercase text-muted">
+                Simulator Latihan Roleplay AI
               </p>
 
               {/* Login button */}
@@ -118,8 +149,8 @@ export function LoginScreen({ onLogin, isLoading }: LoginScreenProps) {
                 )}
               </button>
 
-              <p className="text-[9px] font-bold uppercase text-muted/50">
-                Internal Company Tool — Authorized Users Only
+              <p className="text-xs font-bold uppercase text-muted/70">
+                Aplikasi Internal - Hanya untuk Pengguna Berwenang
               </p>
             </motion.div>
           )}

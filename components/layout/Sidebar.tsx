@@ -12,15 +12,15 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { step: 'selection', label: 'Dashboard', icon: LayoutDashboard },
-  { step: 'training', label: 'Training', icon: Target },
-  { step: 'history', label: 'History', icon: Clock },
-  { step: 'performance', label: 'Performance', icon: BarChart3 },
-  { step: 'achievements', label: 'Achievements', icon: Medal },
+  { step: 'training', label: 'Latihan', icon: Target },
+  { step: 'history', label: 'Riwayat', icon: Clock },
+  { step: 'performance', label: 'Performa', icon: BarChart3 },
+  { step: 'achievements', label: 'Pencapaian', icon: Medal },
 ]
 
 const BOTTOM_ITEMS = [
-  { step: 'profile', label: 'Profile', icon: User },
-  { step: 'settings', label: 'Settings', icon: Settings },
+  { step: 'profile', label: 'Profil', icon: User },
+  { step: 'settings', label: 'Pengaturan', icon: Settings },
 ]
 
 export function Sidebar({ activeStep, onNavigate, isAdmin, isMobileOpen, onMobileClose }: SidebarProps) {
@@ -39,11 +39,11 @@ export function Sidebar({ activeStep, onNavigate, isAdmin, isMobileOpen, onMobil
           aria-hidden="true"
         />
       )}
-      <aside className={`flex flex-col w-60 min-h-screen bg-navy text-white fixed left-0 top-0 z-sidebar transition-transform duration-200 lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside id="app-sidebar" aria-label="Navigasi utama" className={`flex flex-col w-60 min-h-screen bg-navy text-white fixed left-0 top-0 z-sidebar transition-transform duration-200 lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
       {/* Brand */}
       <div className="px-5 pt-8 pb-6 border-b border-white/10">
         <h2 className="text-xl font-bold text-white font-heading uppercase tracking-tight">SalesLab</h2>
-        <p className="text-[10px] font-bold text-white/40 uppercase mt-1 tracking-wide">Internal Training</p>
+        <p className="text-[11px] font-bold text-white/60 uppercase mt-1 tracking-wide">Latihan Internal</p>
       </div>
 
       {/* Main Nav */}
@@ -56,6 +56,7 @@ export function Sidebar({ activeStep, onNavigate, isAdmin, isMobileOpen, onMobil
               key={item.step}
               onClick={() => handleNavigate(item.step)}
               className={`sidebar-link w-full text-left ${isActive ? 'sidebar-link-active' : ''}`}
+              aria-current={isActive ? 'page' : undefined}
             >
               <Icon size={18} strokeWidth={2} />
               {item.label}
@@ -67,6 +68,7 @@ export function Sidebar({ activeStep, onNavigate, isAdmin, isMobileOpen, onMobil
           <button
             onClick={() => handleNavigate('admin')}
             className={`sidebar-link w-full text-left ${activeStep === 'admin' ? 'sidebar-link-active' : ''}`}
+            aria-current={activeStep === 'admin' ? 'page' : undefined}
           >
             <Settings size={18} strokeWidth={2} />
             Admin
@@ -84,6 +86,7 @@ export function Sidebar({ activeStep, onNavigate, isAdmin, isMobileOpen, onMobil
               key={item.step}
               onClick={() => handleNavigate(item.step)}
               className={`sidebar-link w-full text-left ${isActive ? 'sidebar-link-active' : ''}`}
+              aria-current={isActive ? 'page' : undefined}
             >
               <Icon size={18} strokeWidth={2} />
               {item.label}
