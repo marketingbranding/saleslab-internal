@@ -83,7 +83,7 @@ export function LoginScreen({ onLogin, visualState, restoredSession = false, onE
   const exitAnimation = shouldReduceMotion
     ? { opacity: 0, scale: 1 }
     : restoredSession
-      ? { opacity: [1, 1, 0], scale: [1, 1.02, 1.08] }
+      ? { opacity: 0, scale: 1.08, x: 0 }
       : {
           opacity: [1, 1, 1, 0],
           scale: [1, 0.985, 1.025, compactViewport ? 1.55 : 2],
@@ -93,7 +93,7 @@ export function LoginScreen({ onLogin, visualState, restoredSession = false, onE
   const transition = shouldReduceMotion
     ? { duration: 0.18, ease: 'easeOut' as const }
     : restoredSession
-      ? { duration: 0.32, times: [0, 0.55, 1], ease: 'easeOut' as const }
+      ? { duration: 0.32, ease: 'easeOut' as const }
       : { duration: 0.82, times: [0, 0.16, 0.4, 1], ease: [0.22, 1, 0.36, 1] as const }
 
   const statusText = visualState === 'resolving'
