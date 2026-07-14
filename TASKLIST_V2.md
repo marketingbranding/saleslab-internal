@@ -7,8 +7,8 @@ Completion date: `2026-07-14`
 - `FT-001 Evidence Validator` — completed.
 - `FT-002 Evaluation Context Builder` — completed.
 - `FT-003 Backward-Compatible Evaluator API` — completed.
-- `FT-004 Minimal Compliance Caps` — next.
-- `FT-005 Trial Report Integration` — pending.
+- `FT-004 Minimal Compliance Caps` — completed.
+- `FT-005 Trial Report Integration` — next.
 - `FT-006 Manual Trial QA` — pending.
 
 ## Epic 1 — Domain Foundation
@@ -239,9 +239,9 @@ Completion date: `2026-07-14`
 - Tests: golden transcript tests with expected hard caps and evidence references.
 - Migration impact: high; affects feedback and score semantics.
 - Status: partially completed.
-- Implementation: Deterministic legacy request reconstruction, evaluator context prompt, validated evidence normalization, backward-compatible response, and optional trial V2 diagnostics are implemented.
-- Verification: Evaluator reconstruction, prompt, result normalization, full SOS tests, lint, typecheck, and build pass on `2026-07-14`.
-- Remaining: Deterministic weighted scoring, compliance hard caps, `FeedbackView` V2 rendering, persistence, and full evaluation profiles are pending.
+- Implementation: Deterministic legacy reconstruction, context prompt, evidence normalization, backward-compatible response, leadership-trial score caps, and V2 diagnostics are implemented.
+- Verification: Evaluator pipeline, score-adjustment tests, full SOS tests, lint, typecheck, and build pass on `2026-07-14`.
+- Remaining: Full weighted scoring, final rubric-approved cap values, `FeedbackView` V2 rendering, persistence, and configurable evaluation profiles are pending.
 
 #### Task V-002
 
@@ -270,10 +270,10 @@ Completion date: `2026-07-14`
 - Acceptance criteria: max-score caps from `docs/sos_kpr_roleplay/11_EVALUATION_RUBRIC.md` are enforced after weighted scoring.
 - Tests: unit tests for cap precedence and multiple violations.
 - Migration impact: high; scores may be lower than current generic evaluator.
-- Status: pending.
-- Implementation: Deterministic compliance events and state flags exist, but score caps do not.
-- Verification: Compliance event detector and state aggregation tests pass.
-- Remaining: Implement and integrate hard-cap calculation in `FT-004`.
+- Status: partially completed.
+- Implementation: Leadership-trial deterministic score caps cover structured compliance events, closing before discovery, no meaningful discovery, strictest-cap precedence, and privacy-safe diagnostics.
+- Verification: Score-adjustment and result-normalizer integration tests, lint, typecheck, build, and full SOS verification pass on `2026-07-14`.
+- Remaining: Final rubric-approved values, fabricated-regulation detection beyond current events, weighted scoring, profile-driven eligibility/discovery rules, configurable evaluation profiles, and trainer/admin configuration are pending.
 
 ## Epic 10 — Persistence and Migration
 

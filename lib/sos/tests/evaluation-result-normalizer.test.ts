@@ -2,8 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildEvaluationContext } from '../evaluation/context'
 import { normalizeTrialEvaluationResult, TRIAL_DIMENSIONS } from '../evaluation/result-normalizer'
-import { createInitialRoleplayState } from '../state-reducer'
-import type { Persona, Scenario } from '../types'
+import { createInitialRoleplayState, reduceRoleplayEvents } from '../state-reducer'
+import type { Persona, RoleplayEvent, Scenario } from '../types'
 
 const persona: Persona = {
   id: 'result-persona',
@@ -35,6 +35,7 @@ const scenario: Scenario = {
   evaluationProfile: 'default_sos_kpr',
 }
 
+const baseState = createInitialRoleplayState()
 const context = buildEvaluationContext({
   persona,
   scenario,
@@ -44,7 +45,17 @@ const context = buildEvaluationContext({
     { sequence: 3, role: 'sales', text: 'Pekerjaan Ibu saat ini apa?', timestamp: '1970-01-01T00:00:00.000Z', source: 'legacy', finalized: true },
   ],
   events: [],
-  finalState: createInitialRoleplayState(),
+  finalState: {
+    ...baseState,
+    home: {
+      housingDiscovered: true,
+      occupationDiscovered: true,
+      moneyDiscovered: false,
+      eligibilityDiscovered: false,
+      completedCount: 2,
+      completionRatio: 0.5,
+    },
+  },
 })
 
 const validEvidence = {
@@ -82,7 +93,15 @@ test('valid model result preserves all legacy fields and returns eight dimension
     'Turn 2: Sales menanyakan status tempat tinggal pelanggan.',
   ])
   assert.equal(result.evaluationV2.evidence.length, 1)
-  assert.equal(result.evaluationV2.version, 'trial-v1')
+  assert.equal(result.evaluationV2.version, 'trial-v1.1')
+  assert.deepEqual(result.evaluationV2.scoreAdjustment, {
+    originalScore: 100,
+    adjustedScore: 100,
+    effectiveMaxScore: 100,
+    capped: false,
+    controllingRuleId: null,
+    appliedRules: [],
+  })
   for (const field of ['strengths', 'weaknesses', 'keyObjectionsHandled', 'missedOpportunities', 'actionableTips', 'skillScores', 'suggestedResponses', 'actionPlan']) {
     assert.ok(field in result)
   }
@@ -140,6 +159,47 @@ test('malformed arrays and scores normalize safely with all legacy fields presen
   assert.equal(result.skillScores.length, 8)
   assert.equal(result.skillScores.find(skill => skill.skill === 'Probing')?.score, 0)
   assert.equal(result.recommendedNextScenario, null)
+})
+
+test('result normalizer applies guarantee cap to legacy score and grade while preserving dimensions and evidence', () => {
+  const guaranteeEvent: RoleplayEvent = {
+    id: 'guarantee-2',
+    sessionId: 'result-session',
+    eventType: 'GUARANTEE_LANGUAGE',
+    severity: 'CRITICAL',
+    sourceTurnSequence: 2,
+    confidence: 0.97,
+    extractor: 'deterministic',
+    createdAt: '1970-01-01T00:00:00.000Z',
+  }
+  const guaranteeContext = buildEvaluationContext({
+    persona,
+    scenario,
+    turns: context.turns,
+    events: [guaranteeEvent],
+    finalState: reduceRoleplayEvents(baseState, [guaranteeEvent]),
+  })
+  const raw = {
+    overallScore: 90,
+    grade: 'A',
+    skillScores: [{ dimensionKey: 'probing', score: 88 }],
+    evidence: [validEvidence],
+  }
+  const result = normalizeTrialEvaluationResult(raw, guaranteeContext)
+
+  assert.equal(result.overallScore, 65)
+  assert.equal(result.grade, 'D')
+  assert.equal(result.evaluationV2.scoreAdjustment.originalScore, 90)
+  assert.equal(result.evaluationV2.scoreAdjustment.adjustedScore, 65)
+  assert.equal(result.evaluationV2.scoreAdjustment.controllingRuleId, 'GUARANTEE_LANGUAGE')
+  assert.equal(result.skillScores.find(skill => skill.skill === 'Probing')?.score, 88)
+  assert.equal(result.evaluationV2.evidence.length, 1)
+  assert.deepEqual(raw, {
+    overallScore: 90,
+    grade: 'A',
+    skillScores: [{ dimensionKey: 'probing', score: 88 }],
+    evidence: [validEvidence],
+  })
 })
 
 test('normalized response excludes rejected raw evidence and private/internal values', () => {

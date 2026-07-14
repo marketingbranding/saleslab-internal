@@ -1,6 +1,7 @@
 import type { EvaluationEvidence } from '../types'
 import type { EvaluationContext } from './context'
 import { EVALUATION_DIMENSION_KEYS, validateEvaluationEvidenceBatch } from './evidence'
+import { applyTrialScoreAdjustments, gradeFromScore } from './score-adjustments'
 
 export const TRIAL_DIMENSIONS = [
   { key: 'approaching', label: 'Approaching' },
@@ -34,7 +35,7 @@ export interface TrialEvaluationResponse {
   recommendedNextScenario: string | null
   actionPlan: string[]
   evaluationV2: {
-    version: 'trial-v1'
+    version: 'trial-v1.1'
     transcriptSufficient: boolean
     insufficiencyReasons: string[]
     dimensions: Array<{ key: string; label: string; score: number }>
@@ -50,6 +51,20 @@ export interface TrialEvaluationResponse {
       missingCategories: string[]
     }
     complianceFlags: string[]
+    scoreAdjustment: {
+      originalScore: number
+      adjustedScore: number
+      effectiveMaxScore: number
+      capped: boolean
+      controllingRuleId: string | null
+      appliedRules: Array<{
+        ruleId: string
+        maxScore: number
+        severity: string
+        reasonCode: string
+        sourceTurnSequences: number[]
+      }>
+    }
   }
 }
 
@@ -104,7 +119,9 @@ export function normalizeTrialEvaluationResult(
   context: EvaluationContext
 ): TrialEvaluationResponse {
   const raw = isRecord(rawInput) ? rawInput : {}
-  const overallScore = scoreValue(raw.overallScore ?? raw.overall_score)
+  const modelOverallScore = scoreValue(raw.overallScore ?? raw.overall_score)
+  const scoreAdjustment = applyTrialScoreAdjustments(modelOverallScore, context)
+  const overallScore = scoreAdjustment.adjustedScore
   const candidates = Array.isArray(raw.evidence) ? raw.evidence : []
   const evidenceResult = validateEvaluationEvidenceBatch(candidates, {
     turns: context.turns,
@@ -132,7 +149,7 @@ export function normalizeTrialEvaluationResult(
 
   return {
     overallScore,
-    grade: stringValue(raw.grade, overallScore >= 90 ? 'A' : overallScore >= 80 ? 'B' : overallScore >= 70 ? 'C' : overallScore >= 60 ? 'D' : 'E'),
+    grade: gradeFromScore(overallScore),
     summary: stringValue(raw.summary ?? raw.verdict, summaryFallback),
     strengths: stringArray(raw.strengths),
     weaknesses: stringArray(raw.weaknesses),
@@ -148,7 +165,7 @@ export function normalizeTrialEvaluationResult(
     ) || null,
     actionPlan: stringArray(raw.actionPlan ?? raw.action_plan),
     evaluationV2: {
-      version: 'trial-v1',
+      version: 'trial-v1.1',
       transcriptSufficient: context.summary.isTranscriptSufficient,
       insufficiencyReasons: [...context.summary.insufficiencyReasons],
       dimensions,
@@ -164,6 +181,20 @@ export function normalizeTrialEvaluationResult(
         missingCategories: [...context.home.missingCategories],
       },
       complianceFlags: [...context.complianceFlags],
+      scoreAdjustment: {
+        originalScore: scoreAdjustment.originalScore,
+        adjustedScore: scoreAdjustment.adjustedScore,
+        effectiveMaxScore: scoreAdjustment.effectiveMaxScore,
+        capped: scoreAdjustment.capped,
+        controllingRuleId: scoreAdjustment.controllingAdjustment?.ruleId ?? null,
+        appliedRules: scoreAdjustment.appliedAdjustments.map(adjustment => ({
+          ruleId: adjustment.ruleId,
+          maxScore: adjustment.maxScore,
+          severity: adjustment.severity,
+          reasonCode: adjustment.reasonCode,
+          sourceTurnSequences: [...adjustment.sourceTurnSequences],
+        })),
+      },
     },
   }
 }
