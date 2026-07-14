@@ -6,14 +6,14 @@ Fast-track implementation completion date: `2026-07-14`
 
 Latest QA date: `2026-07-14`
 
-Trial readiness: `NO-GO` - signed-in voice, report, Firestore, retry merge, and privacy checks passed; the deployed HOME false-positive fix remains manually unverified, reconnect was skipped, and the uninterrupted leadership rehearsal was skipped. See `docs/LEADERSHIP_TRIAL_QA.md`.
+Trial readiness: `CONDITIONAL GO` - core signed-in voice, evaluator, report, Firestore, retry, navigation, and privacy checks passed. Reconnect, deployed HOME regression confirmation, and formal rehearsal were deferred due to trial timing and remain documented risks. See `docs/LEADERSHIP_TRIAL_QA.md`.
 
 - `FT-001 Evidence Validator` — completed.
 - `FT-002 Evaluation Context Builder` — completed.
 - `FT-003 Backward-Compatible Evaluator API` — completed.
 - `FT-004 Minimal Compliance Caps` — completed.
 - `FT-005 Trial Report Integration` — completed.
-- `FT-006 Manual Trial QA` — in progress; operator-assisted core flow passed, but HOME regression, reconnect, and QA-18 remain not tested.
+- `FT-006 Manual Trial QA` — partially completed; core operator path passed, remaining exit tests deferred until after the leadership trial.
 
 ## Post-Trial Roadmap Resume Point
 
@@ -28,6 +28,14 @@ Recommended next architecture phase:
 - continue remaining phases from `TASKLIST_V2.md`.
 
 These tasks are not complete and must not begin until leadership-trial feedback has been recorded.
+
+Before resuming architecture implementation:
+
+1. record leadership feedback;
+2. complete deferred FT-006 checks;
+3. classify trial defects and requested changes;
+4. stabilize any Blocker or High issue;
+5. then resume the original roadmap.
 
 ## Epic 1 — Domain Foundation
 

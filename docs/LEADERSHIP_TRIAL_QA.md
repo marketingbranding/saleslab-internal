@@ -2,11 +2,23 @@
 
 ## Trial Readiness
 
-**NO-GO** as of `2026-07-14` after operator-assisted QA.
+**CONDITIONAL GO** as of `2026-07-14`.
 
-The authorized operator completed real sign-in, physical microphone transcription, a full voice-to-report flow, successful Firestore inspection, controlled failed-state persistence and retry merge, real-session privacy inspection, and navigation checks against Vercel. Two High defects were found and deployed during operator QA. Customer/AI transcription was manually verified after its fix. The HOME false-positive fix is deployed but its required manual rerun was skipped. Network interruption/reconnect and the uninterrupted leadership rehearsal were also skipped.
+The authorized operator completed real sign-in, physical microphone transcription, both-role transcript capture, a full voice-to-report flow, successful Firestore inspection, controlled failed-state persistence and retry merge, real-session privacy inspection, mute/unmute, and navigation checks against Vercel. The trial may proceed under the operating conditions in this document.
 
-Do not treat this record as approval for the leadership trial until the blocked cases are rerun by an authorized operator and this decision is updated.
+Reconnect/interruption recovery, final deployed HOME regression confirmation, and an uninterrupted formal leadership rehearsal were deferred due to schedule constraints. They are not considered passed, and FT-006 remains partially completed.
+
+## Conditional Go Decision
+
+- Decision date: `2026-07-14`.
+- Deployed commit: `2e90aa03f26aa0e442bcd76f30bf1a71c3c23de8`.
+- Previous decision: `NO-GO` on `2026-07-14` while required operator checks were still outstanding. This historical decision is superseded by the conditional decision, not deleted or reclassified.
+- Reason: The core human-operated end-to-end path passed, and leadership timing requires the remaining exit checks to be deferred with explicit operating controls.
+- Passed core capabilities: authorized sign-in, physical microphone, sales and customer transcription, duplicate control, evaluator response, report rendering, grounded evidence, Firestore successful save, failed-state retry merge, mute/unmute, navigation, and real-session privacy inspection.
+- Deferred cases: QA-10 reconnect/interruption, QA-18 uninterrupted rehearsal, and QA-D05 deployed manual HOME confirmation.
+- Operating conditions: restart interrupted voice sessions, space Groq retries, interpret HOME only as discovery coverage, and label any backup report transparently.
+- Residual risks: listed under `Residual Risks`; none of the deferred checks is marked passed.
+- Post-trial obligation: complete the deferred validation before marking FT-006 complete or resuming architecture implementation.
 
 ## Tested Environment
 
@@ -84,7 +96,7 @@ The following matrix preserves the automated, provider-backed, and controlled-br
 | QA-07 | No meaningful discovery | API | Not applicable | 2 sales turns, zero HOME categories | `NO_MEANINGFUL_DISCOVERY`, max `65`, all four HOME areas missing | Matched; report fixture retained HOME disclaimer | **Passed** |
 | QA-08 | Evidence validation | Real Vercel flow plus controlled tests | Physical session | Operator confirmed visible evidence referenced real sales statements | Real response and targeted rejection tests passed | Grounded sales evidence passed | **Passed** |
 | QA-09 | Repeated speech and dedupe | Real Chrome plus targeted tests | Physical repetition performed | No severe duplicate flooding; both roles remained readable | Evaluation completed | Operator-confirmed | **Passed** |
-| QA-10 | Voice interruption | Chrome on Windows | Physical mute/unmute passed | Interruption recovery and preservation not performed | Not tested after real interruption | Operator explicitly skipped Wi-Fi interruption/reconnect | **Not tested** |
+| QA-10 | Voice interruption | Chrome on Windows | Physical mute/unmute passed | Interruption recovery and preservation not performed | Deferred after the trial | Operator explicitly skipped Wi-Fi interruption/reconnect | **Deferred / Not tested** |
 | QA-11 | Provider error and retry | Vercel and Chrome request blocking | Physical roleplay before evaluation | Real session transcript persisted | Safe failed state, one retry, and real report passed | Same Firestore document merged from failed to completed with no duplicate | **Passed** |
 | QA-12 | Groq rate limit | Local API | Not applicable | Fictional compact cases | Consecutive requests produced actual HTTP 429 upstream and controlled 502 locally; retries after about 20 seconds succeeded | No hang or prompt/transcript logging; no automatic fallback after Groq 429 | **Passed** |
 | QA-13 | Legacy response | Controlled Chrome desktop | Not applicable | Compact fixture | Contract response without `evaluationV2` rendered | No HOME or score-adjustment section; legacy report remained usable | **Passed** |
@@ -92,7 +104,7 @@ The following matrix preserves the automated, provider-backed, and controlled-br
 | QA-15 | Authentication and access | Vercel and Chrome | Authorized admin account | Real roleplay allowed | Real evaluation and writes allowed | Signed-out controlled state and authorized signed-in flow passed; expiry refresh was not exercised | **Passed** |
 | QA-16 | Responsive report | Chrome `1440 x 900` and `375 x 812` | Not applicable | Compact fixture | Controlled V2 response | Score, critical cap, HOME, evidence, and buttons rendered with no horizontal overflow or console errors | **Passed** |
 | QA-17 | Restart and navigation | Vercel and Chrome | Physical follow-up session | Fresh roleplay opened without stale report | No duplicate evaluation request observed | `Coba Lagi` and `Menu Utama` operator-confirmed | **Passed** |
-| QA-18 | Leadership rehearsal | Vercel intended | Not run | Not run | Not run | Operator explicitly skipped the uninterrupted rehearsal | **Not tested** |
+| QA-18 | Leadership rehearsal | Vercel intended | Not run | Not run | Deferred after the trial | Operator explicitly skipped the uninterrupted rehearsal | **Deferred / Not tested** |
 
 ## Human-Operated QA
 
@@ -106,10 +118,10 @@ The following matrix preserves the automated, provider-backed, and controlled-br
 | Successful Firestore save | PASSED: required fields, completed status, adjusted score, V2 adjustment/HOME, and one session document |
 | Failure and retry merge | PASSED: safe failed state, safe error, one retry, same document, completed result, score and feedback |
 | Mute/unmute | PASSED: muted speech excluded; transcription resumed after unmute |
-| Reconnect/interruption | NOT TESTED: operator explicitly skipped the real Wi-Fi interruption |
+| Reconnect/interruption | DEFERRED / NOT TESTED: operator explicitly skipped the real Wi-Fi interruption |
 | Real-session privacy | PASSED: Chrome Console and Vercel logs inspected; no transcript, prompt, secret, provider body, or hidden value |
-| HOME false-positive fix | NOT TESTED manually after deployment of `2e90aa0` |
-| Leadership rehearsal | NOT TESTED: operator explicitly skipped QA-18 |
+| HOME false-positive fix | DEFERRED / AUTOMATED ONLY: source fix and automated regressions passed; deployed manual confirmation was not completed |
+| Leadership rehearsal | DEFERRED / NOT TESTED: operator explicitly skipped QA-18 |
 
 ## Defects
 
@@ -167,7 +179,7 @@ The following matrix preserves the automated, provider-backed, and controlled-br
 - Files changed: `lib/sos/event-extractor.ts`, `lib/sos/tests/event-extractor.test.ts`.
 - Commit: `2e90aa0`.
 - Regression test: 18 focused extractor tests passed, including generic-concern exclusions and concrete financial-fact preservation.
-- Manual verification: NOT TESTED after deployment; operator chose to skip the required rerun.
+- Manual verification: DEFERRED / NOT TESTED after deployment; operator chose to skip the required rerun.
 - Remaining risk: The fix is deployed but remains an unresolved High risk until the exact operator reproduction passes.
 
 ## Provider Reliability
@@ -239,12 +251,12 @@ No successful evaluator response exceeded 5 seconds. Rate-limited requests faile
 ## Unresolved Risks
 
 - HOME false-positive fix `2e90aa0` is deployed but its exact manual regression was skipped.
-- Gemini Live interruption/reconnect and transcript preservation remain unverified.
-- The uninterrupted leadership demonstration rehearsal remains unperformed.
+- Gemini Live reconnect has not been manually tested.
+- A disconnected roleplay may need to be restarted.
 - Groq can return HTTP 429 during consecutive requests and has no automatic runtime fallback while its key is configured.
+- A formal uninterrupted leadership rehearsal was not completed.
+- Base and dimension scores remain model-generated before deterministic caps.
 - Production dependency audit reports 4 high and 2 moderate findings.
-- Vercel is the tested host and `2e90aa0` is operator-confirmed deployed; deployment rollback access was not exercised.
-- Base and dimension scoring remain model-generated rather than rubric-weighted.
 
 ## Rollback
 
@@ -260,6 +272,49 @@ Practical rollback procedure:
 4. Identify evaluator V2 failure by controlled `/api/analyze` errors, absent `evaluationV2`, report crashes, or incorrect adjusted score/grade.
 5. After rollback, submit a compact fictional transcript and confirm the legacy-compatible fields (`overallScore`, `grade`, strengths, weaknesses, verdict, and skill scores) render without the HOME or score-adjustment sections when `evaluationV2` is absent.
 6. Recheck authentication and one session write before allowing another demonstration.
+
+## Trial Operating Conditions
+
+### Voice Connection Failure
+
+If Gemini Live disconnects or the roleplay becomes stuck:
+
+1. Do not attempt to preserve or continue the interrupted session.
+2. Return to the dashboard.
+3. Confirm the internet connection is stable.
+4. Start a new roleplay session.
+
+Automatic recovery is not promised because reconnect was not manually tested.
+
+### Groq Evaluator Rate Limit
+
+Actual HTTP 429 behavior was previously observed after rapid consecutive evaluator requests. If evaluation fails after finishing a session:
+
+1. Do not click retry repeatedly.
+2. Wait approximately 20 seconds.
+3. Retry once.
+4. If it fails again, stop repeated attempts and use the documented backup procedure.
+
+### HOME Report Interpretation
+
+HOME coverage is a deterministic discovery indicator. It is not a bank eligibility or approval decision. The deployed false-positive fix has automated coverage but was not manually reconfirmed before the trial.
+
+### Backup Procedure
+
+A previously generated fictional trial report may be kept available only as a clearly labeled demonstration backup. It must not be represented as the result of a failed live session. Live failures must not be hidden from leadership.
+
+## Minimum Pre-Demo Operator Check
+
+- [ ] Open the deployed Vercel application.
+- [ ] Sign in with the authorized account.
+- [ ] Confirm Chrome microphone permission.
+- [ ] Speak one sentence and confirm it appears in the transcript.
+- [ ] Confirm the customer response also appears.
+- [ ] Confirm Groq has not recently been called repeatedly.
+- [ ] Confirm Firestore and the evaluator endpoint are reachable.
+- [ ] Keep the documented backup report in a separate tab.
+
+This operational check does not replace the deferred QA cases.
 
 ## Trial Operations Checklist
 
@@ -303,15 +358,15 @@ This plan is prepared but the operator explicitly skipped the uninterrupted rehe
 - Expected report: sufficient transcript, HOME coverage reflecting the discussion, grounded sales evidence, no compliance cap, internally consistent score and grade.
 - Backup: reload voice once; if evaluation fails, wait before one retry; use a clearly labeled prior fictional report only if policy allows.
 
-## Exit Criteria To Change NO-GO
+## Deferred Post-Trial Validation
 
-An authorized operator must complete and record all of the following in this document:
+These checks are required before declaring fast-track QA fully complete:
 
-1. Rerun the exact generic installment/BI-checking concern case against `2e90aa0` and confirm Money/Eligibility remain missing in both report and Firestore.
-2. QA-10 with a real safe interruption, observed connection state, transcript preservation, and resume or tested restart procedure.
-3. QA-18 as one uninterrupted, non-automated leadership demonstration rehearsal against the intended Vercel deployment.
-
-Only after those checks pass should FT-006 be marked completed and readiness changed to `GO` or `CONDITIONAL GO`.
+1. QA-D05: Manually verify the deployed HOME negative and positive controls.
+2. QA-10: Test temporary network interruption, transcript preservation, and recovery.
+3. QA-18: Perform one uninterrupted human-operated rehearsal.
+4. Reassess: Decide whether reconnect needs product work or only an operating procedure.
+5. Update: Change FT-006 to completed only after these checks are documented.
 
 ## Final Verification
 
