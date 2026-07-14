@@ -2,14 +2,32 @@
 
 ## Current Delivery Priority — Leadership Trial Fast Track
 
-Completion date: `2026-07-14`
+Fast-track implementation completion date: `2026-07-14`
+
+Latest QA date: `2026-07-14`
+
+Trial readiness: `NO-GO` - real signed-in voice, Firestore persistence, reconnect, and uninterrupted leadership rehearsal remain unverified. See `docs/LEADERSHIP_TRIAL_QA.md`.
 
 - `FT-001 Evidence Validator` — completed.
 - `FT-002 Evaluation Context Builder` — completed.
 - `FT-003 Backward-Compatible Evaluator API` — completed.
 - `FT-004 Minimal Compliance Caps` — completed.
 - `FT-005 Trial Report Integration` — completed.
-- `FT-006 Manual Trial QA` — next.
+- `FT-006 Manual Trial QA` — in progress; automated, provider-backed, and controlled browser checks completed, but required human-operated end-to-end cases are blocked.
+
+## Post-Trial Roadmap Resume Point
+
+After leadership trial and stabilization, resume the original roadmap.
+
+Recommended next architecture phase:
+
+- complete evaluation profiles and weighted rubric;
+- replace trial cap constants with rubric-approved configuration;
+- transfer browser runtime session state into evaluator input;
+- formalize V2 session persistence;
+- continue remaining phases from `TASKLIST_V2.md`.
+
+These tasks are not complete and must not begin until leadership-trial feedback has been recorded.
 
 ## Epic 1 — Domain Foundation
 

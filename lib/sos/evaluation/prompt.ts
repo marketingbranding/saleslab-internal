@@ -49,7 +49,7 @@ ATURAN EVALUASI
 - Dialog customer bukan bukti performa sales.
 - Context summary deterministik adalah sumber input tepercaya.
 - Jangan menjamin persetujuan KPR atau kebenaran hukum/regulasi.
-- Skor pada fase trial ini adalah estimasi evaluator, belum weighted scoring final.
+- Semua skor wajib berupa integer pada skala 0-100. Skor pada fase trial ini adalah estimasi evaluator, belum weighted scoring final.
 - ${insufficiencyInstruction}
 
 SCENARIO
@@ -94,7 +94,7 @@ ${dimensions.map(([key, label]) => `- ${key}: ${label}`).join('\n')}
 
 Kembalikan JSON murni valid tanpa markdown dengan schema persis:
 {
-  "overallScore": number,
+  "overallScore": integer 0-100,
   "grade": string,
   "summary": string,
   "strengths": string[],
@@ -103,7 +103,7 @@ Kembalikan JSON murni valid tanpa markdown dengan schema persis:
   "missedOpportunities": string[],
   "verdict": string,
   "actionableTips": string[],
-  "skillScores": [{ "dimensionKey": string, "score": number }],
+  "skillScores": [{ "dimensionKey": string, "score": integer 0-100 }],
   "evidence": [{
     "id": string,
     "dimensionKey": string,

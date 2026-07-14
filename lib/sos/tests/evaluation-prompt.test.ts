@@ -77,6 +77,9 @@ test('trial prompt contains numbered transcript and deterministic summaries', ()
   assert.match(prompt, /PRESSURE_TACTIC/)
   assert.match(prompt, /"evidence": \[\{/)
   assert.match(prompt, /Gunakan hanya bukti dari TURN SALES/)
+  assert.match(prompt, /Semua skor wajib berupa integer pada skala 0-100/)
+  assert.match(prompt, /"overallScore": integer 0-100/)
+  assert.match(prompt, /"score": integer 0-100/)
 })
 
 test('insufficient context adds explicit conservative instruction', () => {

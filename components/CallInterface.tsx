@@ -496,11 +496,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
               // audio chunk — log size only
               const chunkSize = message.serverContent.modelTurn.parts[0].inlineData.data.length
               logLatency(`AI audio chunk received (${Math.round(chunkSize / 1024)}KB)`)
-            } else if (message.serverContent?.inputTranscription?.text) {
-              // user transcription — log text preview
-              if (process.env.NODE_ENV === 'development') {
-                console.log(`[Live] Input transcription: "${message.serverContent.inputTranscription.text.slice(0, 50)}..."`)
-              }
             }
 
             if (message.sessionResumptionUpdate?.newHandle) {
@@ -534,7 +529,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
             const modelParts = message.serverContent?.modelTurn?.parts || []
             const modelText = combineTranscriptTextParts(modelParts)
             if (modelText && isMountedRef.current) {
-              console.log('AI text:', modelText)
               appendTranscript('model', modelText, 'gemini_live_model', 'serverContent.modelTurn.parts')
             }
 
@@ -542,7 +536,6 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
             const userParts = message.serverContent?.userTurn?.parts || []
             const userText = combineTranscriptTextParts(userParts)
             if (userText && isMountedRef.current) {
-              console.log('User text:', userText)
               appendTranscript('user', userText, 'fallback', 'serverContent.userTurn.parts')
             }
 
