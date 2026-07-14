@@ -16,6 +16,7 @@ import { FAB_KNOWLEDGE, HOME_KNOWLEDGE, SOS_KNOWLEDGE, SPIN_KNOWLEDGE } from "@/
 import { compileVoiceRoleplayPrompt } from "@/lib/sos/prompt-compiler"
 import { extractDeterministicEvents } from "@/lib/sos/event-extractor"
 import { createInitialRoleplayState, reduceRoleplayEvents } from "@/lib/sos/state-reducer"
+import { deriveInitialRoleplayState } from "@/lib/sos/initial-state"
 import { applyHiddenInformationRevealKeys, evaluateHiddenInformation } from "@/lib/sos/hidden-information-engine"
 import {
   appendNormalizedTurn,
@@ -403,10 +404,9 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
       const mappedPersona = mapLegacyPersona(scenario)
       hiddenInformationConfigRef.current = mappedPersona.hiddenInformation
       if (roleplayStateRef.current.processedEventIds.length === 0) {
-        roleplayStateRef.current = createInitialRoleplayState({
-          scenarioId: mappedScenario.id,
-          personaId: mappedPersona.id,
-          initialTrust: mappedPersona.trustStart,
+        roleplayStateRef.current = deriveInitialRoleplayState({
+          persona: mappedPersona,
+          scenario: mappedScenario,
         })
       }
       const roleplayPrompt = compileVoiceRoleplayPrompt({
