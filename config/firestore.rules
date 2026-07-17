@@ -19,6 +19,7 @@ service cloud.firestore {
         request.auth.token.email == "faizalsyahiddin@gmail.com" ||
         request.auth.token.email == "groupmarketing.mbn@gmail.com" ||
         request.auth.token.email == "redhapekug@gmail.com" ||
+        request.auth.token.email == "jeparamarison941@gmail.com" ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
