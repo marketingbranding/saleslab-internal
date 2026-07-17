@@ -80,6 +80,9 @@ test('trial prompt contains numbered transcript and deterministic summaries', ()
   assert.match(prompt, /Semua skor wajib berupa integer pada skala 0-100/)
   assert.match(prompt, /"overallScore": integer 0-100/)
   assert.match(prompt, /"score": integer 0-100/)
+  assert.match(prompt, /home_qualification \(20%\)/)
+  assert.match(prompt, /Anchor skor: 0=tidak dilakukan\/berbahaya/)
+  assert.match(prompt, /overall score berbobot secara deterministik/)
 })
 
 test('insufficient context adds explicit conservative instruction', () => {

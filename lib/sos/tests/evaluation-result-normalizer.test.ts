@@ -67,6 +67,13 @@ const validEvidence = {
   recommendedImprovement: 'Lanjutkan pertanyaan HOME lainnya.',
 }
 
+function allSkillScores(score: number, overrides: Record<string, number> = {}) {
+  return TRIAL_DIMENSIONS.map(dimension => ({
+    dimensionKey: dimension.key,
+    score: overrides[dimension.key] ?? score,
+  }))
+}
+
 test('valid model result preserves all legacy fields and returns eight dimensions with V2 evidence', () => {
   const result = normalizeTrialEvaluationResult({
     overallScore: 120,
@@ -78,14 +85,14 @@ test('valid model result preserves all legacy fields and returns eight dimension
     missedOpportunities: ['Eligibility'],
     verdict: 'Cukup baik.',
     actionableTips: ['Lanjutkan HOME'],
-    skillScores: [{ dimensionKey: 'probing', score: 88 }],
+    skillScores: allSkillScores(100, { probing: 88 }),
     evidence: [validEvidence],
     suggestedResponses: ['Boleh saya tanya pekerjaan Ibu?'],
     recommendedNextScenario: 'Closing survey',
     actionPlan: ['Latihan probing'],
   }, context)
 
-  assert.equal(result.overallScore, 100)
+  assert.equal(result.overallScore, 98)
   assert.equal(result.skillScores.length, 8)
   assert.deepEqual(result.skillScores.map(skill => skill.skill), TRIAL_DIMENSIONS.map(dimension => dimension.label))
   assert.equal(result.skillScores.find(skill => skill.skill === 'Probing')?.score, 88)
@@ -93,10 +100,14 @@ test('valid model result preserves all legacy fields and returns eight dimension
     'Turn 2: Sales menanyakan status tempat tinggal pelanggan.',
   ])
   assert.equal(result.evaluationV2.evidence.length, 1)
-  assert.equal(result.evaluationV2.version, 'trial-v1.1')
+  assert.equal(result.evaluationV2.version, 'trial-v1.2')
+  assert.equal(result.evaluationV2.provider, 'unspecified')
+  assert.equal(result.evaluationV2.scoring.modelOverallScore, 100)
+  assert.equal(result.evaluationV2.scoring.weightedScore, 98)
+  assert.equal(result.evaluationV2.scoring.profileId, 'trial-weighted-v1')
   assert.deepEqual(result.evaluationV2.scoreAdjustment, {
-    originalScore: 100,
-    adjustedScore: 100,
+    originalScore: 98,
+    adjustedScore: 98,
     effectiveMaxScore: 100,
     capped: false,
     controllingRuleId: null,
@@ -182,7 +193,7 @@ test('result normalizer applies guarantee cap to legacy score and grade while pr
   const raw = {
     overallScore: 90,
     grade: 'A',
-    skillScores: [{ dimensionKey: 'probing', score: 88 }],
+    skillScores: allSkillScores(90, { probing: 88 }),
     evidence: [validEvidence],
   }
   const result = normalizeTrialEvaluationResult(raw, guaranteeContext)
@@ -194,12 +205,10 @@ test('result normalizer applies guarantee cap to legacy score and grade while pr
   assert.equal(result.evaluationV2.scoreAdjustment.controllingRuleId, 'GUARANTEE_LANGUAGE')
   assert.equal(result.skillScores.find(skill => skill.skill === 'Probing')?.score, 88)
   assert.equal(result.evaluationV2.evidence.length, 1)
-  assert.deepEqual(raw, {
-    overallScore: 90,
-    grade: 'A',
-    skillScores: [{ dimensionKey: 'probing', score: 88 }],
-    evidence: [validEvidence],
-  })
+  assert.equal(raw.overallScore, 90)
+  assert.equal(raw.grade, 'A')
+  assert.deepEqual(raw.skillScores, allSkillScores(90, { probing: 88 }))
+  assert.deepEqual(raw.evidence, [validEvidence])
 })
 
 test('normalized response excludes rejected raw evidence and private/internal values', () => {

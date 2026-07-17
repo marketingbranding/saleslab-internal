@@ -8,6 +8,7 @@ export interface TrialScoreAdjustmentRuleView {
 
 export interface TrialEvaluationV2View {
   version?: string
+  provider?: 'groq' | 'nvidia_nim' | 'gemini' | 'unspecified' | string
   transcriptSufficient?: boolean
   insufficiencyReasons?: string[]
   dimensions?: Array<{
@@ -35,6 +36,17 @@ export interface TrialEvaluationV2View {
     missingCategories?: string[]
   }
   complianceFlags?: string[]
+  scoring?: {
+    profileId?: string
+    modelOverallScore?: number
+    weightedScore?: number
+    weights?: Array<{
+      key: string
+      weight: number
+      score: number
+      contribution: number
+    }>
+  }
   scoreAdjustment?: {
     originalScore?: number
     adjustedScore?: number

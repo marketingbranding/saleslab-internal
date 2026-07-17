@@ -85,7 +85,7 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         score: data.overallScore,
         feedback: data,
         analysisStatus: 'completed',
-        analysisProvider: 'api/analyze',
+        analysisProvider: data.evaluationV2?.provider || 'api/analyze',
       })
       setSaved(true)
     } catch (err: any) {
@@ -166,6 +166,14 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
   if (!feedback) return null
 
   const evaluationV2 = feedback.evaluationV2
+  const providerLabel = evaluationV2?.provider === 'groq'
+    ? 'Groq'
+    : evaluationV2?.provider === 'nvidia_nim'
+      ? 'NVIDIA NIM'
+      : evaluationV2?.provider === 'gemini'
+        ? 'Gemini'
+        : null
+  const weightedScoring = evaluationV2?.scoring
   const v2SufficiencyKnown = typeof evaluationV2?.transcriptSufficient === 'boolean'
   const transcriptIncomplete = v2SufficiencyKnown
     ? evaluationV2.transcriptSufficient === false
@@ -211,9 +219,12 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
       className="max-w-5xl mx-auto space-y-12 pb-24"
     >
       {/* Header with sync status */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-2xl font-bold font-heading tracking-tight uppercase">LAPORAN Mission</h2>
-        <SyncIndicator status={saved ? 'synced' : 'syncing'} />
+        <div className="flex items-center gap-3">
+          {providerLabel && <span className="retro-badge bg-surface text-dark">Evaluator: {providerLabel}</span>}
+          <SyncIndicator status={saved ? 'synced' : 'syncing'} />
+        </div>
       </div>
 
       {analysisStatus === 'completed' && feedback.summary && (
@@ -242,6 +253,9 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
           <div className="w-48 h-48 bg-primary text-dark flex items-center justify-center flex-col border-2 border-dark">
             <span className="text-7xl font-bold font-heading tracking-tight leading-none">{feedback.overallScore}</span>
             <span className="text-[11px] font-bold uppercase text-dark/80 mt-2 font-heading">{feedback.grade || 'Score Akhir'}</span>
+            {weightedScoring?.profileId && (
+              <span className="text-[10px] font-bold uppercase text-dark/70 mt-1 font-heading">Skor Berbobot</span>
+            )}
             {scoreCapped && (
               <span className="text-[11px] font-bold text-dark/70 mt-1 font-mono">Skor awal: {originalScore}</span>
             )}

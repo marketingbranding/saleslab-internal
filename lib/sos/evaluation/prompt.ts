@@ -1,18 +1,19 @@
 import type { EvaluationContext } from './context'
+import { TRIAL_WEIGHTED_SCORING_PROFILE } from './weighted-scoring'
 
 export interface EvaluationPromptInput {
   context: EvaluationContext
 }
 
 const dimensions = [
-  ['approaching', 'Approaching'],
-  ['probing', 'Probing'],
-  ['home_qualification', 'Kualifikasi HOME'],
-  ['solution_presentation', 'Presentasi Solusi'],
-  ['objection_handling', 'Penanganan Keberatan'],
-  ['closing', 'Closing'],
-  ['communication', 'Komunikasi'],
-  ['compliance', 'Kepatuhan'],
+  ['approaching', 'Approaching', 'Pembukaan, agenda, sikap awal, dan rapport yang relevan.'],
+  ['probing', 'Probing', 'Pertanyaan terbuka, klarifikasi, serta kedalaman penggalian kebutuhan dan masalah.'],
+  ['home_qualification', 'Kualifikasi HOME', 'Penggalian Housing, Occupation, Money, dan Eligibility berdasarkan bukti percakapan.'],
+  ['solution_presentation', 'Presentasi Solusi', 'Kesesuaian penjelasan fitur/manfaat dengan kebutuhan yang benar-benar ditemukan.'],
+  ['objection_handling', 'Penanganan Keberatan', 'Klarifikasi, respons, dan konfirmasi penyelesaian keberatan tanpa mengarang.'],
+  ['closing', 'Closing', 'Ketepatan waktu closing dan kejelasan langkah berikutnya tanpa tekanan.'],
+  ['communication', 'Komunikasi', 'Kejelasan, struktur, empati, kemampuan mendengar, dan profesionalitas.'],
+  ['compliance', 'Kepatuhan', 'Keamanan klaim, privasi, kejujuran dokumen, dan proses penjualan yang bertanggung jawab.'],
 ] as const
 
 function valueOrNone(value: string | undefined): string {
@@ -49,7 +50,11 @@ ATURAN EVALUASI
 - Dialog customer bukan bukti performa sales.
 - Context summary deterministik adalah sumber input tepercaya.
 - Jangan menjamin persetujuan KPR atau kebenaran hukum/regulasi.
-- Semua skor wajib berupa integer pada skala 0-100. Skor pada fase trial ini adalah estimasi evaluator, belum weighted scoring final.
+- Semua skor wajib berupa integer pada skala 0-100.
+- Nilai setiap dimensi secara independen berdasarkan bukti. Sistem menghitung overall score berbobot secara deterministik dari skor dimensi.
+- overallScore dari model adalah estimasi holistik untuk diagnostik dan bukan sumber skor akhir.
+- Wajib kembalikan tepat satu skillScores untuk setiap dimensionKey yang ditentukan.
+- Anchor skor: 0=tidak dilakukan/berbahaya, 25=sangat lemah, 50=sebagian/dasar, 70=kompeten, 85=kuat dan berbukti, 95-100=luar biasa dan konsisten.
 - ${insufficiencyInstruction}
 
 SCENARIO
@@ -89,8 +94,8 @@ ${listOrNone(context.complianceFlags)}
 NUMBERED TRANSCRIPT
 ${numberedTranscript(context)}
 
-DIMENSIONS (gunakan semua, persis key dan label berikut)
-${dimensions.map(([key, label]) => `- ${key}: ${label}`).join('\n')}
+DIMENSIONS DAN BOBOT (gunakan semua, persis key berikut)
+${dimensions.map(([key, label, description]) => `- ${key} (${TRIAL_WEIGHTED_SCORING_PROFILE.weights[key]}%): ${label}. ${description}`).join('\n')}
 
 Kembalikan JSON murni valid tanpa markdown dengan schema persis:
 {

@@ -2,6 +2,8 @@ import type { EvaluationEvidence } from '../types'
 import type { EvaluationContext } from './context'
 import { EVALUATION_DIMENSION_KEYS, validateEvaluationEvidenceBatch } from './evidence'
 import { applyTrialScoreAdjustments, gradeFromScore } from './score-adjustments'
+import { calculateTrialWeightedScore } from './weighted-scoring'
+import type { EvaluationProviderId } from './providers'
 
 export const TRIAL_DIMENSIONS = [
   { key: 'approaching', label: 'Approaching' },
@@ -35,7 +37,8 @@ export interface TrialEvaluationResponse {
   recommendedNextScenario: string | null
   actionPlan: string[]
   evaluationV2: {
-    version: 'trial-v1.1'
+    version: 'trial-v1.2'
+    provider: EvaluationProviderId | 'unspecified'
     transcriptSufficient: boolean
     insufficiencyReasons: string[]
     dimensions: Array<{ key: string; label: string; score: number }>
@@ -51,6 +54,17 @@ export interface TrialEvaluationResponse {
       missingCategories: string[]
     }
     complianceFlags: string[]
+    scoring: {
+      profileId: string
+      modelOverallScore: number
+      weightedScore: number
+      weights: Array<{
+        key: string
+        weight: number
+        score: number
+        contribution: number
+      }>
+    }
     scoreAdjustment: {
       originalScore: number
       adjustedScore: number
@@ -116,18 +130,20 @@ function modelDimensionScores(raw: Record<string, unknown>): Map<string, number>
 
 export function normalizeTrialEvaluationResult(
   rawInput: unknown,
-  context: EvaluationContext
+  context: EvaluationContext,
+  options: { provider?: EvaluationProviderId } = {}
 ): TrialEvaluationResponse {
   const raw = isRecord(rawInput) ? rawInput : {}
   const modelOverallScore = scoreValue(raw.overallScore ?? raw.overall_score)
-  const scoreAdjustment = applyTrialScoreAdjustments(modelOverallScore, context)
-  const overallScore = scoreAdjustment.adjustedScore
   const candidates = Array.isArray(raw.evidence) ? raw.evidence : []
   const evidenceResult = validateEvaluationEvidenceBatch(candidates, {
     turns: context.turns,
     requireSalesTurn: true,
   })
   const scores = modelDimensionScores(raw)
+  const weightedScoring = calculateTrialWeightedScore(scores)
+  const scoreAdjustment = applyTrialScoreAdjustments(weightedScoring.weightedScore, context)
+  const overallScore = scoreAdjustment.adjustedScore
 
   const dimensions = TRIAL_DIMENSIONS.map(dimension => ({
     key: dimension.key,
@@ -165,7 +181,8 @@ export function normalizeTrialEvaluationResult(
     ) || null,
     actionPlan: stringArray(raw.actionPlan ?? raw.action_plan),
     evaluationV2: {
-      version: 'trial-v1.1',
+      version: 'trial-v1.2',
+      provider: options.provider ?? 'unspecified',
       transcriptSufficient: context.summary.isTranscriptSufficient,
       insufficiencyReasons: [...context.summary.insufficiencyReasons],
       dimensions,
@@ -181,6 +198,17 @@ export function normalizeTrialEvaluationResult(
         missingCategories: [...context.home.missingCategories],
       },
       complianceFlags: [...context.complianceFlags],
+      scoring: {
+        profileId: weightedScoring.profileId,
+        modelOverallScore,
+        weightedScore: weightedScoring.weightedScore,
+        weights: weightedScoring.dimensions.map(dimension => ({
+          key: dimension.key,
+          weight: dimension.weight,
+          score: dimension.score,
+          contribution: dimension.contribution,
+        })),
+      },
       scoreAdjustment: {
         originalScore: scoreAdjustment.originalScore,
         adjustedScore: scoreAdjustment.adjustedScore,

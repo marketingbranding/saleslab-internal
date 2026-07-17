@@ -25,7 +25,7 @@ Platform internal untuk melatih skill sales dan negosiasi tim dengan simulasi AI
 |---|---|
 | **Framework** | Next.js 15 (App Router) |
 | **UI** | React 19 + Tailwind CSS v4 + Motion |
-| **AI** | Google Gemini 2.0 Flash + Gemini 3.1 Flash Live Preview |
+| **AI** | Gemini Live voice + Groq/NVIDIA NIM/Gemini evaluation failover |
 | **Backend** | Firebase (Auth, Firestore) |
 | **Language** | TypeScript 5.9 |
 | **Deployment** | Vercel / Netlify |
@@ -62,9 +62,13 @@ npm install
 
 3. Set up environment variables
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file in the project root. Keep evaluator keys server-only:
 ```env
 NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+NVIDIA_NIM_API_KEY=your_fresh_nvidia_api_key_here
+# Optional:
+NVIDIA_NIM_MODEL=nvidia/nemotron-3-ultra-550b-a55b
 ```
 
 4. Run the development server
@@ -142,7 +146,9 @@ saleslab-internal/
 | Feature | Model | Purpose |
 |---|---|---|
 | Audio Call (Live) | `gemini-3.1-flash-live-preview` | Real-time voice conversation |
-| Performance Analysis | `gemini-2.0-flash` | Session evaluation and feedback |
+| Performance Analysis (primary) | `llama-3.1-8b-instant` via Groq | Session evaluation and feedback |
+| Performance Analysis (fallback 1) | `nvidia/nemotron-3-ultra-550b-a55b` via NVIDIA NIM | Evaluator fallback |
+| Performance Analysis (fallback 2) | `gemini-2.0-flash` | Final evaluator fallback |
 | Text Chat (fallback) | Ollama (local) | Local text-based roleplay |
 
 ## Firebase Setup

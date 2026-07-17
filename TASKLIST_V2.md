@@ -21,7 +21,7 @@ After leadership trial and stabilization, resume the original roadmap.
 
 Recommended next architecture phase:
 
-- complete evaluation profiles and weighted rubric;
+- complete configurable evaluation profiles and approve weighted rubric variants;
 - replace trial cap constants with rubric-approved configuration;
 - transfer browser runtime session state into evaluator input;
 - formalize V2 session persistence;
@@ -265,9 +265,9 @@ Before resuming architecture implementation:
 - Tests: golden transcript tests with expected hard caps and evidence references.
 - Migration impact: high; affects feedback and score semantics.
 - Status: partially completed.
-- Implementation: The leadership-trial pipeline now includes V2 feedback rendering, transcript sufficiency messaging, deterministic score-cap explanations, HOME discovery coverage, expanded validated skill evidence, and legacy response fallback.
-- Verification: Presentation helper tests, full SOS tests, lint, typecheck, build, and desktop/mobile browser QA pass on `2026-07-14`.
-- Remaining: Complete weighted rubric, configurable evaluation profiles, best and critical moment presentation, persisted V2 session contract, and the long-term post-trial report redesign are pending.
+- Implementation: The evaluator pipeline includes V2 feedback rendering, transcript sufficiency messaging, deterministic weighted scoring across eight dimensions, score-cap explanations, HOME discovery coverage, expanded validated skill evidence, legacy response fallback, and provider failover from Groq to NVIDIA NIM to Gemini.
+- Verification: Weighted-scoring, provider-failover, presentation, evidence, score-cap, and normalizer tests plus lint, typecheck, build, and browser QA pass on `2026-07-14`.
+- Remaining: Configurable evaluation profiles, rubric-approved profile variants, best and critical moment presentation, persisted V2 session contract, and the long-term post-trial report redesign are pending.
 
 #### Task V-002
 
@@ -297,9 +297,9 @@ Before resuming architecture implementation:
 - Tests: unit tests for cap precedence and multiple violations.
 - Migration impact: high; scores may be lower than current generic evaluator.
 - Status: partially completed.
-- Implementation: Leadership-trial deterministic score caps cover structured compliance events, closing before discovery, no meaningful discovery, strictest-cap precedence, and privacy-safe diagnostics.
+- Implementation: Leadership-trial deterministic score caps run after the eight-dimension weighted score and cover structured compliance events, closing before discovery, no meaningful discovery, strictest-cap precedence, and privacy-safe diagnostics.
 - Verification: Score-adjustment and result-normalizer integration tests, lint, typecheck, build, and full SOS verification pass on `2026-07-14`.
-- Remaining: Final rubric-approved values, fabricated-regulation detection beyond current events, weighted scoring, profile-driven eligibility/discovery rules, configurable evaluation profiles, and trainer/admin configuration are pending.
+- Remaining: Final rubric-approved values, fabricated-regulation detection beyond current events, profile-driven eligibility/discovery rules, configurable evaluation profiles, and trainer/admin configuration are pending.
 
 ## Epic 10 — Persistence and Migration
 
