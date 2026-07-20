@@ -128,15 +128,15 @@ service cloud.firestore {
       allow update: if isAdmin()
         && request.resource.data.status == resource.data.status
         && isValidBranch(request.resource.data);
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // Users select a branch once. Only an admin can change the membership later.
     match /userMemberships/{userId} {
       function branchExistsAndMatches(data) {
-        return exists(/databases/$(database)/documents/branches/$(data.branchId))
-          && get(/databases/$(database)/documents/branches/$(data.branchId)).data.status == 'active'
-          && get(/databases/$(database)/documents/branches/$(data.branchId)).data.name == data.branchName;
+        return existsAfter(/databases/$(database)/documents/branches/$(data.branchId))
+          && getAfter(/databases/$(database)/documents/branches/$(data.branchId)).data.status == 'active'
+          && getAfter(/databases/$(database)/documents/branches/$(data.branchId)).data.name == data.branchName;
       }
 
       function isValidMembership(data) {

@@ -1,32 +1,40 @@
 'use client'
 
 import * as React from 'react'
-import { Building2, Plus } from 'lucide-react'
+import { Building2, Check, Pencil, Plus, Trash2, X } from 'lucide-react'
 import type { Branch, UserMembership } from '@/lib/personas'
 
 interface BranchManagerProps {
   branches: Branch[]
   memberships: UserMembership[]
   onCreate: (name: string) => Promise<void>
+  onUpdate: (branch: Branch, name: string) => Promise<void>
+  onDelete: (branch: Branch) => Promise<void>
   onChangeMembership: (membership: UserMembership, branch: Branch) => Promise<void>
 }
 
-export function BranchManager({ branches, memberships, onCreate, onChangeMembership }: BranchManagerProps) {
+export function BranchManager({ branches, memberships, onCreate, onUpdate, onDelete, onChangeMembership }: BranchManagerProps) {
   const [name, setName] = React.useState('')
   const [saving, setSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [editingId, setEditingId] = React.useState<string | null>(null)
+  const [editingName, setEditingName] = React.useState('')
+  const [actionId, setActionId] = React.useState<string | null>(null)
   const activeBranches = branches.filter(branch => branch.status === 'active')
+
+  const validateName = (branchName: string, currentId?: string) => {
+    if (!/^(KC|KCP)\s+\S+/i.test(branchName)) return 'Nama cabang harus diawali KC atau KCP, misalnya KC Jepara.'
+    if (branches.some(branch => branch.id !== currentId && branch.normalizedName === branchName.toLowerCase())) return 'Nama cabang sudah terdaftar.'
+    return null
+  }
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     const branchName = name.trim()
     if (!branchName || saving) return
-    if (!/^(KC|KCP)\s+\S+/i.test(branchName)) {
-      setError('Nama cabang harus diawali KC atau KCP, misalnya KC Jepara.')
-      return
-    }
-    if (branches.some(branch => branch.normalizedName === branchName.toLowerCase())) {
-      setError('Nama cabang sudah terdaftar.')
+    const validationError = validateName(branchName)
+    if (validationError) {
+      setError(validationError)
       return
     }
 
@@ -44,6 +52,46 @@ export function BranchManager({ branches, memberships, onCreate, onChangeMembers
     }
   }
 
+  const saveEdit = async (branch: Branch) => {
+    const branchName = editingName.trim()
+    const validationError = validateName(branchName, branch.id)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    setActionId(branch.id)
+    setError(null)
+    try {
+      await onUpdate(branch, branchName)
+      setEditingId(null)
+      setEditingName('')
+    } catch (err) {
+      console.error('Branch update failed:', err)
+      setError(err instanceof Error ? err.message : 'Cabang gagal diperbarui.')
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  const removeBranch = async (branch: Branch) => {
+    const memberCount = memberships.filter(item => item.branchId === branch.id).length
+    if (memberCount > 0) {
+      setError(`${branch.name} masih digunakan oleh ${memberCount} user. Pindahkan user sebelum menghapus cabang.`)
+      return
+    }
+    if (!window.confirm(`Hapus ${branch.name}? Tindakan ini tidak dapat dibatalkan.`)) return
+    setActionId(branch.id)
+    setError(null)
+    try {
+      await onDelete(branch)
+    } catch (err) {
+      console.error('Branch deletion failed:', err)
+      setError(err instanceof Error ? err.message : 'Cabang gagal dihapus.')
+    } finally {
+      setActionId(null)
+    }
+  }
+
   return (
     <div className="space-y-8">
       <section className="retro-panel bg-surface p-5 sm:p-6 space-y-5">
@@ -55,10 +103,27 @@ export function BranchManager({ branches, memberships, onCreate, onChangeMembers
         </form>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {branches.map(branch => (
-            <div key={branch.id} className="border-2 border-dark/15 p-4 flex items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2"><p className="font-bold">{branch.name}</p><span className="px-1.5 py-0.5 border border-primary/30 bg-primary/10 text-primary text-[9px] font-bold">{branch.type || (branch.name.startsWith('KCP ') ? 'KCP' : 'KC')}</span></div>
-                <span className="text-[10px] font-bold uppercase text-muted">{branch.status}</span>
+            <div key={branch.id} className="border-2 border-dark/15 p-4 space-y-3 min-w-0">
+              {editingId === branch.id ? (
+                <input value={editingName} onChange={event => { setEditingName(event.target.value); setError(null) }} className="retro-input bg-surface w-full" maxLength={100} autoFocus disabled={actionId === branch.id} />
+              ) : (
+                <div>
+                  <div className="flex items-center gap-2 min-w-0"><p className="font-bold truncate">{branch.name}</p><span className="shrink-0 px-1.5 py-0.5 border border-primary/30 bg-primary/10 text-primary text-[9px] font-bold">{branch.type || (branch.name.startsWith('KCP ') ? 'KCP' : 'KC')}</span></div>
+                  <span className="text-[10px] font-bold uppercase text-muted">{memberships.filter(item => item.branchId === branch.id).length} user</span>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                {editingId === branch.id ? (
+                  <>
+                    <button type="button" onClick={() => void saveEdit(branch)} disabled={actionId === branch.id || !editingName.trim()} className="min-h-11 bg-success/10 text-success hover:bg-success hover:text-surface flex items-center justify-center gap-1 disabled:opacity-50" aria-label={`Simpan ${branch.name}`}><Check size={15} /> Simpan</button>
+                    <button type="button" onClick={() => { setEditingId(null); setEditingName('') }} disabled={actionId === branch.id} className="min-h-11 bg-dark/5 text-muted hover:bg-dark/10 flex items-center justify-center gap-1"><X size={15} /> Batal</button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" onClick={() => { setEditingId(branch.id); setEditingName(branch.name); setError(null) }} className="min-h-11 bg-primary/10 text-primary hover:bg-primary hover:text-dark flex items-center justify-center gap-1"><Pencil size={14} /> Edit</button>
+                    <button type="button" onClick={() => void removeBranch(branch)} disabled={actionId === branch.id} className="min-h-11 bg-danger/10 text-danger hover:bg-danger hover:text-surface flex items-center justify-center gap-1 disabled:opacity-50"><Trash2 size={14} /> Hapus</button>
+                  </>
+                )}
               </div>
             </div>
           ))}
