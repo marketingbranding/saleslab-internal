@@ -97,8 +97,6 @@ export default function Home() {
   const isAdmin = normalizedUserEmail === "faizalsyahiddin@gmail.com"
     || normalizedUserEmail === "groupmarketing.mbn@gmail.com"
     || normalizedUserEmail === "redhapekug@gmail.com"
-    || normalizedUserEmail === "jeparamarison941@gmail.com"
-    || normalizedUserEmail === "marisonbatang@gmail.com"
 
   const [globalStats, setGlobalStats] = React.useState({ totalSessions: 0, topSalesperson: '-', activeScenarios: 0, winRate: 0 })
   const [statsLoaded, setStatsLoaded] = React.useState(false)
