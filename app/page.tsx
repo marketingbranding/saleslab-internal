@@ -989,6 +989,40 @@ export default function Home() {
     setIsStartModalOpen(true)
   }
 
+  const handleSelectPersona = (persona: PersonaData) => {
+    const responseStyle = ['To the point', 'Banyak Tanya', 'Ragu-ragu', 'Cerewet'].includes(persona.speechStyle)
+      ? persona.speechStyle as SalesScenario['responseStyle']
+      : 'Banyak Tanya'
+
+    const scenarioFromPersona: SalesScenario = {
+      id: `persona-roleplay-${persona.id}`,
+      personaId: persona.id,
+      title: `Roleplay dengan ${persona.name}`,
+      description: persona.currentSituation || persona.backgroundStory || `Latihan menghadapi ${persona.name}.`,
+      target: persona.goals || 'Gali kebutuhan, bangun kepercayaan, dan arahkan ke langkah berikutnya.',
+      consumerProfile: [persona.backgroundStory, persona.currentSituation, persona.painPoints].filter(Boolean).join(' ') || 'Persona approved dari library cabang.',
+      difficulty: 'Medium',
+      icon: 'UserSquare2',
+      name: persona.name,
+      gender: persona.gender,
+      aggressiveness: persona.aggressiveness,
+      patience: persona.patience,
+      responseStyle,
+      firstSpeaker: 'AI',
+      openingMessage: persona.commonPhrases || undefined,
+      successCriteria: [
+        'Bangun rapport dengan calon pembeli',
+        'Gali kebutuhan dan ketakutan utama',
+        'Tawarkan langkah berikutnya yang jelas',
+      ],
+      status: 'published',
+    }
+
+    setSelectedScenario(scenarioFromPersona)
+    setSelectedPersonaSnapshot(persona)
+    setIsStartModalOpen(true)
+  }
+
   const handleStartSim = () => {
     setStep('briefing')
     setIsStartModalOpen(false)
@@ -1121,6 +1155,13 @@ export default function Home() {
                           <span className="truncate">{creatorLabel}</span>
                         </div>
                       </div>
+
+                      <button
+                        onClick={() => handleSelectPersona(persona)}
+                        className="retro-btn retro-btn-primary w-full min-h-11 justify-center text-[11px]"
+                      >
+                        Pilih untuk Roleplay
+                      </button>
                     </article>
                   )
                 })}
