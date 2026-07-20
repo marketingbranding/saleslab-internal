@@ -2,9 +2,9 @@
 
 import * as React from 'react'
 import { motion } from 'motion/react'
-import { ChevronRight, LayoutDashboard, ListChecks, UserSquare2, Settings } from 'lucide-react'
+import { Building2, ChevronRight, LayoutDashboard, ListChecks, UserSquare2, Settings } from 'lucide-react'
 
-export type AdminTab = 'dashboard' | 'scenarios' | 'personas' | 'settings'
+export type AdminTab = 'dashboard' | 'scenarios' | 'personas' | 'branches' | 'settings'
 
 interface AdminLayoutProps {
   activeTab: AdminTab
@@ -17,6 +17,7 @@ const TABS: { key: AdminTab; label: string; icon: React.ReactNode }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   { key: 'scenarios', label: 'Skenario', icon: <ListChecks size={16} /> },
   { key: 'personas', label: 'Persona', icon: <UserSquare2 size={16} /> },
+  { key: 'branches', label: 'Cabang', icon: <Building2 size={16} /> },
   { key: 'settings', label: 'Pengaturan AI', icon: <Settings size={16} /> },
 ]
 

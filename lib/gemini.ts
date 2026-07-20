@@ -38,6 +38,7 @@ export async function getGenAI() {
 
 export interface SalesScenario {
   id: string;
+  personaId?: string;
   title: string;
   description: string;
   target: string;

@@ -24,9 +24,10 @@ interface FeedbackViewProps {
   transcript: { role: "user" | "model"; text: string }[]
   onRestart: () => void
   onHome: () => void
+  personaVersion?: number
 }
 
-export function FeedbackView({ scenario, salespersonName, transcript, onRestart, onHome }: FeedbackViewProps) {
+export function FeedbackView({ scenario, salespersonName, transcript, onRestart, onHome, personaVersion }: FeedbackViewProps) {
   const { user } = useAuth()
   const [feedback, setFeedback] = React.useState<TrialFeedbackData | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -53,9 +54,10 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
       score: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      ...(scenario.personaId ? { personaId: scenario.personaId, personaVersion: personaVersion || 1 } : {}),
       ...payload,
     }, { merge: true })
-  }, [ensureSessionId, scenario.id, salespersonName, transcript, user])
+  }, [ensureSessionId, personaVersion, scenario.id, scenario.personaId, salespersonName, transcript, user])
 
   const runAnalysis = React.useCallback(async () => {
     try {

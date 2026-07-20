@@ -3,77 +3,17 @@
 import * as React from 'react'
 import { motion } from 'motion/react'
 import { X, Save, User, BookOpen, Heart, MessageSquare, AlertTriangle, Eye, Mic } from 'lucide-react'
-
-export interface PersonaData {
-  id: string
-  name: string
-  gender: 'Pria' | 'Wanita'
-  age: number
-  occupation: string
-  familyStatus: string
-  incomeRange: string
-  backgroundStory: string
-  currentSituation: string
-  goals: string
-  painPoints: string
-  motivations: string
-  personality: string
-  emotionalLevel: number
-  aggressiveness: number
-  patience: number
-  trustLevel: number
-  curiosityLevel: number
-  speechStyle: string
-  tone: string
-  formality: string
-  speakingSpeed: string
-  commonPhrases: string
-  commonObjections: string
-  triggerConditions: string
-  escalationBehavior: string
-  hiddenInstructions: string
-  personaKnowledge: string
-  personaUnknowns: string
-}
-
-const DEFAULT_PERSONA: PersonaData = {
-  id: '',
-  name: '',
-  gender: 'Pria',
-  age: 35,
-  occupation: '',
-  familyStatus: '',
-  incomeRange: '',
-  backgroundStory: '',
-  currentSituation: '',
-  goals: '',
-  painPoints: '',
-  motivations: '',
-  personality: 'Neutral',
-  emotionalLevel: 5,
-  aggressiveness: 5,
-  patience: 5,
-  trustLevel: 5,
-  curiosityLevel: 5,
-  speechStyle: 'To the point',
-  tone: 'Neutral',
-  formality: 'Neutral',
-  speakingSpeed: 'Normal',
-  commonPhrases: '',
-  commonObjections: '',
-  triggerConditions: '',
-  escalationBehavior: '',
-  hiddenInstructions: '',
-  personaKnowledge: '',
-  personaUnknowns: '',
-}
+import { DEFAULT_PERSONA, PersonaData } from '@/lib/personas'
+export type { PersonaData } from '@/lib/personas'
 
 type BuilderTab = 'identity' | 'background' | 'personality' | 'speech' | 'objections' | 'hidden' | 'voice'
 
 interface PersonaBuilderProps {
   editingPersona?: PersonaData | null
-  onSave: (persona: PersonaData) => void
+  onSave: (persona: PersonaData) => void | Promise<void>
   onClose: () => void
+  allowInternalFields?: boolean
+  submitLabel?: string
 }
 
 const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
@@ -86,16 +26,27 @@ const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
   { key: 'voice', label: 'Voice', icon: <Mic size={14} /> },
 ]
 
-export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuilderProps) {
+export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalFields = true, submitLabel }: PersonaBuilderProps) {
   const [tab, setTab] = React.useState<BuilderTab>('identity')
   const [data, setData] = React.useState<PersonaData>(() => editingPersona || { ...DEFAULT_PERSONA, id: `persona-${Date.now()}` })
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const update = (partial: Partial<PersonaData>) => setData(prev => ({ ...prev, ...partial }))
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!data.name) return
-    onSave(data)
+    if (!data.name || saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave(data)
+    } catch (err) {
+      console.error('Persona save failed:', err)
+      setError(err instanceof Error ? err.message : 'Persona gagal disimpan. Silakan coba lagi.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const renderTab = () => {
@@ -344,7 +295,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
         </div>
 
         <div className="flex overflow-x-auto border-b-2 border-dark/15 bg-bg shrink-0">
-          {TABS.map(t => (
+          {TABS.filter(t => allowInternalFields || (t.key !== 'hidden' && t.key !== 'voice')).map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
@@ -358,11 +309,12 @@ export function PersonaBuilder({ editingPersona, onSave, onClose }: PersonaBuild
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-w-0">
+          {error && <div role="alert" className="p-3 border-2 border-danger/30 bg-danger/10 text-danger text-xs font-bold">{error}</div>}
           {renderTab()}
 
           <div className="flex flex-col min-[360px]:flex-row gap-3 pt-4 border-t-2 border-dark/15">
-            <button type="submit" className="retro-btn retro-btn-primary flex items-center gap-2 text-[11px] flex-1 justify-center">
-              <Save size={16} /> {editingPersona ? 'Update Persona' : 'Create Persona'}
+            <button type="submit" disabled={saving} className="retro-btn retro-btn-primary flex items-center gap-2 text-[11px] flex-1 justify-center disabled:opacity-50">
+              <Save size={16} /> {saving ? 'Menyimpan...' : submitLabel || (editingPersona ? 'Update Persona' : 'Create Persona')}
             </button>
             <button type="button" onClick={onClose} className="retro-btn retro-btn-ghost text-[11px]">Cancel</button>
           </div>

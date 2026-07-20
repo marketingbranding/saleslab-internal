@@ -34,6 +34,12 @@ test('mapSalesScenario preserves legacy scenario identity and goal fields', () =
   assert.equal(scenario.customerStartsFirst, true)
 })
 
+test('mapSalesScenario preserves an approved persona reference', () => {
+  const scenario = mapSalesScenario({ ...legacyScenario, personaId: 'approved-persona-1' })
+
+  assert.equal(scenario.personaId, 'approved-persona-1')
+})
+
 test('mapLegacyPersona converts embedded legacy persona fields into a Persona', () => {
   const persona = mapLegacyPersona(legacyScenario)
 

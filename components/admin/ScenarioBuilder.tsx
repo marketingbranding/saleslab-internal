@@ -4,6 +4,7 @@ import * as React from 'react'
 import { motion } from 'motion/react'
 import { X, Save, Info, User, Target, Cpu, BarChart3, Award, Globe } from 'lucide-react'
 import { SalesScenario } from '@/lib/gemini'
+import type { PersonaData } from '@/lib/personas'
 
 type BuilderTab = 'basic' | 'persona' | 'objective' | 'ai-config' | 'evaluation' | 'rewards' | 'publish'
 
@@ -11,6 +12,7 @@ interface ScenarioBuilderProps {
   editingScenario?: SalesScenario | null
   onSave: (scenario: SalesScenario) => void
   onClose: () => void
+  personas?: PersonaData[]
 }
 
 const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
@@ -23,7 +25,7 @@ const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
   { key: 'publish', label: 'Publish', icon: <Globe size={14} /> },
 ]
 
-export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBuilderProps) {
+export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [] }: ScenarioBuilderProps) {
   const [tab, setTab] = React.useState<BuilderTab>('basic')
   const [title, setTitle] = React.useState(editingScenario?.title || '')
   const [description, setDescription] = React.useState(editingScenario?.description || '')
@@ -31,6 +33,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
   const [consumerProfile, setConsumerProfile] = React.useState(editingScenario?.consumerProfile || '')
   const [difficulty, setDifficulty] = React.useState<'Easy' | 'Medium' | 'Hard'>(editingScenario?.difficulty || 'Medium')
   const [name, setName] = React.useState(editingScenario?.name || '')
+  const [personaId, setPersonaId] = React.useState(editingScenario?.personaId || '')
   const [gender, setGender] = React.useState<'Pria' | 'Wanita'>(editingScenario?.gender || 'Pria')
   const [aggressiveness, setAggressiveness] = React.useState(editingScenario?.aggressiveness || 5)
   const [patience, setPatience] = React.useState(editingScenario?.patience || 5)
@@ -55,6 +58,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
 
     const scenario: SalesScenario = {
       id: editingScenario?.id || `scenario-${Date.now()}`,
+      ...(personaId ? { personaId } : {}),
       title,
       description,
       target: target || description,
@@ -110,6 +114,32 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose }: ScenarioBu
       case 'persona':
         return (
           <div className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Persona Approved</label>
+              <select
+                value={personaId}
+                onChange={event => {
+                  const nextId = event.target.value
+                  setPersonaId(nextId)
+                  const selected = personas.find(persona => persona.id === nextId)
+                  if (!selected) return
+                  setName(selected.name)
+                  setGender(selected.gender)
+                  setAggressiveness(selected.aggressiveness)
+                  setPatience(selected.patience)
+                  setResponseStyle((['To the point', 'Banyak Tanya', 'Ragu-ragu', 'Cerewet'].includes(selected.speechStyle) ? selected.speechStyle : 'To the point') as SalesScenario['responseStyle'])
+                  setConsumerProfile([selected.backgroundStory, selected.currentSituation, selected.painPoints].filter(Boolean).join(' '))
+                  setHiddenRules(selected.hiddenInstructions)
+                }}
+                className="retro-input bg-surface p-4"
+              >
+                <option value="">Persona manual / legacy</option>
+                {personas.map(persona => (
+                  <option key={persona.id} value={persona.id}>{persona.name} · {persona.creatorBranchName || 'System / Admin'}</option>
+                ))}
+              </select>
+              <p className="text-[10px] font-semibold text-muted">Memilih persona akan mengisi profil skenario. Field di bawah tetap dapat disesuaikan.</p>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Persona Name *</label>

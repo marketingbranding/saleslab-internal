@@ -4,15 +4,17 @@ import * as React from 'react'
 import { Plus, Search, Copy, Archive, Trash2, Edit3 } from 'lucide-react'
 import { SalesScenario } from '@/lib/gemini'
 import { ScenarioBuilder } from './ScenarioBuilder'
+import type { PersonaData } from '@/lib/personas'
 
 interface ScenarioListProps {
   scenarios: SalesScenario[]
   onSave: (scenario: SalesScenario) => Promise<void>
   onDelete: (id: string) => Promise<void>
   loading?: boolean
+  personas?: PersonaData[]
 }
 
-export function ScenarioList({ scenarios, onSave, onDelete, loading }: ScenarioListProps) {
+export function ScenarioList({ scenarios, onSave, onDelete, loading, personas = [] }: ScenarioListProps) {
   const [search, setSearch] = React.useState('')
   const [builderOpen, setBuilderOpen] = React.useState(false)
   const [editingScenario, setEditingScenario] = React.useState<SalesScenario | null>(null)
@@ -189,6 +191,7 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading }: ScenarioL
           editingScenario={editingScenario}
           onSave={handleSave}
           onClose={() => { setBuilderOpen(false); setEditingScenario(null) }}
+          personas={personas}
         />
       )}
     </div>

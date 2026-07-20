@@ -27,6 +27,7 @@ import {
   normalizedTurnToLegacyTranscriptTurn,
 } from "@/lib/sos/transcript-normalizer"
 import type { HiddenInformation, RoleplayEvent, RoleplayState, TurnSource } from "@/lib/sos/types"
+import { mapPersonaDataToSos, type PersonaData } from '@/lib/personas'
 
 interface CallInterfaceProps {
   scenario: SalesScenario
@@ -34,11 +35,12 @@ interface CallInterfaceProps {
   onFinish: (transcript: { role: 'user' | 'model'; text: string }[]) => void
   onExit: () => void
   frustrationSensitivity?: number
+  persona?: PersonaData
 }
 
 type CallStatus = 'connecting' | 'connected' | 'ai-speaking' | 'disconnected' | 'error' | 'ended'
 
-export function CallInterface({ scenario, salespersonName, onFinish, onExit, frustrationSensitivity = 5 }: CallInterfaceProps) {
+export function CallInterface({ scenario, salespersonName, onFinish, onExit, frustrationSensitivity = 5, persona }: CallInterfaceProps) {
   const [isTerhubung, setIsTerhubung] = React.useState(false)
   const [isMuted, setIsMuted] = React.useState(false)
   const [isAITalking, setIsAITalking] = React.useState(false)
@@ -405,7 +407,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
       console.log('Starting Live API session with model: gemini-3.1-flash-live-preview')
 
       const mappedScenario = mapSalesScenario(scenario)
-      const mappedPersona = mapLegacyPersona(scenario)
+      const mappedPersona = persona ? mapPersonaDataToSos(persona, scenario) : mapLegacyPersona(scenario)
       const derivedInitialState = deriveInitialRoleplayState({
         persona: mappedPersona,
         scenario: mappedScenario,
@@ -642,7 +644,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
         setCallStatus('error')
       }
     }
-  }, [scenario, stopAudio])
+  }, [persona, scenario, stopAudio])
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/immutability

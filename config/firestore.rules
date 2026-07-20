@@ -27,6 +27,54 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isShortText(value, maxLength) {
+      return value is string && value.size() <= maxLength;
+    }
+
+    function isValidPersonaPublic(data) {
+      return data is map
+        && data.keys().hasAll([
+          'id', 'name', 'gender', 'age', 'occupation', 'familyStatus', 'incomeRange',
+          'backgroundStory', 'currentSituation', 'goals', 'painPoints', 'motivations',
+          'personality', 'emotionalLevel', 'aggressiveness', 'patience', 'trustLevel',
+          'curiosityLevel', 'speechStyle', 'tone', 'formality', 'speakingSpeed',
+          'commonPhrases', 'commonObjections', 'triggerConditions', 'escalationBehavior'
+        ])
+        && data.keys().hasOnly([
+          'id', 'name', 'gender', 'age', 'occupation', 'familyStatus', 'incomeRange',
+          'backgroundStory', 'currentSituation', 'goals', 'painPoints', 'motivations',
+          'personality', 'emotionalLevel', 'aggressiveness', 'patience', 'trustLevel',
+          'curiosityLevel', 'speechStyle', 'tone', 'formality', 'speakingSpeed',
+          'commonPhrases', 'commonObjections', 'triggerConditions', 'escalationBehavior'
+        ])
+        && isValidId(data.id)
+        && isShortText(data.name, 100) && data.name.size() > 0
+        && data.gender in ['Pria', 'Wanita']
+        && data.age is int && data.age >= 18 && data.age <= 100
+        && isShortText(data.occupation, 200)
+        && isShortText(data.familyStatus, 200)
+        && isShortText(data.incomeRange, 200)
+        && isShortText(data.backgroundStory, 3000)
+        && isShortText(data.currentSituation, 3000)
+        && isShortText(data.goals, 2000)
+        && isShortText(data.painPoints, 2000)
+        && isShortText(data.motivations, 2000)
+        && isShortText(data.personality, 100)
+        && data.emotionalLevel is int && data.emotionalLevel >= 1 && data.emotionalLevel <= 10
+        && data.aggressiveness is int && data.aggressiveness >= 1 && data.aggressiveness <= 10
+        && data.patience is int && data.patience >= 1 && data.patience <= 10
+        && data.trustLevel is int && data.trustLevel >= 1 && data.trustLevel <= 10
+        && data.curiosityLevel is int && data.curiosityLevel >= 1 && data.curiosityLevel <= 10
+        && isShortText(data.speechStyle, 100)
+        && isShortText(data.tone, 100)
+        && isShortText(data.formality, 100)
+        && isShortText(data.speakingSpeed, 100)
+        && isShortText(data.commonPhrases, 2000)
+        && isShortText(data.commonObjections, 3000)
+        && isShortText(data.triggerConditions, 2000)
+        && isShortText(data.escalationBehavior, 2000);
+    }
+
     // Scenarios Rules
     match /scenarios/{scenarioId} {
       function isValidScenario(data) {
@@ -36,16 +84,159 @@ service cloud.firestore {
                && (data.gender in ['Pria', 'Wanita']);
       }
 
-      allow read: if true;
-      allow create: if isAdmin() && isValidScenario(request.resource.data) && isValidId(scenarioId);
-      allow update: if isAdmin() && isValidScenario(request.resource.data);
+      allow read: if isSignedIn();
+      allow create: if isAdmin()
+        && !('hiddenRules' in request.resource.data)
+        && isValidScenario(request.resource.data) && isValidId(scenarioId);
+      allow update: if isAdmin()
+        && !('hiddenRules' in request.resource.data)
+        && isValidScenario(request.resource.data);
       allow delete: if isAdmin();
+    }
+
+    match /scenarioSecrets/{scenarioId} {
+      allow read, write: if isAdmin() && isValidId(scenarioId);
     }
 
     // Persona Rules
     match /personas/{personaId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin() && isValidId(personaId);
+      allow create, update: if isAdmin()
+        && isValidId(personaId)
+        && !request.resource.data.keys().hasAny(['hiddenInstructions', 'personaKnowledge', 'personaUnknowns']);
+      allow delete: if isAdmin() && isValidId(personaId);
+    }
+
+    match /personaSecrets/{personaId} {
+      allow read, write: if isAdmin() && isValidId(personaId);
+    }
+
+    // Branch master data is visible to signed-in users and managed centrally.
+    match /branches/{branchId} {
+      function isValidBranch(data) {
+        return data.keys().hasAll(['id', 'name', 'normalizedName', 'status'])
+          && data.id == branchId
+          && isValidId(branchId)
+          && isShortText(data.name, 100) && data.name.size() > 0
+          && isShortText(data.normalizedName, 100)
+          && data.status in ['active', 'archived'];
+      }
+
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && request.resource.data.status == 'active' && isValidBranch(request.resource.data);
+      allow update: if isAdmin()
+        && request.resource.data.status == resource.data.status
+        && isValidBranch(request.resource.data);
+      allow delete: if false;
+    }
+
+    // Users select a branch once. Only an admin can change the membership later.
+    match /userMemberships/{userId} {
+      function branchExistsAndMatches(data) {
+        return exists(/databases/$(database)/documents/branches/$(data.branchId))
+          && get(/databases/$(database)/documents/branches/$(data.branchId)).data.status == 'active'
+          && get(/databases/$(database)/documents/branches/$(data.branchId)).data.name == data.branchName;
+      }
+
+      function isValidMembership(data) {
+        return data.keys().hasAll(['userId', 'email', 'displayName', 'branchId', 'branchName'])
+          && data.userId == userId
+          && isShortText(data.email, 200)
+          && isShortText(data.displayName, 100)
+          && isValidId(data.branchId)
+          && isShortText(data.branchName, 100)
+          && branchExistsAndMatches(data);
+      }
+
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.email == request.auth.token.email
+        && exists(/databases/$(database)/documents/users/$(userId))
+        && request.resource.data.displayName == get(/databases/$(database)/documents/users/$(userId)).data.displayName
+        && request.resource.data.selectedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && isValidMembership(request.resource.data);
+      allow update: if isAdmin() && isValidMembership(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // User-authored persona content stays private until an admin approves it.
+    match /personaSubmissions/{submissionId} {
+      function membership() {
+        return get(/databases/$(database)/documents/userMemberships/$(request.auth.uid)).data;
+      }
+
+      function isValidSubmission(data) {
+        return data.keys().hasAll([
+          'id', 'persona', 'status', 'creatorUid', 'creatorName', 'creatorEmail',
+          'creatorBranchId', 'creatorBranchName', 'submittedAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'persona', 'status', 'creatorUid', 'creatorName', 'creatorEmail',
+          'creatorBranchId', 'creatorBranchName', 'submittedAt', 'updatedAt',
+          'targetPersonaId', 'previousSubmissionId'
+        ])
+        && data.id == submissionId
+        && isValidId(submissionId)
+        && data.status == 'pending'
+        && data.submittedAt == request.time
+        && data.updatedAt == request.time
+        && data.creatorUid == request.auth.uid
+        && data.creatorEmail == request.auth.token.email
+        && data.creatorName == membership().displayName
+        && data.creatorBranchId == membership().branchId
+        && data.creatorBranchName == membership().branchName
+        && exists(/databases/$(database)/documents/branches/$(data.creatorBranchId))
+        && get(/databases/$(database)/documents/branches/$(data.creatorBranchId)).data.status == 'active'
+        && get(/databases/$(database)/documents/branches/$(data.creatorBranchId)).data.name == data.creatorBranchName
+        && (!('targetPersonaId' in data) || isValidId(data.targetPersonaId))
+        && (!('targetPersonaId' in data) || (
+          exists(/databases/$(database)/documents/personas/$(data.targetPersonaId))
+          && get(/databases/$(database)/documents/personas/$(data.targetPersonaId)).data.creatorUid == request.auth.uid
+        ))
+        && (('targetPersonaId' in data) || !exists(/databases/$(database)/documents/personas/$(data.persona.id)))
+        && (!('targetPersonaId' in data) || ('previousSubmissionId' in data))
+        && (!('previousSubmissionId' in data) || (
+          isValidId(data.previousSubmissionId)
+          && exists(/databases/$(database)/documents/personaSubmissions/$(data.previousSubmissionId))
+          && get(/databases/$(database)/documents/personaSubmissions/$(data.previousSubmissionId)).data.creatorUid == request.auth.uid
+          && get(/databases/$(database)/documents/personaSubmissions/$(data.previousSubmissionId)).data.persona.id == data.persona.id
+          && (
+            (('targetPersonaId' in data)
+              && get(/databases/$(database)/documents/personaSubmissions/$(data.previousSubmissionId)).data.targetPersonaId == data.targetPersonaId
+              && get(/databases/$(database)/documents/personaSubmissions/$(data.previousSubmissionId)).data.status in ['approved', 'rejected'])
+            || (!('targetPersonaId' in data)
+              && !('targetPersonaId' in get(/databases/$(database)/documents/personaSubmissions/$(data.previousSubmissionId)).data)
+              && get(/databases/$(database)/documents/personaSubmissions/$(data.previousSubmissionId)).data.status == 'rejected')
+          )
+        ))
+        && isValidPersonaPublic(data.persona);
+      }
+
+      allow create: if isSignedIn()
+        && exists(/databases/$(database)/documents/userMemberships/$(request.auth.uid))
+        && isValidSubmission(request.resource.data);
+      allow read: if isOwner(resource.data.creatorUid) || isAdmin();
+      allow update: if isAdmin()
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['approved', 'rejected']
+        && request.resource.data.creatorUid == resource.data.creatorUid
+        && request.resource.data.creatorEmail == resource.data.creatorEmail
+        && request.resource.data.creatorBranchId == resource.data.creatorBranchId
+        && request.resource.data.persona == resource.data.persona
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && ((request.resource.data.status == 'approved' && ('targetPersonaId' in request.resource.data))
+          || (request.resource.data.status == 'rejected'
+            && request.resource.data.rejectionReason is string
+            && request.resource.data.rejectionReason.size() > 0
+            && request.resource.data.rejectionReason.size() <= 1000))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'targetPersonaId', 'reviewedAt', 'reviewedByUid',
+          'reviewedByName', 'rejectionReason', 'updatedAt'
+        ]);
+      allow delete: if false;
     }
 
     // Sessions Rules
@@ -67,6 +258,11 @@ service cloud.firestore {
     // Settings Rules
     match /settings/{settingsId} {
       allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isOwner(adminId) || isAdmin();
       allow write: if isAdmin();
     }
 

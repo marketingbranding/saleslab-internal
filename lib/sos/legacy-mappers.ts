@@ -36,7 +36,7 @@ export function mapSalesScenario(scenario: SalesScenario): Scenario {
     name: scenario.title,
     stage: 'inquiry',
     channel: 'voice',
-    personaId: `legacy-persona-${scenario.id}`,
+    personaId: scenario.personaId || `legacy-persona-${scenario.id}`,
     salesGoals: scenario.successCriteria?.filter(Boolean).length
       ? scenario.successCriteria.filter(Boolean)
       : [scenario.target],

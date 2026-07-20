@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Plus, Search, Copy, Archive, Trash2, Edit3 } from 'lucide-react'
+import { Plus, Search, Copy, Archive, Edit3 } from 'lucide-react'
 import { PersonaBuilder, PersonaData } from './PersonaBuilder'
 
 interface PersonaListProps {
@@ -97,6 +97,9 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
               <span>|</span>
               <span>Pat: {persona.patience}/10</span>
             </div>
+            <div className="p-2 bg-dark/5 border-l-2 border-primary text-[11px] font-semibold text-muted break-words">
+              {persona.creatorBranchName || 'System / Admin'} · {persona.creatorName || persona.creatorEmail || 'Admin'}
+            </div>
             <div className="grid grid-cols-[minmax(0,1fr)_44px_44px] gap-2 pt-2">
               <button onClick={() => { setEditingPersona(persona); setBuilderOpen(true) }} className="min-h-11 bg-primary/10 text-primary hover:bg-primary hover:text-dark font-bold text-xs uppercase font-heading flex items-center justify-center gap-1">
                 <Edit3 size={12} /> Edit
@@ -104,8 +107,8 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
               <button onClick={() => handleDuplicate(persona)} className="h-11 bg-dark/5 text-muted hover:bg-dark/20 flex items-center justify-center" title="Duplikasi" aria-label={`Duplikasi ${persona.name}`}>
                 <Copy size={14} />
               </button>
-              <button onClick={() => handleDelete(persona.id)} disabled={deletingId === persona.id} className="h-11 bg-danger/10 text-danger hover:bg-danger hover:text-surface flex items-center justify-center disabled:opacity-50" title="Hapus" aria-label={`Hapus ${persona.name}`}>
-                <Trash2 size={14} />
+              <button onClick={() => handleDelete(persona.id)} disabled={deletingId === persona.id} className="h-11 bg-warning/10 text-warning hover:bg-warning hover:text-dark flex items-center justify-center disabled:opacity-50" title="Arsipkan" aria-label={`Arsipkan ${persona.name}`}>
+                <Archive size={14} />
               </button>
             </div>
           </div>
