@@ -32,11 +32,11 @@ export function ScenarioBriefing({ scenario, salespersonName, onStart, onBack }:
           onClick={onBack}
           className="text-[10px] font-bold uppercase text-muted hover:text-dark mb-2 flex items-center gap-1 font-heading"
         >
-          ← Kembali ke Library
+          ← Kembali ke Perpustakaan
         </button>
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary border-2 border-primary/20 text-[10px] font-bold uppercase font-heading">
           <Target size={12} />
-          Mission Briefing
+          Briefing Misi
         </div>
         <h1 className="text-3xl sm:text-5xl font-bold font-heading leading-[0.9] uppercase">
           {scenario.title}
@@ -64,7 +64,7 @@ export function ScenarioBriefing({ scenario, salespersonName, onStart, onBack }:
         <div className="p-6 retro-panel bg-surface space-y-4">
           <div className="flex items-center gap-2 text-primary">
             <Target size={18} />
-            <h2 className="text-sm font-bold uppercase font-heading">Objective</h2>
+            <h2 className="text-sm font-bold uppercase font-heading">Tujuan</h2>
           </div>
           <p className="font-semibold text-base leading-relaxed">
             {scenario.description}
@@ -79,19 +79,19 @@ export function ScenarioBriefing({ scenario, salespersonName, onStart, onBack }:
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase text-muted font-heading">Name</span>
+              <span className="text-[10px] font-bold uppercase text-muted font-heading">Nama</span>
               <span className="font-bold">{scenario.name}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase text-muted font-heading">Gender</span>
+              <span className="text-[10px] font-bold uppercase text-muted font-heading">Jenis Kelamin</span>
               <span className="font-bold">{scenario.gender}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase text-muted font-heading">Mood</span>
+              <span className="text-[10px] font-bold uppercase text-muted font-heading">Suasana Hati</span>
               <span className="font-bold">{scenario.responseStyle}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase text-muted font-heading">Patience</span>
+              <span className="text-[10px] font-bold uppercase text-muted font-heading">Kesabaran</span>
               <span className="font-bold">{scenario.patience}/10</span>
             </div>
           </div>
@@ -102,11 +102,11 @@ export function ScenarioBriefing({ scenario, salespersonName, onStart, onBack }:
       <div className="p-6 retro-panel bg-surface space-y-4">
         <div className="flex items-center gap-2 text-warning">
           <ListChecks size={18} />
-          <h2 className="text-sm font-bold uppercase font-heading">Success Criteria</h2>
+          <h2 className="text-sm font-bold uppercase font-heading">Kriteria Keberhasilan</h2>
         </div>
         <ul className="space-y-3">
           {[
-            'Pahami kekhawatiran utama pelanggan\'s main concern',
+            'Pahami kekhawatiran utama pelanggan',
             'Bangun rapport dan kepercayaan',
             'Sajikan solusi yang relevan',
             'Tangani objection secara profesional',

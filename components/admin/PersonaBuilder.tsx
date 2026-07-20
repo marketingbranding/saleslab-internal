@@ -17,13 +17,13 @@ interface PersonaBuilderProps {
 }
 
 const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
-  { key: 'identity', label: 'Identity', icon: <User size={14} /> },
-  { key: 'background', label: 'Background', icon: <BookOpen size={14} /> },
-  { key: 'personality', label: 'Personality', icon: <Heart size={14} /> },
-  { key: 'speech', label: 'Speech Style', icon: <MessageSquare size={14} /> },
-  { key: 'objections', label: 'Objections', icon: <AlertTriangle size={14} /> },
-  { key: 'hidden', label: 'Hidden Rules', icon: <Eye size={14} /> },
-  { key: 'voice', label: 'Voice', icon: <Mic size={14} /> },
+  { key: 'identity', label: 'Identitas', icon: <User size={14} /> },
+  { key: 'background', label: 'Latar Belakang', icon: <BookOpen size={14} /> },
+  { key: 'personality', label: 'Kepribadian', icon: <Heart size={14} /> },
+  { key: 'speech', label: 'Gaya Bicara', icon: <MessageSquare size={14} /> },
+  { key: 'objections', label: 'Keberatan', icon: <AlertTriangle size={14} /> },
+  { key: 'hidden', label: 'Aturan Tersembunyi', icon: <Eye size={14} /> },
+  { key: 'voice', label: 'Suara', icon: <Mic size={14} /> },
 ]
 
 export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalFields = true, submitLabel }: PersonaBuilderProps) {
@@ -56,11 +56,11 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Name *</label>
-                <input value={data.name} onChange={e => update({ name: e.target.value })} placeholder="e.g. Mrs. Siti" className="retro-input bg-surface p-4" required />
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Nama *</label>
+                <input value={data.name} onChange={e => update({ name: e.target.value })} placeholder="Contoh: Ibu Siti" className="retro-input bg-surface p-4" required />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Gender</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Jenis Kelamin</label>
                 <select value={data.gender} onChange={e => update({ gender: e.target.value as any })} className="retro-input bg-surface p-4">
                   <option value="Pria">Pria</option>
                   <option value="Wanita">Wanita</option>
@@ -69,22 +69,22 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Age</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Usia</label>
                 <input type="number" value={data.age} onChange={e => update({ age: parseInt(e.target.value) || 0 })} className="retro-input bg-surface p-4" />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Occupation</label>
-                <input value={data.occupation} onChange={e => update({ occupation: e.target.value })} placeholder="e.g. Teacher" className="retro-input bg-surface p-4" />
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Pekerjaan</label>
+                <input value={data.occupation} onChange={e => update({ occupation: e.target.value })} placeholder="Contoh: Guru" className="retro-input bg-surface p-4" />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Family Status</label>
-                <input value={data.familyStatus} onChange={e => update({ familyStatus: e.target.value })} placeholder="e.g. Married, 2 kids" className="retro-input bg-surface p-4" />
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Status Keluarga</label>
+                <input value={data.familyStatus} onChange={e => update({ familyStatus: e.target.value })} placeholder="Contoh: Menikah, 2 anak" className="retro-input bg-surface p-4" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Income Range</label>
-                <input value={data.incomeRange} onChange={e => update({ incomeRange: e.target.value })} placeholder="e.g. Rp 5-10 juta" className="retro-input bg-surface p-4" />
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Pendapatan</label>
+                <input value={data.incomeRange} onChange={e => update({ incomeRange: e.target.value })} placeholder="Contoh: Rp 5-10 juta" className="retro-input bg-surface p-4" />
               </div>
             </div>
           </div>
@@ -94,25 +94,25 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Background Story</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Cerita Latar Belakang</label>
               <textarea value={data.backgroundStory} onChange={e => update({ backgroundStory: e.target.value })} rows={3} placeholder="Persona's background..." className="retro-input bg-surface p-4 resize-none" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Current Situation</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Situasi Saat Ini</label>
               <textarea value={data.currentSituation} onChange={e => update({ currentSituation: e.target.value })} rows={2} placeholder="What's happening now?" className="retro-input bg-surface p-4 resize-none" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Goals</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Tujuan</label>
                 <textarea value={data.goals} onChange={e => update({ goals: e.target.value })} rows={2} placeholder="What do they want?" className="retro-input bg-surface p-4 resize-none" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Pain Points</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Titik Nyeri</label>
                 <textarea value={data.painPoints} onChange={e => update({ painPoints: e.target.value })} rows={2} placeholder="What frustrates them?" className="retro-input bg-surface p-4 resize-none" />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Motivations</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Motivasi</label>
               <textarea value={data.motivations} onChange={e => update({ motivations: e.target.value })} rows={2} placeholder="What drives their decisions?" className="retro-input bg-surface p-4 resize-none" />
             </div>
           </div>
@@ -122,13 +122,13 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Personality Type</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Tipe Kepribadian</label>
               <select value={data.personality} onChange={e => update({ personality: e.target.value })} className="retro-input bg-surface p-4">
-                <option value="Friendly">Friendly</option>
+                <option value="Friendly">Ramah</option>
                 <option value="Neutral">Neutral</option>
-                <option value="Skeptical">Skeptical</option>
-                <option value="Aggressive">Aggressive</option>
-                <option value="Anxious">Anxious</option>
+                <option value="Skeptical">Skeptis</option>
+                <option value="Aggressive">Agresif</option>
+                <option value="Anxious">Cemas</option>
               </select>
             </div>
             {[
@@ -160,7 +160,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Speech Style</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Gaya Bicara</label>
                 <select value={data.speechStyle} onChange={e => update({ speechStyle: e.target.value })} className="retro-input bg-surface p-4">
                   <option value="To the point">To the point</option>
                   <option value="Banyak Tanya">Banyak Tanya</option>
@@ -169,36 +169,36 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Tone</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Nada Bicara</label>
                 <select value={data.tone} onChange={e => update({ tone: e.target.value })} className="retro-input bg-surface p-4">
-                  <option value="Warm">Warm</option>
+                  <option value="Warm">Hangat</option>
                   <option value="Neutral">Neutral</option>
                   <option value="Formal">Formal</option>
-                  <option value="Sarcastic">Sarcastic</option>
+                  <option value="Sarcastic">Sarkastis</option>
                 </select>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Formality</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Formalitas</label>
                 <select value={data.formality} onChange={e => update({ formality: e.target.value })} className="retro-input bg-surface p-4">
-                  <option value="Very Formal">Very Formal</option>
+                  <option value="Very Formal">Sangat Formal</option>
                   <option value="Formal">Formal</option>
                   <option value="Neutral">Neutral</option>
-                  <option value="Casual">Casual</option>
+                  <option value="Casual">Santai</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Speaking Speed</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Kecepatan Bicara</label>
                 <select value={data.speakingSpeed} onChange={e => update({ speakingSpeed: e.target.value })} className="retro-input bg-surface p-4">
-                  <option value="Slow">Slow</option>
+                  <option value="Slow">Lambat</option>
                   <option value="Normal">Normal</option>
-                  <option value="Fast">Fast</option>
+                  <option value="Fast">Cepat</option>
                 </select>
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Common Phrases</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Ungkapan Umum</label>
               <textarea value={data.commonPhrases} onChange={e => update({ commonPhrases: e.target.value })} rows={2} placeholder="Phrases the persona uses often..." className="retro-input bg-surface p-4 resize-none" />
             </div>
           </div>
@@ -208,15 +208,15 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Common Objections</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Keberatan Umum</label>
               <textarea value={data.commonObjections} onChange={e => update({ commonObjections: e.target.value })} rows={3} placeholder="What does this persona typically object to?" className="retro-input bg-surface p-4 resize-none" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Trigger Conditions</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Kondisi Pemicu</label>
               <textarea value={data.triggerConditions} onChange={e => update({ triggerConditions: e.target.value })} rows={2} placeholder="What triggers their objections?" className="retro-input bg-surface p-4 resize-none" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Escalation Behavior</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Perilaku Eskalasi</label>
               <textarea value={data.escalationBehavior} onChange={e => update({ escalationBehavior: e.target.value })} rows={2} placeholder="How do they react when pushed?" className="retro-input bg-surface p-4 resize-none" />
             </div>
           </div>
@@ -227,21 +227,21 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
           <div className="space-y-5">
             <div className="p-4 bg-warning/5 border-2 border-warning/20">
               <p className="text-[10px] font-bold text-warning uppercase font-heading flex items-center gap-1">
-                <Eye size={12} /> Hidden from users
+                <Eye size={12} /> Tersembunyi dari pengguna
               </p>
               <p className="text-[10px] font-semibold text-muted mt-1">These fields are never shown to normal users.</p>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Hidden Instructions for AI</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Instruksi Tersembunyi untuk AI</label>
               <textarea value={data.hiddenInstructions} onChange={e => update({ hiddenInstructions: e.target.value })} rows={4} placeholder="Internal behavior instructions for this persona..." className="retro-input bg-surface p-4 resize-none border-warning/50 bg-warning/5" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">What Persona KNOWS</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Yang DIKETAHUI Persona</label>
                 <textarea value={data.personaKnowledge} onChange={e => update({ personaKnowledge: e.target.value })} rows={3} placeholder="Information the persona has..." className="retro-input bg-surface p-4 resize-none" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">What Persona Does Not Know</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Yang TIDAK Diketahui Persona</label>
                 <textarea value={data.personaUnknowns} onChange={e => update({ personaUnknowns: e.target.value })} rows={3} placeholder="Information withheld from the persona..." className="retro-input bg-surface p-4 resize-none" />
               </div>
             </div>
@@ -253,19 +253,19 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
           <div className="space-y-5">
             <p className="text-sm font-semibold text-muted">Voice settings for this persona. Configure provider-specific settings here.</p>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Voice Provider</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Penyedia Suara</label>
               <select className="retro-input bg-surface p-4">
-                <option value="default">Default (System)</option>
+                <option value="default">Default (Sistem)</option>
                 <option value="elevenlabs">ElevenLabs</option>
                 <option value="google">Google Cloud TTS</option>
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Voice Model</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Model Suara</label>
               <input placeholder="e.g. en-US-Neural2-F" className="retro-input bg-surface p-4" />
             </div>
             <div className="p-4 bg-primary/5 border-2 border-primary/15">
-              <p className="text-xs font-semibold text-muted">Voice integration is configured at the system level in AI Settings.</p>
+              <p className="text-xs font-semibold text-muted">Integrasi suara dikonfigurasi di tingkat sistem pada Pengaturan AI.</p>
             </div>
           </div>
         )
@@ -287,7 +287,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
       >
         <div className="p-4 sm:p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
           <h3 className="text-lg font-bold font-heading">
-            {editingPersona ? 'Edit Persona' : 'New Persona'}
+            {editingPersona ? 'Edit Persona' : 'Persona Baru'}
           </h3>
           <button onClick={onClose} className="p-2 bg-dark/20 hover:bg-dark/30">
             <X size={18} />
@@ -316,7 +316,7 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
             <button type="submit" disabled={saving} className="retro-btn retro-btn-primary flex items-center gap-2 text-[11px] flex-1 justify-center disabled:opacity-50">
               <Save size={16} /> {saving ? 'Menyimpan...' : submitLabel || (editingPersona ? 'Update Persona' : 'Create Persona')}
             </button>
-            <button type="button" onClick={onClose} className="retro-btn retro-btn-ghost text-[11px]">Cancel</button>
+            <button type="button" onClick={onClose} className="retro-btn retro-btn-ghost text-[11px]">Batal</button>
           </div>
         </form>
       </motion.div>

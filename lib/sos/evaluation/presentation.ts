@@ -33,10 +33,10 @@ export interface HomeCategoryView {
 }
 
 const homeCategories: Record<HomeCategoryKey, HomeCategoryView> = {
-  housing: { key: 'housing', label: 'Housing', description: 'Kondisi tempat tinggal' },
-  occupation: { key: 'occupation', label: 'Occupation', description: 'Pekerjaan' },
-  money: { key: 'money', label: 'Money', description: 'Kemampuan finansial' },
-  eligibility: { key: 'eligibility', label: 'Eligibility', description: 'Kelayakan dasar' },
+  housing: { key: 'housing', label: 'Kondisi Tempat Tinggal', description: 'Kondisi tempat tinggal' },
+  occupation: { key: 'occupation', label: 'Pekerjaan', description: 'Pekerjaan' },
+  money: { key: 'money', label: 'Kemampuan Finansial', description: 'Kemampuan finansial' },
+  eligibility: { key: 'eligibility', label: 'Kelayakan Dasar', description: 'Kelayakan dasar' },
 }
 
 function normalizedCode(value: unknown): string {

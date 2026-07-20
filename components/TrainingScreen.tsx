@@ -23,7 +23,7 @@ interface TrainingScreenProps {
 const MODULES = [
   {
     key: 'opening',
-    label: 'Opening Call',
+    label: 'Pembukaan Panggilan',
     description: 'Bangun rapport, atur konteks, dan mulai percakapan dengan kontrol.',
     icon: MessageCircle,
     difficulty: 'Starter',
@@ -37,7 +37,7 @@ const MODULES = [
   },
   {
     key: 'objection',
-    label: 'Objection Handling',
+    label: 'Penanganan Keberatan',
     description: 'Tangani keraguan, tekanan harga, BI checking, dan masalah kepercayaan.',
     icon: ShieldQuestion,
     difficulty: 'Advanced',
@@ -105,16 +105,16 @@ export function TrainingScreen({
           </div>
 
           <div className="grid grid-cols-3 gap-3 min-w-full sm:min-w-[360px] lg:min-w-[420px]">
-            <Metric label="Missions" value={sessions.length.toString()} icon={<BarChart3 size={16} />} />
-            <Metric label="Best" value={bestScore.toString()} icon={<Trophy size={16} />} />
-            <Metric label="Library" value={scenarios.length.toString()} icon={<Users size={16} />} />
+            <Metric label="Misi" value={sessions.length.toString()} icon={<BarChart3 size={16} />} />
+            <Metric label="Tertinggi" value={bestScore.toString()} icon={<Trophy size={16} />} />
+            <Metric label="Perpustakaan" value={scenarios.length.toString()} icon={<Users size={16} />} />
           </div>
         </div>
       </section>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b-2 border-dark/15 pb-3">
-          <h3 className="text-xl font-bold font-heading uppercase">Skill Tracks</h3>
+          <h3 className="text-xl font-bold font-heading uppercase">Jalur Skill</h3>
           <span className="text-[10px] font-bold uppercase text-muted font-heading">4 modul</span>
         </div>
         <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -141,7 +141,7 @@ export function TrainingScreen({
       {recommended.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between border-b-2 border-dark/15 pb-3">
-            <h3 className="text-xl font-bold font-heading uppercase">Recommended Next</h3>
+            <h3 className="text-xl font-bold font-heading uppercase">Rekomendasi Berikutnya</h3>
             <span className="text-[10px] font-bold uppercase text-muted font-heading">Berdasarkan mission yang belum selesai</span>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
@@ -162,7 +162,7 @@ export function TrainingScreen({
       <section className="space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b-2 border-dark/15 pb-4">
           <div>
-            <h3 className="text-2xl sm:text-3xl font-bold font-heading uppercase">Scenario Library</h3>
+            <h3 className="text-2xl sm:text-3xl font-bold font-heading uppercase">Perpustakaan Skenario</h3>
             <p className="text-sm font-semibold text-muted">Filter mission berdasarkan topik, persona, atau kesulitan.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 lg:min-w-[520px]">
@@ -180,10 +180,10 @@ export function TrainingScreen({
               onChange={event => setDifficulty(event.target.value as 'All' | 'Easy' | 'Medium' | 'Hard')}
               className="retro-input bg-surface sm:w-40"
             >
-              <option value="All">All</option>
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
+              <option value="All">Semua</option>
+              <option value="Easy">Mudah</option>
+              <option value="Medium">Sedang</option>
+              <option value="Hard">Sulit</option>
             </select>
             {isAdmin && (
               <button onClick={onCreateScenario} className="retro-btn retro-btn-primary px-4 py-3 font-bold uppercase text-xs flex items-center justify-center gap-2">

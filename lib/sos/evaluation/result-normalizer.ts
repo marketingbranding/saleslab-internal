@@ -6,8 +6,8 @@ import { calculateTrialWeightedScore } from './weighted-scoring'
 import type { EvaluationProviderId } from './providers'
 
 export const TRIAL_DIMENSIONS = [
-  { key: 'approaching', label: 'Approaching' },
-  { key: 'probing', label: 'Probing' },
+  { key: 'approaching', label: 'Pendekatan' },
+  { key: 'probing', label: 'Eksplorasi' },
   { key: 'home_qualification', label: 'Kualifikasi HOME' },
   { key: 'solution_presentation', label: 'Presentasi Solusi' },
   { key: 'objection_handling', label: 'Penanganan Keberatan' },

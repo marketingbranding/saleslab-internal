@@ -143,12 +143,12 @@ function xpForLevel(level: number): number {
  */
 export function getRank(level: number): string {
   if (level >= 60) return "Simulation Elite";
-  if (level >= 40) return "Master Communicator";
-  if (level >= 25) return "Negotiation Specialist";
-  if (level >= 15) return "Senior Agent";
-  if (level >= 10) return "Communication Agent";
-  if (level >= 5) return "Field Trainee";
-  return "Rookie Agent";
+  if (level >= 40) return "Ahli Komunikasi";
+  if (level >= 25) return "Spesialis Negosiasi";
+  if (level >= 15) return "Agen Senior";
+  if (level >= 10) return "Agen Komunikasi";
+  if (level >= 5) return "Peserta Pelatihan Lapangan";
+  return "Agen Pemula";
 }
 
 // ============================================================================
@@ -242,36 +242,36 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // --- Starter ---
   {
     key: "first_mission",
-    name: "First Mission",
-    description: "Complete your first training session",
+    name: "Misi Pertama",
+    description: "Selesaikan sesi pelatihan pertama Anda",
     category: "starter",
     xpReward: 50,
   },
   {
     key: "first_a_grade",
-    name: "First A Grade",
-    description: "Score an A grade (85+) in any session",
+    name: "Nilai A Pertama",
+    description: "Raih nilai A (85+) di sesi mana pun",
     category: "starter",
     xpReward: 100,
   },
   {
     key: "three_day_streak",
-    name: "Three-Day Streak",
-    description: "Train for 3 consecutive days",
+    name: "Streak 3 Hari",
+    description: "Berlatih selama 3 hari berturut-turut",
     category: "starter",
     xpReward: 100,
   },
   {
     key: "ten_sessions",
-    name: "Ten Sessions",
-    description: "Complete 10 training sessions",
+    name: "Sepuluh Sesi",
+    description: "Selesaikan 10 sesi pelatihan",
     category: "starter",
     xpReward: 150,
   },
   {
     key: "perfect_empathy",
-    name: "Perfect Empathy",
-    description: "Score 100 in the empathy skill",
+    name: "Empati Sempurna",
+    description: "Raih nilai 100 di keterampilan empati",
     category: "starter",
     xpReward: 150,
   },
@@ -279,29 +279,29 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // --- Skill ---
   {
     key: "closer_i",
-    name: "Closer I",
-    description: "Demonstrate foundational closing skills",
+    name: "Penutup I",
+    description: "Tunjukkan keterampilan closing dasar",
     category: "skill",
     xpReward: 150,
   },
   {
     key: "closer_ii",
-    name: "Closer II",
-    description: "Master advanced closing techniques",
+    name: "Penutup II",
+    description: "Kuasai teknik closing lanjutan",
     category: "skill",
     xpReward: 300,
   },
   {
     key: "objection_master",
-    name: "Objection Master",
-    description: "Excel at handling objections",
+    name: "Ahli Keberatan",
+    description: "Unggul dalam menangani keberatan",
     category: "skill",
     xpReward: 300,
   },
   {
     key: "discovery_agent",
-    name: "Discovery Agent",
-    description: "Outstanding discovery and questioning skills",
+    name: "Agen Discovery",
+    description: "Keterampilan discovery dan bertanya yang luar biasa",
     category: "skill",
     xpReward: 300,
   },
@@ -309,29 +309,29 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // --- Consistency ---
   {
     key: "weekly_training",
-    name: "Weekly Training",
-    description: "Train every day for a full week",
+    name: "Pelatihan Mingguan",
+    description: "Berlatih setiap hari selama seminggu penuh",
     category: "consistency",
     xpReward: 200,
   },
   {
     key: "monthly_operator",
-    name: "Monthly Operator",
-    description: "Train every day for a full month",
+    name: "Operator Bulanan",
+    description: "Berlatih setiap hari selama sebulan penuh",
     category: "consistency",
     xpReward: 500,
   },
   {
     key: "streak_7",
-    name: "7-Day Streak",
-    description: "Maintain a 7-day training streak",
+    name: "Streak 7 Hari",
+    description: "Pertahankan streak pelatihan 7 hari",
     category: "consistency",
     xpReward: 300,
   },
   {
     key: "streak_30",
-    name: "30-Day Streak",
-    description: "Maintain a 30-day training streak",
+    name: "Streak 30 Hari",
+    description: "Pertahankan streak pelatihan 30 hari",
     category: "consistency",
     xpReward: 1000,
   },

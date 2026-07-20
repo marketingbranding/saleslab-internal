@@ -45,9 +45,9 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
     <div className="space-y-8">
       {/* Header */}
       <div className="border-b-2 border-dark/15 pb-4">
-        <h2 className="text-3xl sm:text-4xl font-bold font-heading uppercase">Mission History</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold font-heading uppercase">Riwayat Misi</h2>
         <p className="text-muted font-semibold text-sm mt-1">
-          Tinjau semua mission training yang sudah selesai
+          Tinjau semua misi training yang sudah selesai
         </p>
       </div>
 
@@ -69,9 +69,9 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
           className="retro-input bg-surface text-sm font-bold w-full sm:w-auto"
         >
           <option value="all">Semua Kesulitan</option>
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
+          <option value="Easy">Mudah</option>
+          <option value="Medium">Sedang</option>
+          <option value="Hard">Sulit</option>
         </select>
         <select
           value={scoreFilter}
@@ -89,25 +89,25 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 retro-panel bg-primary text-dark">
           <div className="text-2xl font-bold font-heading">{sessions.length}</div>
-          <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Total Missions</div>
+          <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Total Misi</div>
         </div>
         <div className="p-4 retro-panel bg-surface">
           <div className="text-2xl font-bold font-heading text-dark">
             {sessions.length > 0 ? Math.round(sessions.reduce((a, s) => a + s.score, 0) / sessions.length) : '-'}
           </div>
-          <div className="text-[10px] font-bold uppercase text-muted font-heading">Avg Score</div>
+          <div className="text-[10px] font-bold uppercase text-muted font-heading">Rata-rata Skor</div>
         </div>
         <div className="p-4 retro-panel bg-surface">
           <div className="text-2xl font-bold font-heading text-dark">
             {sessions.length > 0 ? scoreToGrade(Math.round(sessions.reduce((a, s) => a + s.score, 0) / sessions.length)) : '-'}
           </div>
-          <div className="text-[10px] font-bold uppercase text-muted font-heading">Avg Grade</div>
+          <div className="text-[10px] font-bold uppercase text-muted font-heading">Rata-rata Grade</div>
         </div>
         <div className="p-4 retro-panel bg-surface">
           <div className="text-2xl font-bold font-heading text-dark">
             {sessions.length > 0 ? Math.max(...sessions.map(s => s.score)) : '-'}
           </div>
-          <div className="text-[10px] font-bold uppercase text-muted font-heading">Best Score</div>
+          <div className="text-[10px] font-bold uppercase text-muted font-heading">Skor Tertinggi</div>
         </div>
       </div>
 
@@ -119,7 +119,7 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
       ) : filtered.length === 0 ? (
         <div className="p-12 border-2 border-dashed border-dark/15 text-center space-y-4">
           <Calendar size={40} className="mx-auto text-muted/40" />
-          <p className="font-bold text-muted text-lg">Belum ada riwayat mission</p>
+          <p className="font-bold text-muted text-lg">Belum ada riwayat misi</p>
           <p className="text-muted text-sm max-w-md mx-auto">
             Selesaikan panggilan pertama Anda untuk menghasilkan laporan.
           </p>
@@ -129,11 +129,11 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b-2 border-dark/15">
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Date</th>
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Scenario</th>
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden sm:table-cell">Score</th>
+                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Tanggal</th>
+                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Skenario</th>
+                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden sm:table-cell">Skor</th>
                 <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading hidden sm:table-cell">Grade</th>
-                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Action</th>
+                <th className="p-3 text-[10px] font-bold uppercase text-muted font-heading">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -185,7 +185,7 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
           >
             <div className="p-6 border-b-2 border-dark/15 bg-primary text-dark sticky top-0 flex justify-between items-center">
               <div>
-                <h3 className="text-lg font-bold font-heading">Laporan Mission</h3>
+                <h3 className="text-lg font-bold font-heading">Laporan Misi</h3>
                 <p className="text-[10px] font-bold uppercase text-dark/60 font-heading">
                   {selectedSession.salespersonName} • {selectedSession.createdAt?.toDate().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
@@ -208,7 +208,7 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
                 </div>
                 <div className="space-y-1">
                   <div className="text-2xl font-bold font-heading">{scoreToGrade(selectedSession.score)}</div>
-                  <div className="text-[10px] font-bold uppercase text-muted font-heading">Overall Score</div>
+                  <div className="text-[10px] font-bold uppercase text-muted font-heading">Skor Keseluruhan</div>
                 </div>
               </div>
 
@@ -220,7 +220,7 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
 
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <h4 className="text-[10px] font-bold uppercase bg-success/10 text-success inline-block px-2 py-1 font-heading">Strengths</h4>
+                  <h4 className="text-[10px] font-bold uppercase bg-success/10 text-success inline-block px-2 py-1 font-heading">Kekuatan</h4>
                   <ul className="space-y-1">
                     {selectedSession.feedback?.strengths?.map((s, i) => (
                       <li key={i} className="text-xs font-semibold flex items-start gap-2">
@@ -230,7 +230,7 @@ export function MissionHistory({ sessions, loading }: MissionHistoryProps) {
                   </ul>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="text-[10px] font-bold uppercase bg-danger/10 text-danger inline-block px-2 py-1 font-heading">Improvements</h4>
+                  <h4 className="text-[10px] font-bold uppercase bg-danger/10 text-danger inline-block px-2 py-1 font-heading">Perbaikan</h4>
                   <ul className="space-y-1">
                     {selectedSession.feedback?.weaknesses?.map((w, i) => (
                       <li key={i} className="text-xs font-semibold flex items-start gap-2">

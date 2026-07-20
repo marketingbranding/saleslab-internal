@@ -3,13 +3,13 @@ import './globals.css';
 import { AuthProvider } from '@/lib/AuthContext';
 
 export const metadata: Metadata = {
-  title: 'SalesLab Internal — AI Roleplay Training Simulator',
-  description: 'Master the art of persuasion through AI-powered sales roleplay simulations with real-time feedback and performance analysis.',
+  title: 'SalesLab Internal — Simulator Latihan Roleplay AI',
+  description: 'Asah kemampuan persuasi melalui simulasi roleplay sales berbasis AI dengan umpan balik real-time dan analisis kinerja.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="id">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

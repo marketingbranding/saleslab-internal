@@ -93,15 +93,15 @@ export function AchievementsScreen({ sessions, loading }: AchievementsScreenProp
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 retro-panel bg-primary text-dark">
               <div className="text-3xl font-bold font-heading">{totalEarned} / {ACHIEVEMENTS.length}</div>
-              <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Pencapaian Unlocked</div>
+              <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Pencapaian Terbuka</div>
             </div>
             <div className="p-4 retro-panel bg-surface">
               <div className="text-3xl font-bold font-heading text-dark">+{totalXP} XP</div>
-              <div className="text-[10px] font-bold uppercase text-muted font-heading">Total XP Earned</div>
+              <div className="text-[10px] font-bold uppercase text-muted font-heading">Total XP Diperoleh</div>
             </div>
             <div className="p-4 retro-panel bg-surface">
               <div className="text-3xl font-bold font-heading text-dark">{sessions.length}</div>
-              <div className="text-[10px] font-bold uppercase text-muted font-heading">Missions Completed</div>
+              <div className="text-[10px] font-bold uppercase text-muted font-heading">Misi Selesai</div>
             </div>
           </div>
 
@@ -146,7 +146,7 @@ export function AchievementsScreen({ sessions, loading }: AchievementsScreenProp
                         <p className="text-xs font-semibold text-muted mb-3">{achievement.description}</p>
                         <div className="space-y-1">
                           <div className="flex justify-between text-[10px] font-bold">
-                            <span className="text-muted">Progress</span>
+                            <span className="text-muted">Kemajuan</span>
                             <span className={progress.earned ? 'text-success' : 'text-muted'}>
                               {progress.current}/{progress.max}
                             </span>

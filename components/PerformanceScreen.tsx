@@ -60,8 +60,8 @@ const SKILL_LABELS: Record<string, string> = {
   'Discovery': 'Discovery',
   'Presentasi': 'Presentation',
   'Handling Objection': 'Objection Handling',
-  'Closing': 'Closing',
-  'Follow Up': 'Follow Up',
+  'Closing': 'Penutupan',
+  'Follow Up': 'Tindak Lanjut',
 }
 
 export function PerformanceScreen({ sessions, loading }: PerformanceScreenProps) {
@@ -92,7 +92,7 @@ export function PerformanceScreen({ sessions, loading }: PerformanceScreenProps)
     <div className="space-y-8">
       {/* Header */}
       <div className="border-b-2 border-dark/15 pb-4">
-        <h2 className="text-3xl sm:text-4xl font-bold font-heading uppercase">Performance</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold font-heading uppercase">Kinerja</h2>
         <p className="text-muted font-semibold text-sm mt-1">
           Lacak progress dan pertumbuhan skill Anda dari waktu ke waktu
         </p>
@@ -107,7 +107,7 @@ export function PerformanceScreen({ sessions, loading }: PerformanceScreenProps)
           <BarChart3 size={40} className="mx-auto text-muted/40" />
           <p className="font-bold text-muted text-lg">Belum ada data performa</p>
           <p className="text-muted text-sm max-w-md mx-auto">
-            Selesaikan mission training untuk membangun profile performa Anda.
+            Selesaikan misi training untuk membangun profile performa Anda.
           </p>
         </div>
       ) : (
@@ -116,38 +116,38 @@ export function PerformanceScreen({ sessions, loading }: PerformanceScreenProps)
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-4 retro-panel bg-primary text-dark">
               <div className="text-3xl font-bold font-heading">{avg}</div>
-              <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Avg Score</div>
+              <div className="text-[10px] font-bold uppercase text-dark/60 font-heading">Rata-rata Skor</div>
               <div className="mt-2">
                 {trend === 'improving' ? (
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-dark/70"><TrendingUp size={12} /> Improving</span>
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-dark/70"><TrendingUp size={12} /> Membaik</span>
                 ) : trend === 'declining' ? (
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-dark/70"><TrendingDown size={12} /> Declining</span>
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-dark/70"><TrendingDown size={12} /> Menurun</span>
                 ) : (
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-dark/70"><Minus size={12} /> Stable</span>
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-dark/70"><Minus size={12} /> Stabil</span>
                 )}
               </div>
             </div>
             <div className="p-4 retro-panel bg-surface">
               <div className="text-3xl font-bold font-heading text-dark">{best}</div>
-              <div className="text-[10px] font-bold uppercase text-muted font-heading">Best Score</div>
+              <div className="text-[10px] font-bold uppercase text-muted font-heading">Skor Tertinggi</div>
               <div className="mt-2 text-[10px] font-bold text-success uppercase">{scoreToGrade(best)}</div>
             </div>
             <div className="p-4 retro-panel bg-surface">
               <div className="text-3xl font-bold font-heading text-dark">{worst}</div>
-              <div className="text-[10px] font-bold uppercase text-muted font-heading">Worst Score</div>
+              <div className="text-[10px] font-bold uppercase text-muted font-heading">Skor Terendah</div>
               <div className="mt-2 text-[10px] font-bold text-danger uppercase">{scoreToGrade(worst)}</div>
             </div>
             <div className="p-4 retro-panel bg-surface">
               <div className="text-3xl font-bold font-heading text-dark">{sessions.length}</div>
-              <div className="text-[10px] font-bold uppercase text-muted font-heading">Total Missions</div>
+              <div className="text-[10px] font-bold uppercase text-muted font-heading">Total Misi</div>
             </div>
           </div>
 
-          {/* Distribusi Score */}
+          {/* Distribusi Skor */}
           <div className="p-6 retro-panel bg-surface space-y-4">
             <h3 className="text-sm font-bold uppercase font-heading flex items-center gap-2">
               <BarChart3 size={16} className="text-primary" />
-              Distribusi Score
+              Distribusi Skor
             </h3>
             <div className="space-y-2">
               {distribution.map((bucket) => (
@@ -170,7 +170,7 @@ export function PerformanceScreen({ sessions, loading }: PerformanceScreenProps)
             <div className="p-6 retro-panel bg-surface space-y-4">
               <h3 className="text-sm font-bold uppercase font-heading flex items-center gap-2">
                 <Zap size={16} className="text-success" />
-                Strongest Skills
+                Skill Terkuat
               </h3>
               {skillAverages.filter(s => s.avg >= 70).length === 0 ? (
                 <p className="text-muted text-sm font-semibold">Belum cukup data</p>
@@ -188,7 +188,7 @@ export function PerformanceScreen({ sessions, loading }: PerformanceScreenProps)
             <div className="p-6 retro-panel bg-surface space-y-4">
               <h3 className="text-sm font-bold uppercase font-heading flex items-center gap-2">
                 <Brain size={16} className="text-danger" />
-                Needs Improvement
+                Perlu Perbaikan
               </h3>
               {skillAverages.filter(s => s.avg < 70).length === 0 ? (
                 <p className="text-muted text-sm font-semibold">Semua skill baik-baik saja!</p>
@@ -209,7 +209,7 @@ export function PerformanceScreen({ sessions, loading }: PerformanceScreenProps)
           <div className="p-6 retro-panel bg-surface space-y-4">
             <h3 className="text-sm font-bold uppercase font-heading flex items-center gap-2">
               <TrendingUp size={16} className="text-primary" />
-              Recent Scores
+              Skor Terbaru
             </h3>
             <div className="flex items-end gap-2 h-32">
               {sessions.slice(0, 10).reverse().map((session, i) => (

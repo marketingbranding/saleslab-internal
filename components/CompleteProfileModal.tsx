@@ -33,7 +33,7 @@ export function CompleteProfileModal({ isOpen, user, onComplete }: CompleteProfi
       onComplete()
     } catch (err) {
       console.error("Error saving profile:", err)
-      setError("Gagal menyimpan profile. Silakan coba lagi.")
+      setError("Gagal menyimpan profil. Silakan coba lagi.")
     } finally {
       setIsSubmitting(false)
     }

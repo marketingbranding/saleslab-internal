@@ -46,7 +46,7 @@ export function ProfileScreen({ user, profile, stats }: ProfileScreenProps) {
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary text-dark border-2 border-dark flex items-center justify-center overflow-hidden shrink-0">
               {photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoUrl} alt="Profile photo" className="w-full h-full object-cover" />
+                <img src={photoUrl} alt="Foto profil" className="w-full h-full object-cover" />
               ) : (
                 <User size={34} strokeWidth={2} />
               )}

@@ -1,4 +1,4 @@
-'use client'
+'use ((Klien))'
 
 import * as React from "react"
 import { motion, AnimatePresence } from "motion/react"
@@ -189,7 +189,7 @@ export function ChatInterface({ scenario, salespersonName, onFinish, onExit, fru
             >
               <div className={`max-w-[85%] sm:max-w-[75%] space-y-1`}>
                 <p className={`text-[10px] font-bold uppercase ${m.role === 'user' ? 'text-right' : 'text-left'} text-muted`}>
-                  {m.role === 'user' ? `${salespersonName} (Sales)` : `${scenario.name} (Client)`}
+                  {m.role === 'user' ? `${salespersonName} (Sales)` : `${scenario.name} (Klien)`}
                 </p>
                 <div className={`p-3 sm:p-4 text-sm font-medium leading-relaxed ${
                   m.role === 'user'
@@ -218,7 +218,7 @@ export function ChatInterface({ scenario, salespersonName, onFinish, onExit, fru
 
       {/* Input Area */}
       <div className="bg-primary/[0.04] border-t-[3px] border-dark/15 px-6 py-2">
-         <p className="text-[10px] font-bold uppercase text-primary">Tips: Fokus pada Goal — {scenario.target}</p>
+         <p className="text-[10px] font-bold uppercase text-primary">Tips: Fokus pada Tujuan — {scenario.target}</p>
       </div>
       <form onSubmit={handleSend} className="p-6 bg-surface border-t-[3px] border-dark/15 flex gap-4 items-center">
         <input
@@ -239,7 +239,7 @@ export function ChatInterface({ scenario, salespersonName, onFinish, onExit, fru
 
       {/* Footer */}
       <div className="px-8 py-3 bg-bg border-t-[3px] border-dark flex items-center justify-end text-[10px] text-muted/60 font-bold uppercase">
-        <span>v2.5 TRAINING HUB</span>
+        <span>v2.5 PUSAT TRAINING</span>
       </div>
 
       <ConfirmDialog

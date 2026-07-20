@@ -81,7 +81,7 @@ export function PersonaSubmissionsScreen({ membership, submissions, approvedPers
 
       {activeApproved.length > 0 && (
         <section className="space-y-3">
-          <h3 className="font-heading font-bold uppercase">Library Persona Approved</h3>
+          <h3 className="font-heading font-bold uppercase">Perpustakaan Persona Disetujui</h3>
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {activeApproved.map(persona => (
               <article key={persona.id} className="retro-panel bg-surface p-5 space-y-3">

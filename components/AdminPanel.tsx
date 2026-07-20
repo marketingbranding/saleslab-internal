@@ -115,9 +115,9 @@ export function AdminPanel({ isOpen, onClose, currentSettings }: AdminPanelProps
   }
 
   const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-    { key: 'users', label: 'Users', icon: <Users size={16} strokeWidth={2.5} /> },
-    { key: 'scenarios', label: 'Scenarios', icon: <Database size={16} strokeWidth={2.5} /> },
-    { key: 'settings', label: 'Settings', icon: <Settings size={16} strokeWidth={2.5} /> },
+    { key: 'users', label: 'Pengguna', icon: <Users size={16} strokeWidth={2.5} /> },
+    { key: 'scenarios', label: 'Skenario', icon: <Database size={16} strokeWidth={2.5} /> },
+    { key: 'settings', label: 'Pengaturan', icon: <Settings size={16} strokeWidth={2.5} /> },
   ]
 
   return (
@@ -217,10 +217,10 @@ export function AdminPanel({ isOpen, onClose, currentSettings }: AdminPanelProps
                       <div className="space-y-2">
                         {/* Table Header */}
                         <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-muted border-b-[2px] border-dark/10">
-                          <div className="col-span-3">Name</div>
+                          <div className="col-span-3">Nama</div>
                           <div className="col-span-4">Email</div>
-                          <div className="col-span-2">Role</div>
-                          <div className="col-span-3 text-right">Actions</div>
+                          <div className="col-span-2">Peran</div>
+                          <div className="col-span-3 text-right">Aksi</div>
                         </div>
 
                         {/* User Rows */}

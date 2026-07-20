@@ -46,7 +46,7 @@ export function SettingsScreen({ settings, isAdmin, onNavigate }: SettingsScreen
             <InfoRow label="Ollama URL" value={settings.ollamaUrl || '-'} />
             <InfoRow label="Ollama Model" value={settings.ollamaModel || '-'} />
             <InfoRow label="OpenRouter Model" value={settings.openRouterModel || '-'} />
-            <InfoRow label="Frustration Sensitivity" value={(settings.frustrationSensitivity ?? 5).toString()} />
+            <InfoRow label="Sensitivitas Frustrasi" value={(settings.frustrationSensitivity ?? 5).toString()} />
           </div>
         </section>
 

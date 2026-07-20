@@ -228,7 +228,7 @@ export async function analyzePerformance(
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);
-      throw new Error(data?.error || `Analysis failed: ${response.status}`);
+      throw new Error(data?.error || `Analisis gagal: ${response.status}`);
     }
 
     return response.json() as Promise<TrialFeedbackData>;
@@ -300,7 +300,7 @@ export async function analyzePerformance(
         await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
         return generate(retryCount + 1);
       }
-      console.error("Gemini analysis failed:", e);
+      console.error("Gemini Analisis gagal:", e);
       throw new Error("Gagal menganalisis performa. Silakan coba lagi.");
     }
   };

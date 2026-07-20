@@ -222,7 +222,7 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
     >
       {/* Header with sync status */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="text-2xl font-bold font-heading tracking-tight uppercase">LAPORAN Mission</h2>
+        <h2 className="text-2xl font-bold font-heading tracking-tight uppercase">LAPORAN Misi</h2>
         <div className="flex items-center gap-3">
           {providerLabel && <span className="retro-badge bg-surface text-dark">Evaluator: {providerLabel}</span>}
           <SyncIndicator status={saved ? 'synced' : 'syncing'} />
@@ -269,7 +269,7 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
 
         <div className="flex-1 space-y-6 text-center md:text-left">
           <h2 className="text-5xl font-bold font-heading uppercase tracking-tight leading-none">
-            Mission <br /> Debrief
+            Debriefing <br /> Misi
           </h2>
           <p className="text-lg font-medium text-muted leading-tight border-l-4 border-primary pl-6">
             &quot;{feedback.verdict}&quot;
@@ -340,7 +340,7 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         <section className="bg-surface retro-panel p-5 sm:p-8 space-y-6" aria-labelledby="home-coverage-title">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 border-b-2 border-dark/15 pb-4">
             <div>
-              <div className="text-[10px] font-bold uppercase text-primary font-heading mb-1">Discovery Coverage</div>
+              <div className="text-[10px] font-bold uppercase text-primary font-heading mb-1">Cakupan Discovery</div>
               <h3 id="home-coverage-title" className="text-xl font-bold uppercase">Kelengkapan Kualifikasi HOME</h3>
             </div>
             <div className="font-mono text-sm font-bold">{homeCompletedCount} dari 4 area tergali</div>

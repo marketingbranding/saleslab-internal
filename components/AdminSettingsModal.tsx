@@ -71,7 +71,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                 <div className="p-2.5 bg-primary text-black">
                   <Settings size={22} />
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight">Admin Settings</h2>
+                <h2 className="text-2xl font-bold tracking-tight">Pengaturan Admin</h2>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-dark/5 transition-colors">
                 <X size={24} strokeWidth={2.5} />
@@ -232,7 +232,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                 className="w-full retro-button retro-button-gold p-5 text-sm flex items-center justify-center gap-3 disabled:opacity-50"
               >
                 <Save size={20} strokeWidth={2.5} />
-                {isSaving ? "SAVING..." : "SIMPAN PERUBAHAN"}
+                {isSaving ? "MENYIMPAN..." : "SIMPAN PERUBAHAN"}
               </button>
             </div>
           </motion.div>

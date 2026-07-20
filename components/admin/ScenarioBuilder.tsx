@@ -16,13 +16,13 @@ interface ScenarioBuilderProps {
 }
 
 const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
-  { key: 'basic', label: 'Basic Info', icon: <Info size={14} /> },
+  { key: 'basic', label: 'Info Dasar', icon: <Info size={14} /> },
   { key: 'persona', label: 'Persona', icon: <User size={14} /> },
-  { key: 'objective', label: 'Objective', icon: <Target size={14} /> },
-  { key: 'ai-config', label: 'AI Config', icon: <Cpu size={14} /> },
-  { key: 'evaluation', label: 'Evaluation', icon: <BarChart3 size={14} /> },
-  { key: 'rewards', label: 'Rewards', icon: <Award size={14} /> },
-  { key: 'publish', label: 'Publish', icon: <Globe size={14} /> },
+  { key: 'objective', label: 'Tujuan', icon: <Target size={14} /> },
+  { key: 'ai-config', label: 'Konfigurasi AI', icon: <Cpu size={14} /> },
+  { key: 'evaluation', label: 'Evaluasi', icon: <BarChart3 size={14} /> },
+  { key: 'rewards', label: 'Hadiah', icon: <Award size={14} /> },
+  { key: 'publish', label: 'Terbitkan', icon: <Globe size={14} /> },
 ]
 
 export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [] }: ScenarioBuilderProps) {
@@ -87,24 +87,24 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Scenario Title *</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. BI Checking Objection" className="retro-input bg-surface p-4" required />
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Judul Skenario *</label>
+              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Contoh: Keberatan BI Checking" className="retro-input bg-surface p-4" required />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Description *</label>
-              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Scenario background..." className="retro-input bg-surface p-4 resize-none" required />
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Deskripsi *</label>
+              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Latar belakang skenario..." className="retro-input bg-surface p-4 resize-none" required />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Difficulty</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Kesulitan</label>
                 <select value={difficulty} onChange={e => setDifficulty(e.target.value as any)} className="retro-input bg-surface p-4">
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
+                  <option value="Easy">Mudah</option>
+                  <option value="Medium">Sedang</option>
+                  <option value="Hard">Sulit</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Estimated Duration</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Durasi Estimasi</label>
                 <input value="10 min" disabled className="retro-input bg-surface p-4 opacity-60" />
               </div>
             </div>
@@ -115,7 +115,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Persona Approved</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Persona Disetujui</label>
               <select
                 value={personaId}
                 onChange={event => {
@@ -142,7 +142,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Persona Name *</label>
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Nama Persona *</label>
                 <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Pak Budi" className="retro-input bg-surface p-4" required />
               </div>
               <div className="space-y-2">
@@ -154,7 +154,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Response Style</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Gaya Respon</label>
               <select value={responseStyle} onChange={e => setResponseStyle(e.target.value as any)} className="retro-input bg-surface p-4">
                 <option value="To the point">To the point</option>
                 <option value="Banyak Tanya">Banyak Tanya</option>
@@ -166,12 +166,12 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Aggressiveness ({aggressiveness}/10)</label>
                 <input type="range" min="1" max="10" value={aggressiveness} onChange={e => setAggressiveness(parseInt(e.target.value))} className="w-full" />
-                <div className="flex justify-between text-[10px] font-bold text-muted"><span>Calm</span><span>Aggressive</span></div>
+                <div className="flex justify-between text-[10px] font-bold text-muted"><span>Sopan</span><span>Galak</span></div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted font-heading">Patience ({patience}/10)</label>
                 <input type="range" min="1" max="10" value={patience} onChange={e => setPatience(parseInt(e.target.value))} className="w-full" />
-                <div className="flex justify-between text-[10px] font-bold text-muted"><span>Patient</span><span>Impatient</span></div>
+                <div className="flex justify-between text-[10px] font-bold text-muted"><span>Sabar</span><span>Tidak Sabar</span></div>
               </div>
             </div>
           </div>
@@ -181,15 +181,15 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Objective / Target</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Tujuan / Target</label>
               <textarea value={target} onChange={e => setTarget(e.target.value)} rows={2} placeholder="What should the salesperson achieve?" className="retro-input bg-surface p-4 resize-none" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase text-muted font-heading">Consumer Profile (Brief for AI)</label>
-              <textarea value={consumerProfile} onChange={e => setConsumerProfile(e.target.value)} rows={3} placeholder="Detailed persona background for the AI..." className="retro-input bg-surface p-4 resize-none" />
+              <textarea value={consumerProfile} onChange={e => setConsumerProfile(e.target.value)} rows={3} placeholder="Latar belakang persona detail untuk AI..." className="retro-input bg-surface p-4 resize-none" />
             </div>
             <div className="space-y-3">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Success Criteria</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Kriteria Keberhasilan</label>
               {successCriteria.map((c, i) => (
                 <div key={i} className="flex gap-2">
                   <input
@@ -223,7 +223,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">First Speaker</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Pembicara Pertama</label>
               <div className="flex gap-3">
                 <button onClick={() => setFirstSpeaker('AI')} className={`flex-1 p-4 border-2 font-bold text-[10px] uppercase transition-all ${firstSpeaker === 'AI' ? 'bg-primary text-dark border-primary' : 'bg-surface border-dark/15'}`}>AI First</button>
                 <button onClick={() => setFirstSpeaker('Sales')} className={`flex-1 p-4 border-2 font-bold text-[10px] uppercase transition-all ${firstSpeaker === 'Sales' ? 'bg-primary text-dark border-primary' : 'bg-surface border-dark/15'}`}>Sales First</button>
@@ -235,7 +235,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase text-muted font-heading">Hidden Rules (never shown to users)</label>
-              <textarea value={hiddenRules} onChange={e => setHiddenRules(e.target.value)} rows={3} placeholder="Internal instructions for the AI persona..." className="retro-input bg-surface p-4 resize-none border-warning/50 bg-warning/5" />
+              <textarea value={hiddenRules} onChange={e => setHiddenRules(e.target.value)} rows={3} placeholder="Instruksi internal untuk persona AI..." className="retro-input bg-surface p-4 resize-none border-warning/50 bg-warning/5" />
               <p className="text-[9px] font-semibold text-warning">These instructions are never visible to normal users.</p>
             </div>
           </div>
@@ -249,7 +249,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
               {['Opening', 'Discovery', 'Presentation', 'Objection Handling', 'Closing', 'Follow Up'].map(skill => (
                 <div key={skill} className="flex items-center justify-between p-3 bg-dark/5 border-2 border-dark/10">
                   <span className="font-bold text-sm">{skill}</span>
-                  <span className="text-[10px] font-bold text-muted bg-surface px-2 py-0.5 border border-dark/10">Auto-evaluated</span>
+                  <span className="text-[10px] font-bold text-muted bg-surface px-2 py-0.5 border border-dark/10">Otomatis dievaluasi</span>
                 </div>
               ))}
             </div>
@@ -260,7 +260,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
         return (
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted font-heading">Base XP Reward</label>
+              <label className="text-[10px] font-bold uppercase text-muted font-heading">Hadiah XP Dasar</label>
               <input type="number" value={baseXp} disabled className="retro-input bg-surface p-4 w-32 opacity-60" />
               <p className="text-[10px] font-semibold text-muted">Auto-calculated from difficulty: Easy=50, Medium=80, Hard=120</p>
             </div>
@@ -318,7 +318,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
         {/* Header */}
         <div className="p-4 sm:p-6 border-b-2 border-dark/15 bg-primary text-dark flex justify-between items-center shrink-0">
           <h3 className="text-lg font-bold font-heading">
-            {editingScenario ? 'Edit Scenario' : 'New Scenario'}
+            {editingScenario ? 'Edit Skenario' : 'Skenario Baru'}
           </h3>
           <button onClick={onClose} className="p-2 bg-dark/20 hover:bg-dark/30">
             <X size={18} />

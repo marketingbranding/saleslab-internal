@@ -9,14 +9,14 @@ interface MobileNavProps {
 }
 
 const MOBILE_ITEMS = [
-  { step: 'selection', label: 'Utama', icon: LayoutDashboard },
+  { step: 'selection', label: 'Dashboard', icon: LayoutDashboard },
   { step: 'training', label: 'Latihan', icon: Target },
   { step: 'history', label: 'Riwayat', icon: Clock },
   { step: 'performance', label: 'Performa', icon: BarChart3 },
-  { step: 'achievements', label: 'Prestasi', icon: Medal },
-  { step: 'personas', label: 'Persona', icon: UserSquare2 },
+  { step: 'achievements', label: 'Pencapaian', icon: Medal },
+  { step: 'personas', label: 'Persona Saya', icon: UserSquare2 },
   { step: 'profile', label: 'Profil', icon: User },
-  { step: 'settings', label: 'Atur', icon: Settings },
+  { step: 'settings', label: 'Pengaturan', icon: Settings },
 ]
 
 export function MobileNav({ activeStep, onNavigate, isAdmin }: MobileNavProps) {

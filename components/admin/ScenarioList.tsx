@@ -36,7 +36,7 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading, personas = 
     const dup: SalesScenario = {
       ...scenario,
       id: `scenario-copy-${dupCountRef.current}-${scenario.id}`,
-      title: `${scenario.title} (Copy)`,
+      title: `${scenario.title} (Salinan)`,
     }
     onSave(dup)
   }
@@ -158,8 +158,8 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading, personas = 
                     <button
                       onClick={() => handleDuplicate(scenario)}
                       className="h-11 w-11 bg-dark/5 text-muted hover:bg-dark/20 flex items-center justify-center"
-                      title="Duplicate"
-                      aria-label={`Duplicate ${scenario.title}`}
+                      title="Duplikat"
+                      aria-label={`Duplikat ${scenario.title}`}
                     >
                       <Copy size={14} />
                     </button>
@@ -167,8 +167,8 @@ export function ScenarioList({ scenarios, onSave, onDelete, loading, personas = 
                       onClick={() => handleDelete(scenario.id)}
                       disabled={deletingId === scenario.id}
                       className="h-11 w-11 bg-danger/10 text-danger hover:bg-danger hover:text-surface flex items-center justify-center"
-                      title="Delete"
-                      aria-label={`Delete ${scenario.title}`}
+                      title="Hapus"
+                      aria-label={`Hapus ${scenario.title}`}
                     >
                       <Trash2 size={14} />
                     </button>

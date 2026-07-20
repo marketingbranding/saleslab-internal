@@ -40,11 +40,11 @@ export function AISettings({ currentSettings, onSaved }: AISettingsProps) {
         updatedBy: user.uid,
         updatedAt: serverTimestamp(),
       })
-      setMessage({ type: 'success', text: 'Settings berhasil disimpan!' })
+      setMessage({ type: 'success', text: 'Pengaturan berhasil disimpan!' })
       onSaved?.()
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, 'settings')
-      setMessage({ type: 'error', text: 'Gagal menyimpan settings.' })
+      setMessage({ type: 'error', text: 'Gagal menyimpan pengaturan.' })
     } finally {
       setIsSaving(false)
     }

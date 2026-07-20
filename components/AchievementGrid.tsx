@@ -21,9 +21,9 @@ const BADGE_ICONS: Record<string, React.ReactNode> = {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  starter: 'Starter',
-  skill: 'Skill',
-  consistency: 'Consistency',
+  starter: 'Pemula',
+  skill: 'Keterampilan',
+  consistency: 'Konsistensi',
 }
 
 function groupByCategory(achievements: AchievementDef[]) {
@@ -53,7 +53,7 @@ export default function AchievementGrid({ earnedKeys }: AchievementGridProps) {
         <div className="bg-surface retro-card p-6 text-center">
           <Target className="w-8 h-8 text-muted mx-auto mb-2 opacity-40" />
           <p className="text-xs text-muted">
-            No achievements unlocked yet. Start your first mission!
+            Belum ada pencapaian terbuka. Mulai misi pertama Anda!
           </p>
         </div>
       )}

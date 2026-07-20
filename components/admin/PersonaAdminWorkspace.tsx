@@ -33,12 +33,12 @@ export function PersonaAdminWorkspace({ personas, submissions, onSave, onArchive
           {pending.map(submission => (
             <article key={submission.id} className="retro-panel bg-surface p-5 grid lg:grid-cols-[1fr_auto] gap-5 items-center">
               <div className="space-y-2 min-w-0">
-                <div className="flex flex-wrap items-center gap-2"><h3 className="font-heading font-bold text-lg">{submission.persona.name}</h3><span className="px-2 py-1 border-2 border-warning/30 bg-warning/10 text-warning text-[10px] font-bold uppercase">Pending</span></div>
+                <div className="flex flex-wrap items-center gap-2"><h3 className="font-heading font-bold text-lg">{submission.persona.name}</h3><span className="px-2 py-1 border-2 border-warning/30 bg-warning/10 text-warning text-[10px] font-bold uppercase">Tertunda</span></div>
                 <p className="text-xs font-semibold text-muted">{submission.creatorBranchName} · {submission.creatorName} · {submission.creatorEmail}</p>
                 <p className="text-sm font-medium text-muted line-clamp-2">{submission.persona.backgroundStory || submission.persona.currentSituation || 'Tanpa deskripsi tambahan.'}</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <button onClick={() => setReviewing(submission)} className="retro-btn retro-btn-primary min-h-11 justify-center"><Check size={14} /> Review</button>
+                <button onClick={() => setReviewing(submission)} className="retro-btn retro-btn-primary min-h-11 justify-center"><Check size={14} /> Tinjau</button>
                 <button onClick={() => {
                   const reason = window.prompt('Alasan penolakan persona:')?.trim()
                   if (reason) void onReject(submission, reason)
@@ -74,7 +74,7 @@ export function PersonaAdminWorkspace({ personas, submissions, onSave, onArchive
           onSave={async persona => { await onApprove(reviewing, persona); setReviewing(null) }}
           onClose={() => setReviewing(null)}
           allowInternalFields
-          submitLabel="Approve Persona"
+          submitLabel="Setujui Persona"
         />
       )}
     </div>

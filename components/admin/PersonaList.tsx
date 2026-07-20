@@ -34,7 +34,7 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
     const dup: PersonaData = {
       ...persona,
       id: `persona-copy-${duplicateCountRef.current}-${persona.id}`,
-      name: `${persona.name} (Copy)`,
+      name: `${persona.name} (Salinan)`,
     }
     onSave(dup)
   }

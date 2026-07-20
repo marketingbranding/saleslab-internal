@@ -1043,7 +1043,7 @@ export default function Home() {
           <div className="max-w-3xl space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary border-2 border-primary/20 text-[10px] font-bold uppercase font-heading">
               <Target size={12} />
-              AI Roleplay Training
+              Latihan Roleplay AI
             </div>
             <h1 className="text-4xl md:text-8xl font-bold font-heading leading-[0.9] uppercase">
               Status AI Consumer: <span className="text-warning">Online</span>
@@ -1054,10 +1054,10 @@ export default function Home() {
           {statsLoaded && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 py-6 sm:py-8 border-y-2 border-dark/15">
               {[
-                { icon: <Users size={16}/>, label: "Total Sims", value: globalStats.totalSessions.toLocaleString(), color: "bg-primary/10 text-primary" },
+                { icon: <Users size={16}/>, label: "Total Sesi", value: globalStats.totalSessions.toLocaleString(), color: "bg-primary/10 text-primary" },
                 { icon: <TrendingUp size={16}/>, label: "Top Sales", value: globalStats.topSalesperson, color: "bg-warning/10 text-warning" },
-                { icon: <Target size={16}/>, label: "Scenarios", value: globalStats.activeScenarios.toString(), color: "bg-success/10 text-success" },
-                { icon: <BarChart3 size={16}/>, label: "Win Rate", value: `${globalStats.winRate}%`, color: "bg-danger/10 text-danger" },
+                { icon: <Target size={16}/>, label: "Skenario", value: globalStats.activeScenarios.toString(), color: "bg-success/10 text-success" },
+                { icon: <BarChart3 size={16}/>, label: "Tingkat Menang", value: `${globalStats.winRate}%`, color: "bg-danger/10 text-danger" },
               ].map((stat, i) => (
                 <div key={i} className={`p-5 retro-panel ${i === 0 ? 'bg-primary text-dark border-dark' : 'bg-surface'}`}>
                   <div className="flex items-center gap-2 mb-2">
@@ -1073,14 +1073,14 @@ export default function Home() {
           {/* Scenario Grid */}
           <div className="space-y-6 sm:space-y-8">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 border-dark/15 pb-4 gap-4">
-              <h2 className="text-3xl sm:text-5xl font-bold font-heading uppercase">Library Skenario</h2>
+              <h2 className="text-3xl sm:text-5xl font-bold font-heading uppercase">Perpustakaan Skenario</h2>
               <div className="flex gap-2 sm:gap-4">
                 {isAdmin && (
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-[10px] sm:text-[11px] retro-btn retro-btn-primary px-3 sm:px-5 py-2.5"
                   >
-                    <Plus size={14} strokeWidth={3} /> BUAT MISSION
+                    <Plus size={14} strokeWidth={3} /> BUAT MISI
                   </button>
                 )}
                 <button
@@ -1156,8 +1156,8 @@ export default function Home() {
             onConfirm={confirmDeleteScenario}
             title="Hapus Skenario?"
             message="Skenario ini akan dihapus dari library training. Tindakan ini tidak bisa dibatalkan."
-            confirmLabel="Delete"
-            cancelLabel="Cancel"
+            confirmLabel="Hapus"
+            cancelLabel="Batal"
             variant="danger"
           />
 
@@ -1177,8 +1177,8 @@ export default function Home() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="relative w-full max-w-md bg-surface retro-panel p-8"
                 >
-                  <h2 className="text-3xl font-bold font-heading uppercase mb-4 text-dark">MULAI Mission</h2>
-                  <p className="font-medium mb-6 text-muted text-sm">Siap memulai mission ini, {profile?.displayName || salespersonName}?</p>
+                  <h2 className="text-3xl font-bold font-heading uppercase mb-4 text-dark">MULAI Misi</h2>
+                  <p className="font-medium mb-6 text-muted text-sm">Siap meMULAI Misi ini, {profile?.displayName || salespersonName}?</p>
 
                   <button
                     onClick={handleStartSim}
@@ -1242,8 +1242,8 @@ export default function Home() {
             onConfirm={confirmDeleteScenario}
             title="Hapus Skenario?"
             message="Skenario ini akan dihapus dari library training. Tindakan ini tidak bisa dibatalkan."
-            confirmLabel="Delete"
-            cancelLabel="Cancel"
+            confirmLabel="Hapus"
+            cancelLabel="Batal"
             variant="danger"
           />
         </motion.div>
@@ -1283,7 +1283,7 @@ export default function Home() {
           >
             <Target size={48} />
           </motion.div>
-          <h2 className="text-4xl font-bold font-heading uppercase">Mission Selesai</h2>
+          <h2 className="text-4xl font-bold font-heading uppercase">Misi Selesai</h2>
           <div className="space-y-2 text-center">
             <motion.p
               initial={{ opacity: 0 }}

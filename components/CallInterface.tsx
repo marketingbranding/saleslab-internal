@@ -371,7 +371,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
       const settings = await getSettings()
       if (settings.modelProvider === 'ollama') {
         if (isMountedRef.current) {
-          setError("Panggilan Audio saat ini membutuhkan Gemini. Ganti ke Gemini di Settings atau gunakan Text Chat.")
+          setError("Panggilan Audio saat ini membutuhkan Gemini. Ganti ke Gemini di Pengaturan atau gunakan Teks Chat.")
           setCallStatus('error')
         }
         return
@@ -634,9 +634,9 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
       } else if (err?.message?.includes('secure context') || err?.message?.includes('HTTPS')) {
         errorMessage = "Audio Call membutuhkan HTTPS. Gunakan URL HTTPS dari ngrok."
       } else if (err?.message?.includes('API key') || err?.message?.includes('GEMINI')) {
-        errorMessage = "Gemini API key not configured. Contact your admin for setup."
+        errorMessage = "API key Gemini belum dikonfigurasi. Hubungi admin untuk pengaturan."
       } else {
-        errorMessage = `Error: ${err?.message || 'Unknown'} (name: ${err?.name || 'none'})`
+        errorMessage = `Galat: ${err?.message || 'Tidak diketahui'} (nama: ${err?.name || 'tidak ada'})`
       }
 
       if (isMountedRef.current) {
@@ -771,7 +771,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
           <div className="text-center space-y-3 max-w-2xl">
             <h2 className="text-2xl sm:text-4xl font-bold uppercase tracking-tight text-white leading-none">{scenario.title}</h2>
             <p className="text-white/60 font-semibold text-xs sm:text-sm uppercase leading-tight">
-              Goal: {scenario.target}
+              Tujuan: {scenario.target}
             </p>
           </div>
         </section>
@@ -851,7 +851,7 @@ export function CallInterface({ scenario, salespersonName, onFinish, onExit, fru
       </div>
 
       <div className="px-4 sm:px-6 py-2 bg-surface border-t-2 border-dark/10 flex items-center justify-between text-[10px] text-muted/60 font-bold uppercase z-10">
-        <span>ENCRYPTED AI CALL</span>
+        <span>PANGGILAN AI TERENKRIPSI</span>
         <button
           onClick={() => {
             isUserEndingRef.current = true

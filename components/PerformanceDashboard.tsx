@@ -92,11 +92,11 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
       <div className="p-6 bg-surface retro-panel space-y-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-bold uppercase">IKHTISAR PERFORMANCE</h2>
+          <h2 className="text-xl font-bold uppercase">IKHTISAR KINERJA</h2>
         </div>
         <div className="py-12 text-center text-muted">
           <Target className="w-12 h-12 mx-auto mb-4 opacity-40" />
-          <p className="text-sm">Belum ada mission yang selesai. Mulai mission pertama Anda untuk melihat performa.</p>
+          <p className="text-sm">Belum ada misi yang selesai. Mulai misi pertama Anda untuk melihat performa.</p>
         </div>
       </div>
     )
@@ -109,9 +109,9 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
   }
 
   const trendLabels = {
-    improving: '▲ Improving',
-    declining: '▼ Declining',
-    stable: '— Stable',
+    improving: '▲ Membaik',
+    declining: '▼ Menurun',
+    stable: '— Stabil',
   }
 
   return (
@@ -124,7 +124,7 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
       {/* Header */}
       <div className="flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-bold uppercase">Ikhtisar Performance</h2>
+        <h2 className="text-xl font-bold uppercase">IKHTISAR KINERJA</h2>
       </div>
 
       {/* Row 1: Stat Cards */}
@@ -135,7 +135,7 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
           transition={{ delay: 0.05 }}
           className="bg-primary text-black retro-panel p-4"
         >
-          <p className="text-xs font-bold uppercase opacity-70">Avg Score</p>
+          <p className="text-xs font-bold uppercase opacity-70">Rata-rata Skor</p>
           <p className="text-3xl font-bold mt-1">{stats.averageScore}</p>
         </motion.div>
 
@@ -145,7 +145,7 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
           transition={{ delay: 0.1 }}
           className="bg-surface retro-panel p-4"
         >
-          <p className="text-xs font-bold uppercase text-muted">Best</p>
+          <p className="text-xs font-bold uppercase text-muted">Tertinggi</p>
           <p className="text-3xl font-bold mt-1 text-success">{stats.bestScore}</p>
         </motion.div>
 
@@ -155,7 +155,7 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
           transition={{ delay: 0.15 }}
           className="bg-surface retro-panel p-4"
         >
-          <p className="text-xs font-bold uppercase text-muted">Missions</p>
+          <p className="text-xs font-bold uppercase text-muted">Misi</p>
           <p className="text-3xl font-bold mt-1">{stats.totalSessions}</p>
         </motion.div>
 
@@ -165,14 +165,14 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
           transition={{ delay: 0.2 }}
           className="bg-surface retro-panel p-4"
         >
-          <p className="text-xs font-bold uppercase text-muted">Trend</p>
+          <p className="text-xs font-bold uppercase text-muted">Tren</p>
           <p className={`text-lg font-bold mt-1 ${trendColors[stats.averageTrend]}`}>
             {trendLabels[stats.averageTrend]}
           </p>
         </motion.div>
       </div>
 
-      {/* Row 2: Score Distribution */}
+      {/* Row 2: Distribusi Skor */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -181,7 +181,7 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
       >
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold uppercase">Score Distribution</h3>
+          <h3 className="text-sm font-bold uppercase">Distribusi Skor</h3>
         </div>
 
         <div className="space-y-2">
@@ -233,7 +233,7 @@ export default function PerformanceDashboard({ sessions }: PerformanceDashboardP
                 <div className="flex items-center gap-3">
                   <Calendar className="w-3 h-3 text-muted" />
                   <span className="text-xs text-muted">
-                    {date.toLocaleDateString('en-US', {
+                    {date.toLocaleDateString('id-ID', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
