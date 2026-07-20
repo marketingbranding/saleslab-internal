@@ -676,7 +676,11 @@ export default function Home() {
   }
 
   const handleCreateBranch = async (name: string) => {
-    if (!user || !isAdmin) return
+    if (!user) throw new Error('Sesi login tidak ditemukan. Silakan login ulang.')
+    if (!isAdmin) throw new Error('Hanya admin yang dapat menambahkan cabang.')
+    if (branches.some(branch => branch.normalizedName === name.toLowerCase().trim())) {
+      throw new Error('Nama cabang sudah terdaftar.')
+    }
     const branchId = `branch-${Date.now()}`
     await setDoc(doc(db, 'branches', branchId), {
       id: branchId,
