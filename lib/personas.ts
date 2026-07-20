@@ -7,12 +7,32 @@ export type PersonaSubmissionStatus = 'pending' | 'approved' | 'rejected'
 export interface Branch {
   id: string
   name: string
+  type?: 'KC' | 'KCP'
   normalizedName: string
   status: 'active' | 'archived'
   createdBy?: string
   createdAt?: unknown
   updatedAt?: unknown
 }
+
+export const DEFAULT_BRANCHES: ReadonlyArray<Pick<Branch, 'id' | 'name' | 'type' | 'normalizedName'>> = [
+  { id: 'kcp-tegal', name: 'KCP Tegal', type: 'KCP', normalizedName: 'kcp tegal' },
+  { id: 'kcp-sragen', name: 'KCP Sragen', type: 'KCP', normalizedName: 'kcp sragen' },
+  { id: 'kc-bandung', name: 'KC Bandung', type: 'KC', normalizedName: 'kc bandung' },
+  { id: 'kc-batang', name: 'KC Batang', type: 'KC', normalizedName: 'kc batang' },
+  { id: 'kc-purworejo', name: 'KC Purworejo', type: 'KC', normalizedName: 'kc purworejo' },
+  { id: 'kcp-pati', name: 'KCP Pati', type: 'KCP', normalizedName: 'kcp pati' },
+  { id: 'kc-magelang', name: 'KC Magelang', type: 'KC', normalizedName: 'kc magelang' },
+  { id: 'kc-solo', name: 'KC Solo', type: 'KC', normalizedName: 'kc solo' },
+  { id: 'kc-jepara', name: 'KC Jepara', type: 'KC', normalizedName: 'kc jepara' },
+  { id: 'kcp-karanganyar', name: 'KCP Karanganyar', type: 'KCP', normalizedName: 'kcp karanganyar' },
+  { id: 'kcp-wonogiri', name: 'KCP Wonogiri', type: 'KCP', normalizedName: 'kcp wonogiri' },
+  { id: 'kcp-boyolali', name: 'KCP Boyolali', type: 'KCP', normalizedName: 'kcp boyolali' },
+  { id: 'kcp-sukoharjo', name: 'KCP Sukoharjo', type: 'KCP', normalizedName: 'kcp sukoharjo' },
+  { id: 'kc-madiun', name: 'KC Madiun', type: 'KC', normalizedName: 'kc madiun' },
+  { id: 'kc-malang', name: 'KC Malang', type: 'KC', normalizedName: 'kc malang' },
+  { id: 'kcp-wonosari', name: 'KCP Wonosari', type: 'KCP', normalizedName: 'kcp wonosari' },
+]
 
 export interface UserMembership {
   userId: string

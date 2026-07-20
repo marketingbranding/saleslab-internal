@@ -21,6 +21,10 @@ export function BranchManager({ branches, memberships, onCreate, onChangeMembers
     event.preventDefault()
     const branchName = name.trim()
     if (!branchName || saving) return
+    if (!/^(KC|KCP)\s+\S+/i.test(branchName)) {
+      setError('Nama cabang harus diawali KC atau KCP, misalnya KC Jepara.')
+      return
+    }
     if (branches.some(branch => branch.normalizedName === branchName.toLowerCase())) {
       setError('Nama cabang sudah terdaftar.')
       return
@@ -52,7 +56,10 @@ export function BranchManager({ branches, memberships, onCreate, onChangeMembers
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {branches.map(branch => (
             <div key={branch.id} className="border-2 border-dark/15 p-4 flex items-center justify-between gap-3">
-              <div><p className="font-bold">{branch.name}</p><span className="text-[10px] font-bold uppercase text-muted">{branch.status}</span></div>
+              <div>
+                <div className="flex items-center gap-2"><p className="font-bold">{branch.name}</p><span className="px-1.5 py-0.5 border border-primary/30 bg-primary/10 text-primary text-[9px] font-bold">{branch.type || (branch.name.startsWith('KCP ') ? 'KCP' : 'KC')}</span></div>
+                <span className="text-[10px] font-bold uppercase text-muted">{branch.status}</span>
+              </div>
             </div>
           ))}
           {branches.length === 0 && <p className="sm:col-span-2 lg:col-span-3 border-2 border-dashed border-dark/15 p-6 text-center text-muted font-semibold">Belum ada cabang.</p>}

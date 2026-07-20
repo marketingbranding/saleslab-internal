@@ -37,7 +37,7 @@ import { calculateLevelInfo, calculateStreak, calculateXpEarned, checkAchievemen
 import { useAuth } from '@/lib/AuthContext'
 import { loginWithGoogle, logout, db, handleFirestoreError, OperationType } from '@/lib/firebase'
 import { collection, query, where, onSnapshot, doc, setDoc, serverTimestamp, runTransaction, writeBatch, deleteField } from 'firebase/firestore'
-import { Branch, normalizePersonaData, PersonaData, PersonaSubmission, UserMembership, submissionToPersonaData, toPersonaPublicData } from '@/lib/personas'
+import { Branch, DEFAULT_BRANCHES, normalizePersonaData, PersonaData, PersonaSubmission, UserMembership, submissionToPersonaData, toPersonaPublicData } from '@/lib/personas'
 
 type Step = 'selection' | 'training' | 'history' | 'performance' | 'achievements' | 'personas' | 'profile' | 'settings' | 'admin' | 'briefing' | 'roleplay' | 'transition' | 'report' | 'dashboard'
 type LoginTransitionState = LoginVisualState | 'complete'
@@ -89,6 +89,7 @@ export default function Home() {
   const [personaSecretsLoaded, setPersonaSecretsLoaded] = React.useState(false)
   const [scenarioSecrets, setScenarioSecrets] = React.useState<Record<string, string>>({})
   const [branches, setBranches] = React.useState<Branch[]>([])
+  const [branchesLoaded, setBranchesLoaded] = React.useState(false)
   const [membership, setMembership] = React.useState<UserMembership | null>(null)
   const [memberships, setMemberships] = React.useState<UserMembership[]>([])
   const [personaSubmissions, setPersonaSubmissions] = React.useState<PersonaSubmission[]>([])
@@ -98,6 +99,7 @@ export default function Home() {
   const [isMounted, setIsMounted] = React.useState(false)
   const [notification, setNotification] = React.useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [pendingDeleteScenarioId, setPendingDeleteScenarioId] = React.useState<string | null>(null)
+  const branchSeedStartedRef = React.useRef(false)
 
   React.useEffect(() => {
     if (notification) {
@@ -319,6 +321,7 @@ export default function Home() {
   React.useEffect(() => {
     if (!user) {
       setBranches([])
+      setBranchesLoaded(false)
       setMembership(null)
       setMembershipLoaded(false)
       return
@@ -326,7 +329,9 @@ export default function Home() {
 
     const unsubscribeBranches = onSnapshot(query(collection(db, 'branches')), snapshot => {
       setBranches(snapshot.docs.map(item => ({ id: item.id, ...item.data() } as Branch)))
+      setBranchesLoaded(true)
     }, err => {
+      setBranchesLoaded(true)
       if (!isPermissionDenied(err)) handleFirestoreError(err, OperationType.LIST, 'branches')
     })
 
@@ -343,6 +348,33 @@ export default function Home() {
       unsubscribeMembership()
     }
   }, [isPermissionDenied, user])
+
+  React.useEffect(() => {
+    if (!isAdmin || !user || !branchesLoaded || branchSeedStartedRef.current) return
+    const existingNames = new Set(branches.map(branch => branch.normalizedName))
+    const existingIds = new Set(branches.map(branch => branch.id))
+    const missingBranches = DEFAULT_BRANCHES.filter(branch => !existingNames.has(branch.normalizedName) && !existingIds.has(branch.id))
+    if (missingBranches.length === 0) return
+
+    branchSeedStartedRef.current = true
+    const batch = writeBatch(db)
+    missingBranches.forEach(branch => {
+      batch.set(doc(db, 'branches', branch.id), {
+        ...branch,
+        status: 'active',
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+    })
+    batch.commit()
+      .then(() => setNotification({ message: `${missingBranches.length} cabang berhasil ditambahkan.`, type: 'success' }))
+      .catch(err => {
+        branchSeedStartedRef.current = false
+        handleFirestoreError(err, OperationType.CREATE, 'branches/default-seed')
+        setNotification({ message: 'Daftar cabang awal gagal ditambahkan.', type: 'error' })
+      })
+  }, [branches, branchesLoaded, isAdmin, user])
 
   React.useEffect(() => {
     if (!user) {
@@ -685,6 +717,7 @@ export default function Home() {
     await setDoc(doc(db, 'branches', branchId), {
       id: branchId,
       name,
+      type: name.toUpperCase().startsWith('KCP ') ? 'KCP' : 'KC',
       normalizedName: name.toLowerCase().trim(),
       status: 'active',
       createdBy: user.uid,

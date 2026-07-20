@@ -119,6 +119,7 @@ service cloud.firestore {
           && isValidId(branchId)
           && isShortText(data.name, 100) && data.name.size() > 0
           && isShortText(data.normalizedName, 100)
+          && (!('type' in data) || data.type in ['KC', 'KCP'])
           && data.status in ['active', 'archived'];
       }
 
