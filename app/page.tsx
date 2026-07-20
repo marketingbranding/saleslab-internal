@@ -906,6 +906,11 @@ export default function Home() {
     hiddenRules: scenarioSecrets[scenario.id] || scenario.hiddenRules || '',
   })), [allScenarios, scenarioSecrets])
 
+  const approvedPersonas = React.useMemo(
+    () => personas.filter(persona => !persona.status || persona.status === 'approved'),
+    [personas]
+  )
+
   const userSessions = React.useMemo(() => {
     if (!user) return []
     return sessions.filter(session => session.userId === user.uid)
@@ -1068,6 +1073,59 @@ export default function Home() {
                 </div>
               ))}
             </div>
+          )}
+
+          {approvedPersonas.length > 0 && (
+            <section className="space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 border-dark/15 pb-4 gap-3">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-success/10 text-success border-2 border-success/20 text-[10px] font-bold uppercase font-heading mb-3">
+                    <UserSquare2 size={12} /> Bisa Diakses Semua User
+                  </div>
+                  <h2 className="text-3xl sm:text-5xl font-bold font-heading uppercase">Persona Disetujui</h2>
+                  <p className="text-sm font-semibold text-muted mt-2">Persona yang sudah lolos review admin dan bisa dilihat semua user.</p>
+                </div>
+                <button
+                  onClick={() => setStep('personas')}
+                  className="text-[10px] sm:text-[11px] font-bold text-primary hover:text-primary/80 uppercase font-heading flex items-center gap-2"
+                >
+                  BUKA PERSONA SAYA <ChevronRight size={14} />
+                </button>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {approvedPersonas.map(persona => {
+                  const branchLabel = persona.creatorBranchName || 'System / Admin'
+                  const creatorLabel = persona.creatorName || persona.creatorEmail || 'Admin'
+                  const summary = persona.backgroundStory || persona.currentSituation || persona.painPoints || 'Belum ada ringkasan persona.'
+
+                  return (
+                    <article key={persona.id} className="retro-panel bg-surface p-5 space-y-4 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="font-heading font-bold text-lg uppercase truncate">{persona.name}</h3>
+                          <p className="text-xs font-semibold text-muted truncate">{persona.occupation || 'Calon pembeli'}</p>
+                        </div>
+                        <span className="shrink-0 px-2 py-1 border-2 border-success/30 bg-success/10 text-success text-[10px] font-bold uppercase font-heading">Approved</span>
+                      </div>
+
+                      <p className="text-sm font-medium text-muted line-clamp-3">{summary}</p>
+
+                      <div className="space-y-2 pt-3 border-t-2 border-dark/10">
+                        <div className="flex items-center justify-between gap-3 text-[11px] font-bold uppercase font-heading">
+                          <span className="text-muted">Milik Cabang</span>
+                          <span className="text-primary truncate">{branchLabel}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-muted">
+                          <span>Dibuat oleh</span>
+                          <span className="truncate">{creatorLabel}</span>
+                        </div>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            </section>
           )}
 
           {/* Scenario Grid */}
