@@ -107,8 +107,8 @@ export function PersonaBuilder({ editingPersona, onSave, onClose, allowInternalF
                 <textarea value={data.goals} onChange={e => update({ goals: e.target.value })} rows={2} placeholder="What do they want?" className="retro-input bg-surface p-4 resize-none" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted font-heading">Titik Nyeri</label>
-                <textarea value={data.painPoints} onChange={e => update({ painPoints: e.target.value })} rows={2} placeholder="What frustrates them?" className="retro-input bg-surface p-4 resize-none" />
+                <label className="text-[10px] font-bold uppercase text-muted font-heading">Ketakutan</label>
+                <textarea value={data.painPoints} onChange={e => update({ painPoints: e.target.value })} rows={2} placeholder="Apa yang mereka takuti?" className="retro-input bg-surface p-4 resize-none" />
               </div>
             </div>
             <div className="space-y-2">
