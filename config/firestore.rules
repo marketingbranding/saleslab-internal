@@ -15,12 +15,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email == "faizalsyahiddin@gmail.com" ||
-        request.auth.token.email == "groupmarketing.mbn@gmail.com" ||
-        request.auth.token.email == "redhapekug@gmail.com" ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     function isValidId(id) {
@@ -242,29 +238,24 @@ service cloud.firestore {
 
     // Sessions Rules
     match /sessions/{sessionId} {
-      function isValidSession(data) {
-        return data.scenarioId is string 
-               && data.salespersonName is string
-               && data.userId == request.auth.uid
-               && data.score is number;
-      }
-
-      allow create: if isSignedIn() && isValidSession(request.resource.data) && isValidId(sessionId);
       allow read: if isOwner(resource.data.userId) || isAdmin();
-      // Updates usually not needed for sessions, but let's allow if owner
-      allow update: if isOwner(resource.data.userId) && isValidSession(request.resource.data);
+      // Evaluation sessions and score fields are finalized by Firebase Admin on the server.
+      allow create, update: if false;
       allow delete: if isAdmin();
     }
 
     // Settings Rules
     match /settings/{settingsId} {
       allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow write: if isAdmin()
+        && (settingsId != 'global'
+          || !request.resource.data.keys().hasAny(['openRouterApiKey']));
     }
 
     match /admins/{adminId} {
       allow read: if isOwner(adminId) || isAdmin();
-      allow write: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin() && adminId != request.auth.uid;
     }
 
     // User Profiles

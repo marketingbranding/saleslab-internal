@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { motion } from 'motion/react'
-import { Save, Server, Sparkles, Key, Globe, Clock, AlertTriangle } from 'lucide-react'
+import { Save, Server, Sparkles, Key, Clock, AlertTriangle } from 'lucide-react'
 import { db, OperationType, handleFirestoreError } from '@/lib/firebase'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { useAuth } from '@/lib/AuthContext'
@@ -15,9 +15,7 @@ interface AISettingsProps {
 export function AISettings({ currentSettings, onSaved }: AISettingsProps) {
   const { user } = useAuth()
   const [provider, setProvider] = React.useState(currentSettings?.modelProvider || 'gemini')
-  const [ollamaUrl, setOllamaUrl] = React.useState(currentSettings?.ollamaUrl || 'http://localhost:11434')
   const [ollamaModel, setOllamaModel] = React.useState(currentSettings?.ollamaModel || 'llama3')
-  const [openRouterApiKey, setOpenRouterApiKey] = React.useState(currentSettings?.openRouterApiKey || '')
   const [openRouterModel, setOpenRouterModel] = React.useState(currentSettings?.openRouterModel || 'mistralai/mistral-7b-instruct:free')
   const [thinkingDelay, setThinkingDelay] = React.useState(currentSettings?.thinkingDelay || 1500)
   const [frustrationSensitivity, setFrustrationSensitivity] = React.useState(currentSettings?.frustrationSensitivity || 5)
@@ -31,15 +29,13 @@ export function AISettings({ currentSettings, onSaved }: AISettingsProps) {
     try {
       await setDoc(doc(db, 'settings', 'global'), {
         modelProvider: provider,
-        ollamaUrl,
         ollamaModel,
-        openRouterApiKey,
         openRouterModel,
         thinkingDelay,
         frustrationSensitivity,
         updatedBy: user.uid,
         updatedAt: serverTimestamp(),
-      })
+      }, { merge: true })
       setMessage({ type: 'success', text: 'Pengaturan berhasil disimpan!' })
       onSaved?.()
     } catch (err) {
@@ -88,16 +84,7 @@ export function AISettings({ currentSettings, onSaved }: AISettingsProps) {
       {/* Ollama Config */}
       {provider === 'ollama' && (
         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="space-y-4 p-4 sm:p-5 bg-surface retro-panel min-w-0">
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold uppercase text-muted font-heading flex items-center gap-2">
-              <Globe size={12} /> Ollama API URL
-            </label>
-            <input value={ollamaUrl} onChange={e => setOllamaUrl(e.target.value)} className="retro-input bg-surface p-3 sm:p-4 min-w-0" />
-            <div className="bg-danger/5 border-2 border-danger/20 p-3 text-[11px] space-y-1 min-w-0">
-              <p className="font-bold text-danger uppercase font-heading">Catatan Koneksi:</p>
-              <p className="text-muted font-medium break-words">Jalankan: <code className="bg-white px-1 border border-dark/10 break-all">OLLAMA_ORIGINS=&quot;*&quot; ollama serve</code></p>
-            </div>
-          </div>
+          <p className="text-sm font-semibold text-muted">Alamat Ollama dikonfigurasi lewat environment variable server agar browser tidak bisa menentukan target request.</p>
           <div className="space-y-2">
             <label className="text-[11px] font-bold uppercase text-muted font-heading">Nama Model</label>
             <input value={ollamaModel} onChange={e => setOllamaModel(e.target.value)} className="retro-input bg-surface p-3 sm:p-4 min-w-0" />
@@ -108,12 +95,7 @@ export function AISettings({ currentSettings, onSaved }: AISettingsProps) {
       {/* OpenRouter Config */}
       {provider === 'openrouter' && (
         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="space-y-4 p-4 sm:p-5 bg-surface retro-panel min-w-0">
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold uppercase text-muted font-heading flex items-center gap-2">
-              <Key size={12} /> API Key
-            </label>
-            <input type="password" value={openRouterApiKey} onChange={e => setOpenRouterApiKey(e.target.value)} className="retro-input bg-surface p-3 sm:p-4 min-w-0" />
-          </div>
+          <p className="text-sm font-semibold text-muted">API key OpenRouter sekarang dikonfigurasi lewat environment variable server.</p>
           <div className="space-y-2">
             <label className="text-[11px] font-bold uppercase text-muted font-heading">Nama Model</label>
             <input value={openRouterModel} onChange={e => setOpenRouterModel(e.target.value)} className="retro-input bg-surface p-3 sm:p-4 min-w-0" />

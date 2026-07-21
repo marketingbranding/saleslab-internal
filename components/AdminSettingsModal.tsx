@@ -3,7 +3,7 @@
 
 import * as React from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Settings, Save, X, Server, Sparkles, Globe, Key } from 'lucide-react'
+import { Settings, Save, X, Server, Sparkles, Key } from 'lucide-react'
 import { db, OperationType, handleFirestoreError } from '@/lib/firebase'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { useAuth } from '@/lib/AuthContext'
@@ -17,9 +17,7 @@ interface AdminSettingsModalProps {
 export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSettingsModalProps) {
   const { user } = useAuth()
   const [provider, setProvider] = React.useState(currentSettings?.modelProvider || 'gemini')
-  const [ollamaUrl, setOllamaUrl] = React.useState(currentSettings?.ollamaUrl || 'http://localhost:11434')
   const [ollamaModel, setOllamaModel] = React.useState(currentSettings?.ollamaModel || 'llama3')
-  const [openRouterApiKey, setOpenRouterApiKey] = React.useState(currentSettings?.openRouterApiKey || '')
   const [openRouterModel, setOpenRouterModel] = React.useState(currentSettings?.openRouterModel || 'mistralai/mistral-7b-instruct:free')
   const [thinkingDelay, setThinkingDelay] = React.useState(currentSettings?.thinkingDelay || 1500)
   const [frustrationSensitivity, setFrustrationSensitivity] = React.useState(currentSettings?.frustrationSensitivity || 5)
@@ -32,15 +30,13 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
     try {
       await setDoc(doc(db, path, 'global'), {
         modelProvider: provider,
-        ollamaUrl,
         ollamaModel,
-        openRouterApiKey,
         openRouterModel,
         thinkingDelay,
         frustrationSensitivity,
         updatedBy: user.uid,
         updatedAt: serverTimestamp()
-      })
+      }, { merge: true })
       onClose()
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, path)
@@ -113,23 +109,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                   animate={{ height: 'auto', opacity: 1 }}
                   className="space-y-4 pt-4 border-t border-dark/10"
                 >
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted flex items-center gap-2">
-                      <Globe size={12} /> Ollama API URL
-                    </label>
-                    <input
-                      value={ollamaUrl}
-                      onChange={(e) => setOllamaUrl(e.target.value)}
-                      placeholder="http://localhost:11434"
-                      className="w-full retro-input bg-surface p-4"
-                    />
-                    <div className="bg-danger/5 border-2 border-danger/20 p-3 text-[10px] space-y-1">
-                      <p className="font-bold text-danger uppercase">Penting - Masalah Koneksi:</p>
-                      <p className="text-muted font-medium">1. Agar browser bisa mengakses Ollama, jalankan dengan:</p>
-                      <code className="block bg-white p-1.5 rounded-lg border border-dark/10 font-mono text-[9px]">OLLAMA_ORIGINS=&quot;*&quot; ollama serve</code>
-                      <p className="text-muted font-medium pt-1">2. Jika web ini diakses via <strong>HTTPS</strong>, gunakan URL <code>http://localhost:11434</code> (bukan IP) atau gunakan HTTPS Tunnel (ngrok).</p>
-                    </div>
-                  </div>
+                  <p className="text-sm font-semibold text-muted">Alamat Ollama dikonfigurasi lewat environment variable server.</p>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-muted">Nama Model</label>
                     <input
@@ -148,24 +128,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
                   animate={{ height: 'auto', opacity: 1 }}
                   className="space-y-4 pt-4 border-t border-dark/10"
                 >
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted flex items-center gap-2">
-                      <Key size={12} /> OpenRouter API Key
-                    </label>
-                    <input
-                      type="password"
-                      value={openRouterApiKey}
-                      onChange={(e) => setOpenRouterApiKey(e.target.value)}
-                      placeholder="sk-or-..."
-                      className="w-full retro-input bg-surface p-4"
-                    />
-                    <div className="bg-primary/5 border-2 border-primary/20 p-3 text-[10px] space-y-1">
-                      <p className="font-bold text-primary uppercase">Cara Dapat API Key:</p>
-                      <p className="text-muted font-medium">1. Buka <strong>openrouter.ai</strong> → Sign Up</p>
-                      <p className="text-muted font-medium">2. Menuju <strong>Keys</strong> → Buat key baru</p>
-                      <p className="text-muted font-medium">3. Model free: <code className="bg-white px-1.5 rounded-md border border-dark/10">mistralai/mistral-7b-instruct:free</code></p>
-                    </div>
-                  </div>
+                  <p className="text-sm font-semibold text-muted">API key OpenRouter dikonfigurasi lewat environment variable server.</p>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-muted">Nama Model</label>
                     <input

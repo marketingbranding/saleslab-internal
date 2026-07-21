@@ -64,14 +64,14 @@ test('transcript reason list is defensive and deduplicates unknown fallbacks', (
 
 test('HOME category presentation uses fixed labels and rejects unknown keys', () => {
   assert.deepEqual(allHomeCategoryPresentations(), [
-    { key: 'housing', label: 'Housing', description: 'Kondisi tempat tinggal' },
-    { key: 'occupation', label: 'Occupation', description: 'Pekerjaan' },
-    { key: 'money', label: 'Money', description: 'Kemampuan finansial' },
-    { key: 'eligibility', label: 'Eligibility', description: 'Kelayakan dasar' },
+    { key: 'housing', label: 'Kondisi Tempat Tinggal', description: 'Kondisi tempat tinggal' },
+    { key: 'occupation', label: 'Pekerjaan', description: 'Pekerjaan' },
+    { key: 'money', label: 'Kemampuan Finansial', description: 'Kemampuan finansial' },
+    { key: 'eligibility', label: 'Kelayakan Dasar', description: 'Kelayakan dasar' },
   ])
   assert.deepEqual(homeCategoryPresentation(' HOUSING '), {
     key: 'housing',
-    label: 'Housing',
+    label: 'Kondisi Tempat Tinggal',
     description: 'Kondisi tempat tinggal',
   })
   assert.equal(homeCategoryPresentation('INTERNAL_HOME_KEY'), null)

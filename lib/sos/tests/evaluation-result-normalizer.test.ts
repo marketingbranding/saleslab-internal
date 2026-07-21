@@ -95,8 +95,8 @@ test('valid model result preserves all legacy fields and returns eight dimension
   assert.equal(result.overallScore, 98)
   assert.equal(result.skillScores.length, 8)
   assert.deepEqual(result.skillScores.map(skill => skill.skill), TRIAL_DIMENSIONS.map(dimension => dimension.label))
-  assert.equal(result.skillScores.find(skill => skill.skill === 'Probing')?.score, 88)
-  assert.deepEqual(result.skillScores.find(skill => skill.skill === 'Probing')?.evidence, [
+  assert.equal(result.skillScores.find(skill => skill.skill === 'Eksplorasi')?.score, 88)
+  assert.deepEqual(result.skillScores.find(skill => skill.skill === 'Eksplorasi')?.evidence, [
     'Turn 2: Sales menanyakan status tempat tinggal pelanggan.',
   ])
   assert.equal(result.evaluationV2.evidence.length, 1)
@@ -131,7 +131,7 @@ test('hallucinated, customer-turn, and invalid-dimension evidence are rejected f
 
   assert.deepEqual(result.evaluationV2.evidence, [])
   assert.equal(result.evaluationV2.evidenceDiagnostics.rejected, 3)
-  assert.deepEqual(result.skillScores.find(skill => skill.skill === 'Probing')?.evidence, [])
+  assert.deepEqual(result.skillScores.find(skill => skill.skill === 'Eksplorasi')?.evidence, [])
 })
 
 test('duplicate canonical evidence keeps the first valid item', () => {
@@ -168,7 +168,7 @@ test('malformed arrays and scores normalize safely with all legacy fields presen
   assert.equal(result.grade, 'E')
   assert.deepEqual(result.strengths, [])
   assert.equal(result.skillScores.length, 8)
-  assert.equal(result.skillScores.find(skill => skill.skill === 'Probing')?.score, 0)
+  assert.equal(result.skillScores.find(skill => skill.skill === 'Eksplorasi')?.score, 0)
   assert.equal(result.recommendedNextScenario, null)
 })
 
@@ -203,7 +203,7 @@ test('result normalizer applies guarantee cap to legacy score and grade while pr
   assert.equal(result.evaluationV2.scoreAdjustment.originalScore, 90)
   assert.equal(result.evaluationV2.scoreAdjustment.adjustedScore, 65)
   assert.equal(result.evaluationV2.scoreAdjustment.controllingRuleId, 'GUARANTEE_LANGUAGE')
-  assert.equal(result.skillScores.find(skill => skill.skill === 'Probing')?.score, 88)
+  assert.equal(result.skillScores.find(skill => skill.skill === 'Eksplorasi')?.score, 88)
   assert.equal(result.evaluationV2.evidence.length, 1)
   assert.equal(raw.overallScore, 90)
   assert.equal(raw.grade, 'A')

@@ -5,8 +5,6 @@ import { motion } from "motion/react"
 import { SalesScenario, analyzePerformance } from "@/lib/gemini"
 import { Trophy, Target, AlertTriangle, Lightbulb, CheckCircle2, Home, RefreshCcw, ShieldAlert, CircleCheck, CircleDashed } from "lucide-react"
 import confetti from "canvas-confetti"
-import { db } from "@/lib/firebase"
-import { doc, setDoc, serverTimestamp } from "firebase/firestore"
 import { useAuth } from "@/lib/AuthContext"
 import { SyncIndicator } from "@/components/SyncIndicator"
 import type { TrialFeedbackData } from "@/lib/sos/evaluation/client-types"
@@ -39,38 +37,30 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
 
   const ensureSessionId = React.useCallback(() => {
     if (!sessionIdRef.current) {
-      sessionIdRef.current = `session_${Date.now()}`
+      const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}_${Math.random().toString(36).slice(2)}`
+      sessionIdRef.current = `session_${randomId}`
     }
     return sessionIdRef.current
   }, [])
 
-  const saveSessionState = React.useCallback(async (payload: Record<string, unknown>) => {
-    if (!user) return
-    await setDoc(doc(db, 'sessions', ensureSessionId()), {
-      scenarioId: scenario.id,
-      salespersonName,
-      transcript,
-      userId: user.uid,
-      score: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      ...(scenario.personaId ? { personaId: scenario.personaId, personaVersion: personaVersion || 1 } : {}),
-      ...payload,
-    }, { merge: true })
-  }, [ensureSessionId, personaVersion, scenario.id, scenario.personaId, salespersonName, transcript, user])
-
   const runAnalysis = React.useCallback(async () => {
+    if (!user) {
+      setError('Sesi login tidak ditemukan. Silakan login ulang.')
+      setLoading(false)
+      return
+    }
     try {
       setError(null)
       setLoading(true)
       setAnalysisStatus('processing')
 
-      await saveSessionState({
-        analysisStatus: 'processing',
-        transcriptQuality: transcript.length < 3 ? 'partial' : 'complete',
+      const data = await analyzePerformance(scenario, transcript, {
+        sessionId: ensureSessionId(),
+        salespersonName,
+        ...(personaVersion ? { personaVersion } : {}),
       })
-
-      const data = await analyzePerformance(scenario, transcript)
       setFeedback(data)
       setAnalysisStatus('completed')
 
@@ -83,12 +73,6 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         })
       }
 
-      await saveSessionState({
-        score: data.overallScore,
-        feedback: data,
-        analysisStatus: 'completed',
-        analysisProvider: data.evaluationV2?.provider || 'api/analyze',
-      })
       setSaved(true)
     } catch (err: any) {
       console.error("Feedback error:", err)
@@ -97,19 +81,10 @@ export function FeedbackView({ scenario, salespersonName, transcript, onRestart,
         ? "Server sedang sibuk. Silakan tunggu sebentar dan coba lagi."
         : err?.message || "Gagal menganalisis performa. Silakan coba lagi."
       setError(message)
-      try {
-        await saveSessionState({
-          analysisStatus: 'failed',
-          analysisError: message,
-        })
-        setSaved(true)
-      } catch (saveErr) {
-        console.error('Failed to save failed analysis state:', saveErr)
-      }
     } finally {
       setLoading(false)
     }
-  }, [saveSessionState, scenario, transcript])
+  }, [ensureSessionId, personaVersion, salespersonName, scenario, transcript, user])
 
   React.useEffect(() => {
     if (hasStartedRef.current) return

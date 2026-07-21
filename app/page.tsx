@@ -109,11 +109,7 @@ export default function Home() {
     }
   }, [notification])
 
-  const normalizedUserEmail = user?.email?.toLowerCase().trim()
-  const isBootstrapAdmin = normalizedUserEmail === "faizalsyahiddin@gmail.com"
-    || normalizedUserEmail === "groupmarketing.mbn@gmail.com"
-    || normalizedUserEmail === "redhapekug@gmail.com"
-  const isAdmin = isBootstrapAdmin || hasAdminDocument
+  const isAdmin = hasAdminDocument
 
   const [globalStats, setGlobalStats] = React.useState({ totalSessions: 0, topSalesperson: '-', activeScenarios: 0, winRate: 0 })
   const [statsLoaded, setStatsLoaded] = React.useState(false)

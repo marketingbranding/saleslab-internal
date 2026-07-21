@@ -1,26 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
-import { getSettings } from "./firebase";
-import { callOllama, OllamaMessage } from "./ollama";
+import { auth } from "./firebase";
 import type { TrialFeedbackData } from "./sos/evaluation/client-types";
-
-export async function callOpenRouter(apiKey: string, model: string, messages: { role: string; content: string }[], signal?: AbortSignal): Promise<string> {
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-      "HTTP-Referer": typeof window !== 'undefined' ? window.location.origin : "https://saleslab.local",
-    },
-    body: JSON.stringify({ model, messages, stream: false }),
-    signal,
-  });
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenRouter error: ${response.status} — ${err}`);
-  }
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "";
-}
 
 let genAI: GoogleGenAI | null = null;
 
@@ -127,8 +107,6 @@ export async function getConsumerResponse(
   signal?: AbortSignal,
   mode: 'text' | 'call' = 'text'
 ) {
-  const settings = await getSettings();
-
   const systemInstruction = `
     Anda adalah AI roleplay bot yang berakting sebagai konsumen spesifik dalam skenario penjualan rumah subsidi (KPR).
     Implementasikan materi 'Sales Path' dan 'Sales Funnel' secara implisit dalam perilaku Anda.
@@ -158,35 +136,25 @@ export async function getConsumerResponse(
     6. JANGAN berikan feedback saat chat.
   `;
 
-  // Text mode: OpenRouter, Ollama, or Gemini
+  // Text providers run server-side so provider credentials never reach the browser.
   if (mode === 'text') {
-    if (settings.modelProvider === 'openrouter' && settings.openRouterApiKey) {
-      const messages = [
-        { role: 'system', content: systemInstruction },
-        ...history.map(h => ({
-          role: h.role === 'user' ? 'user' : 'assistant' as const,
-          content: h.parts[0].text
-        }))
-      ];
-      if (history.length === 0 && scenario.firstSpeaker === 'AI') {
-        messages.push({ role: 'user', content: "Mulai obrolan sesuai skenario." });
-      }
-      return await callOpenRouter(settings.openRouterApiKey, settings.openRouterModel || 'mistralai/mistral-7b-instruct:free', messages, signal);
-    }
-
-    const ollamaMessages: OllamaMessage[] = [
-      { role: 'system', content: systemInstruction },
-      ...history.map(h => ({
-        role: (h.role === 'user' ? 'user' : 'assistant') as any,
-        content: h.parts[0].text
-      }))
-    ];
-
-    if (history.length === 0 && scenario.firstSpeaker === 'AI') {
-      ollamaMessages.push({ role: 'user', content: "Mulai obrolan sesuai skenario." });
-    }
-
-    return await callOllama(settings.ollamaUrl, settings.ollamaModel, ollamaMessages, signal);
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) throw new Error('Sesi login tidak ditemukan. Silakan login ulang.');
+    const response = await fetch('/api/roleplay/text', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        scenario,
+        history: history.map(turn => ({ role: turn.role, text: turn.parts[0]?.text || '' })),
+      }),
+      signal,
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(result?.error || `Roleplay text gagal: ${response.status}`);
+    return typeof result?.text === 'string' ? result.text : '';
   }
 
   // Audio call mode uses Gemini
@@ -217,13 +185,19 @@ export async function getConsumerResponse(
 
 export async function analyzePerformance(
   scenario: SalesScenario,
-  transcript: { role: string; text: string }[]
+  transcript: { role: string; text: string }[],
+  session: { sessionId: string; salespersonName: string; personaVersion?: number }
 ): Promise<TrialFeedbackData> {
   if (typeof window !== 'undefined') {
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) throw new Error('Sesi login tidak ditemukan. Silakan login ulang.');
     const response = await fetch('/api/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scenario, transcript }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ scenario, transcript, ...session }),
     });
 
     if (!response.ok) {

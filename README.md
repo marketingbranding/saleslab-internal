@@ -1,5 +1,7 @@
 # SalesLab Internal
 
+> Security note: this repository contains internal architecture and should be private. See [`docs/SECURITY_CHECKLIST.md`](docs/SECURITY_CHECKLIST.md) before deployment.
+
 Platform internal untuk melatih skill sales dan negosiasi tim dengan simulasi AI.
 
 ![SalesLab](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
