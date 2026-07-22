@@ -36,9 +36,31 @@ import { TrendingUp, Target, Users, BarChart3, ChevronRight, Plus, LayoutDashboa
 import { calculateLevelInfo, calculateStreak, calculateXpEarned, checkAchievements, getRank } from '@/lib/gamification'
 import { useAuth } from '@/lib/AuthContext'
 import { loginWithGoogle, logout, db, handleFirestoreError, OperationType } from '@/lib/firebase'
-import { collection, query, where, onSnapshot, doc, setDoc, serverTimestamp, runTransaction, writeBatch, deleteField } from 'firebase/firestore'
-import { DEFAULT_BRANCHES, normalizePersonaData, PersonaData, PersonaSubmission, UserMembership, submissionToPersonaData, toPersonaPublicData } from '@/lib/personas'
-import { DataAccessError, getBranchRepository, type BranchRecord } from '@/lib/data'
+import { collection, query, where, onSnapshot, doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { DEFAULT_BRANCHES, PersonaData, PersonaSubmission, UserMembership, toPersonaPublicData } from '@/lib/personas'
+import {
+  DataAccessError,
+  getBranchRepository,
+  getPersonaAdminRepository,
+  getPersonaRepository,
+  getPersonaSecretRepository,
+  getScenarioAdminRepository,
+  getScenarioRepository,
+  getScenarioSecretRepository,
+  isScenarioVisible,
+  mapLegacyScenario,
+  mergeScenarioCatalog,
+  normalizePersona,
+  normalizeScenario,
+  resolveScenarioPersona,
+  toEditablePersona,
+  type BranchRecord,
+  type PersonaRecord,
+  type PersonaSecretRecord,
+  type ScenarioEditorRecord,
+  type ScenarioRecord,
+  type ScenarioSecretRecord,
+} from '@/lib/data'
 
 type Step = 'selection' | 'training' | 'history' | 'performance' | 'achievements' | 'personas' | 'profile' | 'settings' | 'admin' | 'briefing' | 'roleplay' | 'transition' | 'report' | 'dashboard'
 type LoginTransitionState = LoginVisualState | 'complete'
@@ -71,10 +93,12 @@ export default function Home() {
   const [entryMode, setEntryMode] = React.useState<EntryMode>('restored')
   const loginInitiatedRef = React.useRef(false)
   const shouldReduceMotion = useReducedMotion()
-  const [customScenarios, setCustomScenarios] = React.useState<SalesScenario[]>([])
+  const [customScenarios, setCustomScenarios] = React.useState<ScenarioRecord[]>([])
+  const [scenariosLoaded, setScenariosLoaded] = React.useState(false)
+  const [scenarioError, setScenarioError] = React.useState<DataAccessError | null>(null)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isAllScenariosModalOpen, setIsAllScenariosModalOpen] = React.useState(false)
-  const [editingScenario, setEditingScenario] = React.useState<SalesScenario | null>(null)
+  const [editingScenario, setEditingScenario] = React.useState<ScenarioEditorRecord | null>(null)
   const [isStartModalOpen, setIsStartModalOpen] = React.useState(false)
   const [salespersonName] = React.useState("")
   const [selectedScenario, setSelectedScenario] = React.useState<SalesScenario | null>(null)
@@ -85,10 +109,15 @@ export default function Home() {
   const [settings, setSettings] = React.useState<any>({ modelProvider: 'gemini', ollamaUrl: 'http://localhost:11434', ollamaModel: 'llama3' })
   const [sessions, setSessions] = React.useState<SessionData[]>([])
   const [adminTab, setAdminTab] = React.useState<AdminTab>('dashboard')
-  const [personas, setPersonas] = React.useState<PersonaData[]>([])
-  const [personaSecrets, setPersonaSecrets] = React.useState<Record<string, Pick<PersonaData, 'hiddenInstructions' | 'personaKnowledge' | 'personaUnknowns'>>>({})
+  const [approvedPersonas, setApprovedPersonas] = React.useState<PersonaRecord[]>([])
+  const [personasLoaded, setPersonasLoaded] = React.useState(false)
+  const [personaError, setPersonaError] = React.useState<DataAccessError | null>(null)
+  const [personaSecrets, setPersonaSecrets] = React.useState<Record<string, PersonaSecretRecord>>({})
   const [personaSecretsLoaded, setPersonaSecretsLoaded] = React.useState(false)
-  const [scenarioSecrets, setScenarioSecrets] = React.useState<Record<string, string>>({})
+  const [personaSecretsError, setPersonaSecretsError] = React.useState<DataAccessError | null>(null)
+  const [scenarioSecrets, setScenarioSecrets] = React.useState<Record<string, ScenarioSecretRecord>>({})
+  const [scenarioSecretsLoaded, setScenarioSecretsLoaded] = React.useState(false)
+  const [scenarioSecretsError, setScenarioSecretsError] = React.useState<DataAccessError | null>(null)
   const [branches, setBranches] = React.useState<BranchRecord[]>([])
   const [branchesLoaded, setBranchesLoaded] = React.useState(false)
   const [branchCatalogSeeded, setBranchCatalogSeeded] = React.useState<boolean | null>(null)
@@ -217,90 +246,49 @@ export default function Home() {
     if (!isAdmin) {
       setPersonaSecrets({})
       setPersonaSecretsLoaded(false)
+      setPersonaSecretsError(null)
       return
     }
-    return onSnapshot(query(collection(db, 'personaSecrets')), snapshot => {
-      const secrets: Record<string, Pick<PersonaData, 'hiddenInstructions' | 'personaKnowledge' | 'personaUnknowns'>> = {}
-      snapshot.docs.forEach(item => {
-        const value = item.data()
-        secrets[item.id] = {
-          hiddenInstructions: String(value.hiddenInstructions || ''),
-          personaKnowledge: String(value.personaKnowledge || ''),
-          personaUnknowns: String(value.personaUnknowns || ''),
-        }
-      })
-      setPersonaSecrets(secrets)
+    return getPersonaSecretRepository().subscribeAll(items => {
+      setPersonaSecrets(items)
       setPersonaSecretsLoaded(true)
+      setPersonaSecretsError(null)
     }, err => {
-      setPersonaSecretsLoaded(true)
-      if (!isPermissionDenied(err)) handleFirestoreError(err, OperationType.LIST, 'personaSecrets')
+      setPersonaSecretsLoaded(false)
+      setPersonaSecretsError(err)
+      if (err.category !== 'forbidden') handleFirestoreError(err.originalError || err, OperationType.LIST, 'personaSecrets')
     })
-  }, [isAdmin, isPermissionDenied])
+  }, [isAdmin])
 
   React.useEffect(() => {
     if (!isAdmin) {
       setScenarioSecrets({})
+      setScenarioSecretsLoaded(false)
+      setScenarioSecretsError(null)
       return
     }
-    return onSnapshot(query(collection(db, 'scenarioSecrets')), snapshot => {
-      const secrets: Record<string, string> = {}
-      snapshot.docs.forEach(item => { secrets[item.id] = String(item.data().hiddenRules || '') })
-      setScenarioSecrets(secrets)
+    return getScenarioSecretRepository().subscribeAll(items => {
+      setScenarioSecrets(items)
+      setScenarioSecretsLoaded(true)
+      setScenarioSecretsError(null)
     }, err => {
-      if (!isPermissionDenied(err)) handleFirestoreError(err, OperationType.LIST, 'scenarioSecrets')
+      setScenarioSecretsLoaded(false)
+      setScenarioSecretsError(err)
+      if (err.category !== 'forbidden') handleFirestoreError(err.originalError || err, OperationType.LIST, 'scenarioSecrets')
     })
-  }, [isAdmin, isPermissionDenied])
+  }, [isAdmin])
 
   React.useEffect(() => {
     if (!isAdmin || !user) return
-    const legacyPersonas = personas.filter(persona => persona.hiddenInstructions || persona.personaKnowledge || persona.personaUnknowns)
-    if (legacyPersonas.length === 0) return
-
-    Promise.all(legacyPersonas.map(persona => runTransaction(db, async transaction => {
-      const publicRef = doc(db, 'personas', persona.id)
-      const secretRef = doc(db, 'personaSecrets', persona.id)
-      const publicSnapshot = await transaction.get(publicRef)
-      const secretSnapshot = await transaction.get(secretRef)
-      if (!publicSnapshot.exists()) return
-      const publicData = publicSnapshot.data()
-      if (!publicData.hiddenInstructions && !publicData.personaKnowledge && !publicData.personaUnknowns) return
-      if (!secretSnapshot.exists()) {
-        transaction.set(secretRef, {
-          hiddenInstructions: String(publicData.hiddenInstructions || ''),
-          personaKnowledge: String(publicData.personaKnowledge || ''),
-          personaUnknowns: String(publicData.personaUnknowns || ''),
-          updatedAt: serverTimestamp(),
-          updatedBy: user.uid,
-        })
-      }
-      transaction.update(publicRef, {
-        hiddenInstructions: deleteField(),
-        personaKnowledge: deleteField(),
-        personaUnknowns: deleteField(),
-      })
-    }))).catch(err => handleFirestoreError(err, OperationType.UPDATE, 'personas/private-fields-migration'))
-  }, [isAdmin, personas, user])
+    getPersonaSecretRepository().migrateLegacyPublicSecrets(user.uid)
+      .catch(err => handleFirestoreError(err.originalError || err, OperationType.UPDATE, 'personas/private-fields-migration'))
+  }, [isAdmin, user])
 
   React.useEffect(() => {
     if (!isAdmin || !user) return
-    const legacyScenarios = customScenarios.filter(scenario => scenario.hiddenRules)
-    if (legacyScenarios.length === 0) return
-    Promise.all(legacyScenarios.map(scenario => runTransaction(db, async transaction => {
-      const publicRef = doc(db, 'scenarios', scenario.id)
-      const secretRef = doc(db, 'scenarioSecrets', scenario.id)
-      const publicSnapshot = await transaction.get(publicRef)
-      const secretSnapshot = await transaction.get(secretRef)
-      if (!publicSnapshot.exists() || !publicSnapshot.data().hiddenRules) return
-      if (!secretSnapshot.exists()) {
-        transaction.set(secretRef, {
-          hiddenRules: String(publicSnapshot.data().hiddenRules),
-          updatedAt: serverTimestamp(),
-          updatedBy: user.uid,
-        })
-      }
-      transaction.update(publicRef, { hiddenRules: deleteField() })
-    }))).catch(err => handleFirestoreError(err, OperationType.UPDATE, 'scenarios/private-fields-migration'))
-  }, [customScenarios, isAdmin, user])
+    getScenarioSecretRepository().migrateLegacyPublicSecrets(user.uid)
+      .catch(err => handleFirestoreError(err.originalError || err, OperationType.UPDATE, 'scenarios/private-fields-migration'))
+  }, [isAdmin, user])
 
   React.useEffect(() => {
     if (!user) {
@@ -414,16 +402,6 @@ export default function Home() {
 
     let firstDataReceived = false
 
-    const qScenarios = query(collection(db, 'scenarios'))
-    const unsubScenarios = onSnapshot(qScenarios, (snapshot) => {
-      setGlobalStats(prev => ({ ...prev, activeScenarios: SCENARIOS.length + snapshot.size }))
-      setStatsLoaded(true)
-      if (!firstDataReceived) {
-        firstDataReceived = true
-        endSync()
-      }
-    })
-
     const qSessions = isAdmin
       ? query(collection(db, 'sessions'))
       : user
@@ -432,7 +410,7 @@ export default function Home() {
 
     if (!qSessions) {
       endSync()
-      return () => unsubScenarios()
+      return
     }
 
     const unsubSessions = onSnapshot(qSessions, (snapshot) => {
@@ -472,7 +450,6 @@ export default function Home() {
     })
 
     return () => {
-      unsubScenarios()
       unsubSessions()
     }
   }, [startSync, endSync, isAdmin, user])
@@ -480,46 +457,48 @@ export default function Home() {
   React.useEffect(() => {
     if (!user) {
       setCustomScenarios([])
+      setScenariosLoaded(false)
+      setScenarioError(null)
       return
     }
-    const q = query(collection(db, 'scenarios'))
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as SalesScenario[]
-      setCustomScenarios(docs)
-    }, (err) => {
-      if (!isPermissionDenied(err)) {
-        handleFirestoreError(err, OperationType.LIST, 'scenarios')
-      }
+    return getScenarioRepository().subscribe({ includeArchived: true }, items => {
+      setCustomScenarios(items)
+      setGlobalStats(prev => ({ ...prev, activeScenarios: SCENARIOS.length + items.length }))
+      setScenariosLoaded(true)
+      setStatsLoaded(true)
+      setScenarioError(null)
+    }, err => {
+      setScenariosLoaded(true)
+      setStatsLoaded(true)
+      setScenarioError(err)
+      if (err.category !== 'forbidden') handleFirestoreError(err.originalError || err, OperationType.LIST, 'scenarios')
     })
+  }, [user])
 
-    return () => unsubscribe()
-  }, [isPermissionDenied, user])
-
-  // Fetch personas
   React.useEffect(() => {
     if (!user) {
-      setPersonas([])
+      setApprovedPersonas([])
+      setPersonasLoaded(false)
+      setPersonaError(null)
       return
     }
 
-    const q = query(collection(db, 'personas'))
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(item => normalizePersonaData(item.id, item.data() as Partial<PersonaData>))
-      setPersonas(docs)
-    }, (err) => {
-      if (isPermissionDenied(err)) {
+    return getPersonaRepository().subscribeApproved(items => {
+      setApprovedPersonas(items)
+      setPersonasLoaded(true)
+      setPersonaError(null)
+    }, err => {
+      setPersonasLoaded(true)
+      setPersonaError(err)
+      if (err.category === 'forbidden') {
         console.warn('Personas are not readable with the currently deployed Firestore rules. Continuing with an empty persona list.')
-        setPersonas([])
+        setApprovedPersonas([])
         return
       }
 
-      handleFirestoreError(err, OperationType.LIST, 'personas')
+      handleFirestoreError(err.originalError || err, OperationType.LIST, 'personas')
     })
-    return () => unsubscribe()
-  }, [isPermissionDenied, user])
+  }, [user])
 
   // Fetch total users
   React.useEffect(() => {
@@ -543,36 +522,33 @@ export default function Home() {
     setStep(targetStep as Step)
   }
 
-  const handleCreateScenario = async (newScenario: SalesScenario) => {
+  const handleOpenScenarioBuilder = () => {
+    setAdminTab('scenarios')
+    setStep('admin')
+  }
+
+  const handleCreateScenario = async (newScenario: ScenarioEditorRecord) => {
     if (!isAdmin) {
       setNotification({ message: "Hanya admin yang bisa menyimpan skenario.", type: 'error' })
-      return
+      throw new DataAccessError('Hanya admin yang bisa menyimpan skenario.', 'forbidden')
     }
 
     if (!user) {
       setNotification({ message: "Silakan login terlebih dahulu untuk menyimpan skenario.", type: 'error' })
-      return
+      throw new DataAccessError('Silakan login terlebih dahulu untuk menyimpan skenario.', 'unauthenticated')
     }
 
-    const path = 'scenarios'
     try {
-      const scenarioId = newScenario.id || `custom_${Date.now()}`
-      const { hiddenRules, ...publicScenario } = newScenario
-      const batch = writeBatch(db)
-      batch.set(doc(db, path, scenarioId), {
-        ...publicScenario,
-        id: scenarioId,
-        userId: user.uid,
-        createdAt: serverTimestamp()
+      await getScenarioAdminRepository().save({
+        scenario: normalizeScenario(newScenario.id, { ...newScenario, userId: user.uid }),
+        ...(Object.prototype.hasOwnProperty.call(newScenario, 'hiddenRules') ? { hiddenRules: newScenario.hiddenRules || '' } : {}),
       })
-      if (hiddenRules) {
-        batch.set(doc(db, 'scenarioSecrets', scenarioId), { hiddenRules, updatedAt: serverTimestamp(), updatedBy: user.uid }, { merge: true })
-      }
-      await batch.commit()
-    } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, path)
-    } finally {
       setEditingScenario(null)
+    } catch (err) {
+      const error = err instanceof DataAccessError ? err : new DataAccessError('Skenario gagal disimpan.', 'unknown', err)
+      handleFirestoreError(error.originalError || error, OperationType.WRITE, 'scenarios')
+      setNotification({ message: error.message, type: 'error' })
+      throw error
     }
   }
 
@@ -591,20 +567,18 @@ export default function Home() {
     if (!pendingDeleteScenarioId) return
 
     try {
-      const batch = writeBatch(db)
-      batch.delete(doc(db, 'scenarios', pendingDeleteScenarioId))
-      batch.delete(doc(db, 'scenarioSecrets', pendingDeleteScenarioId))
-      await batch.commit()
+      await getScenarioAdminRepository().remove(pendingDeleteScenarioId)
       setNotification({ message: "Skenario berhasil dihapus!", type: 'success' })
     } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, 'scenarios')
-      setNotification({ message: "Gagal menghapus skenario: " + (err as Error).message, type: 'error' })
+      const error = err instanceof DataAccessError ? err : new DataAccessError('Skenario gagal dihapus.', 'unknown', err)
+      handleFirestoreError(error.originalError || error, OperationType.DELETE, 'scenarios')
+      setNotification({ message: error.message, type: 'error' })
     } finally {
       setPendingDeleteScenarioId(null)
     }
   }
 
-  const handleEditScenario = (scenario: SalesScenario, e: React.MouseEvent) => {
+  const handleEditScenario = (scenario: ScenarioRecord, e: React.MouseEvent) => {
     e.stopPropagation()
     if (!isAdmin) {
       setNotification({ message: "Hanya admin yang bisa mengedit skenario.", type: 'error' })
@@ -615,48 +589,39 @@ export default function Home() {
   }
 
   // Admin scenario handlers (no event parameter)
-  const handleAdminSaveScenario = async (scenario: SalesScenario) => {
-    if (!user) return
-    const scenarioId = scenario.id || `scenario_${Date.now()}`
+  const handleAdminSaveScenario = async (scenario: ScenarioEditorRecord) => {
+    if (!user) throw new DataAccessError('Silakan login terlebih dahulu untuk menyimpan skenario.', 'unauthenticated')
     try {
-      const { hiddenRules, ...publicScenario } = scenario
-      const batch = writeBatch(db)
-      batch.set(doc(db, 'scenarios', scenarioId), {
-        ...publicScenario,
-        id: scenarioId,
-        userId: user.uid,
-        updatedAt: serverTimestamp(),
+      await getScenarioAdminRepository().save({
+        scenario: normalizeScenario(scenario.id, { ...scenario, userId: user.uid }),
+        hiddenRules: scenario.hiddenRules || '',
       })
-      batch.set(doc(db, 'scenarioSecrets', scenarioId), {
-        hiddenRules: hiddenRules || '',
-        updatedAt: serverTimestamp(),
-        updatedBy: user.uid,
-      })
-      await batch.commit()
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, 'scenarios')
+      const error = err instanceof DataAccessError ? err : new DataAccessError('Skenario gagal disimpan.', 'unknown', err)
+      handleFirestoreError(error.originalError || error, OperationType.WRITE, 'scenarios')
+      setNotification({ message: error.message, type: 'error' })
+      throw error
     }
   }
 
   const handleAdminDeleteScenario = async (scenarioId: string) => {
     try {
-      const batch = writeBatch(db)
-      batch.delete(doc(db, 'scenarios', scenarioId))
-      batch.delete(doc(db, 'scenarioSecrets', scenarioId))
-      await batch.commit()
+      await getScenarioAdminRepository().remove(scenarioId)
     } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `scenarios/${scenarioId}`)
+      const error = err instanceof DataAccessError ? err : new DataAccessError('Skenario gagal dihapus.', 'unknown', err)
+      handleFirestoreError(error.originalError || error, OperationType.DELETE, `scenarios/${scenarioId}`)
+      setNotification({ message: error.message, type: 'error' })
+      throw error
     }
   }
 
   // Persona handlers
   const handleAdminSavePersona = async (persona: PersonaData) => {
-    if (!user) return
+    if (!user) throw new DataAccessError('Silakan login terlebih dahulu untuk menyimpan persona.', 'unauthenticated')
     const personaId = persona.id || `persona_${Date.now()}`
     try {
-      const batch = writeBatch(db)
-      batch.set(doc(db, 'personas', personaId), {
-        ...toPersonaPublicData({ ...persona, id: personaId }),
+      const publicPersona = normalizePersona(personaId, {
+        ...persona,
         id: personaId,
         status: persona.status || 'approved',
         version: persona.version || 1,
@@ -666,30 +631,32 @@ export default function Home() {
         creatorBranchId: persona.creatorBranchId || 'system',
         creatorBranchName: persona.creatorBranchName || 'System / Admin',
         createdBy: persona.createdBy || user.uid,
-        createdAt: persona.createdAt || serverTimestamp(),
-        updatedAt: serverTimestamp(),
       })
-      batch.set(doc(db, 'personaSecrets', personaId), {
-        hiddenInstructions: persona.hiddenInstructions,
-        personaKnowledge: persona.personaKnowledge,
-        personaUnknowns: persona.personaUnknowns,
-        updatedAt: serverTimestamp(),
-        updatedBy: user.uid,
+      await getPersonaAdminRepository().save({
+        persona: publicPersona,
+        secrets: {
+          hiddenInstructions: persona.hiddenInstructions,
+          personaKnowledge: persona.personaKnowledge,
+          personaUnknowns: persona.personaUnknowns,
+        },
+        actorId: user.uid,
       })
-      await batch.commit()
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, 'personas')
+      const error = err instanceof DataAccessError ? err : new DataAccessError('Persona gagal disimpan.', 'unknown', err)
+      handleFirestoreError(error.originalError || error, OperationType.WRITE, 'personas')
+      setNotification({ message: error.message, type: 'error' })
+      throw error
     }
   }
 
   const handleAdminDeletePersona = async (personaId: string) => {
     try {
-      await setDoc(doc(db, 'personas', personaId), {
-        status: 'archived',
-        updatedAt: serverTimestamp(),
-      }, { merge: true })
+      await getPersonaAdminRepository().archive(personaId)
     } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `personas/${personaId}`)
+      const error = err instanceof DataAccessError ? err : new DataAccessError('Persona gagal diarsipkan.', 'unknown', err)
+      handleFirestoreError(error.originalError || error, OperationType.DELETE, `personas/${personaId}`)
+      setNotification({ message: error.message, type: 'error' })
+      throw error
     }
   }
 
@@ -787,53 +754,12 @@ export default function Home() {
   const handleApprovePersona = async (submission: PersonaSubmission, reviewedPersona: PersonaData) => {
     if (!user || !isAdmin) return
     const personaId = submission.targetPersonaId || submission.persona.id
-    await runTransaction(db, async transaction => {
-      const personaRef = doc(db, 'personas', personaId)
-      const secretRef = doc(db, 'personaSecrets', personaId)
-      const submissionRef = doc(db, 'personaSubmissions', submission.id)
-      const currentSubmissionSnapshot = await transaction.get(submissionRef)
-      const existing = await transaction.get(personaRef)
-      if (!currentSubmissionSnapshot.exists()) throw new Error('Submission tidak ditemukan.')
-      const currentSubmission = { id: currentSubmissionSnapshot.id, ...currentSubmissionSnapshot.data() } as PersonaSubmission
-      if (currentSubmission.status !== 'pending') throw new Error('Submission ini sudah direview.')
-      const existingData = existing.exists() ? existing.data() as PersonaData : null
-      if (!currentSubmission.targetPersonaId && existing.exists()) throw new Error('ID persona sudah digunakan.')
-      if (currentSubmission.targetPersonaId && (!existingData || existingData.creatorUid !== currentSubmission.creatorUid)) {
-        throw new Error('Target revisi persona tidak valid.')
-      }
-      const base = submissionToPersonaData(currentSubmission)
-      transaction.set(personaRef, {
-        ...toPersonaPublicData({ ...base, ...reviewedPersona, id: personaId }),
-        id: personaId,
-        status: 'approved',
-        version: (existingData?.version || 0) + 1,
-        sourceSubmissionId: currentSubmission.id,
-        creatorUid: currentSubmission.creatorUid,
-        creatorName: currentSubmission.creatorName,
-        creatorEmail: currentSubmission.creatorEmail,
-        creatorBranchId: currentSubmission.creatorBranchId,
-        creatorBranchName: currentSubmission.creatorBranchName,
-        createdBy: existingData?.createdBy || currentSubmission.creatorUid,
-        createdAt: existingData?.createdAt || serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        approvedAt: serverTimestamp(),
-        approvedBy: user.uid,
-      })
-      transaction.set(secretRef, {
-        hiddenInstructions: reviewedPersona.hiddenInstructions,
-        personaKnowledge: reviewedPersona.personaKnowledge,
-        personaUnknowns: reviewedPersona.personaUnknowns,
-        updatedAt: serverTimestamp(),
-        updatedBy: user.uid,
-      })
-      transaction.update(submissionRef, {
-        status: 'approved',
-        targetPersonaId: personaId,
-        reviewedAt: serverTimestamp(),
-        reviewedByUid: user.uid,
-        reviewedByName: profile?.displayName || user.email || 'Admin',
-        updatedAt: serverTimestamp(),
-      })
+    await getPersonaAdminRepository().approveSubmission({
+      submissionId: submission.id,
+      personaId,
+      reviewedPersona,
+      approverId: user.uid,
+      approverName: profile?.displayName || user.email || 'Admin',
     })
     setNotification({ message: `${submission.persona.name} berhasil disetujui.`, type: 'success' })
   }
@@ -851,33 +777,17 @@ export default function Home() {
     setNotification({ message: `${submission.persona.name} ditolak.`, type: 'success' })
   }
 
-  const allScenarios = React.useMemo(() => {
-    const merged = [...SCENARIOS];
-    customScenarios.forEach(cs => {
-      const idx = merged.findIndex(s => s.id === cs.id);
-      if (idx !== -1) {
-        merged[idx] = cs;
-      } else {
-        merged.push(cs);
-      }
-    });
-    return merged.filter(scenario => (scenario as any).status !== 'archived');
-  }, [customScenarios]);
+  const scenarioCatalog = React.useMemo(() => {
+    const builtIns = SCENARIOS.map(mapLegacyScenario)
+    return mergeScenarioCatalog(builtIns, customScenarios)
+  }, [customScenarios])
 
-  const adminPersonas = React.useMemo(() => personas.map(persona => ({
-    ...persona,
-    ...(personaSecrets[persona.id] || {}),
-  })), [personaSecrets, personas])
+  const allScenarios = React.useMemo(() => scenarioCatalog.filter(isScenarioVisible), [scenarioCatalog])
 
-  const adminScenarios = React.useMemo(() => allScenarios.map(scenario => ({
+  const adminScenarios = React.useMemo(() => scenarioCatalog.map(scenario => ({
     ...scenario,
-    hiddenRules: scenarioSecrets[scenario.id] || scenario.hiddenRules || '',
-  })), [allScenarios, scenarioSecrets])
-
-  const approvedPersonas = React.useMemo(
-    () => personas.filter(persona => !persona.status || persona.status === 'approved'),
-    [personas]
-  )
+    hiddenRules: scenarioSecrets[scenario.id]?.hiddenRules || '',
+  })), [scenarioCatalog, scenarioSecrets])
 
   const userSessions = React.useMemo(() => {
     if (!user) return []
@@ -957,7 +867,7 @@ export default function Home() {
     setIsStartModalOpen(true)
   }
 
-  const handleSelectPersona = (persona: PersonaData) => {
+  const handleSelectPersona = (persona: PersonaRecord) => {
     const responseStyle = ['To the point', 'Banyak Tanya', 'Ragu-ragu', 'Cerewet'].includes(persona.speechStyle)
       ? persona.speechStyle as SalesScenario['responseStyle']
       : 'Banyak Tanya'
@@ -987,7 +897,7 @@ export default function Home() {
     }
 
     setSelectedScenario(scenarioFromPersona)
-    setSelectedPersonaSnapshot(persona)
+    setSelectedPersonaSnapshot(toEditablePersona(persona))
     setIsStartModalOpen(true)
   }
 
@@ -997,9 +907,10 @@ export default function Home() {
   }
 
   const handleStartCall = () => {
-    setSelectedPersonaSnapshot(selectedScenario?.personaId
-      ? personas.find(persona => persona.id === selectedScenario.personaId) || null
-      : null)
+    const persona = selectedScenario
+      ? resolveScenarioPersona(normalizeScenario(selectedScenario.id, selectedScenario), approvedPersonas)
+      : null
+    setSelectedPersonaSnapshot(persona ? toEditablePersona(persona) : null)
     setStep('roleplay')
   }
 
@@ -1077,6 +988,8 @@ export default function Home() {
             </div>
           )}
 
+          {!personasLoaded && <div className="p-4 border-2 border-dark/10 text-sm font-semibold text-muted">Memuat persona...</div>}
+          {personaError && <div role="alert" className="p-4 border-2 border-danger/30 bg-danger/10 text-sm font-semibold text-danger">{personaError.message}</div>}
           {approvedPersonas.length > 0 && (
             <section className="space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 border-dark/15 pb-4 gap-3">
@@ -1144,7 +1057,7 @@ export default function Home() {
               <div className="flex gap-2 sm:gap-4">
                 {isAdmin && (
                   <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleOpenScenarioBuilder}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-[10px] sm:text-[11px] retro-btn retro-btn-primary px-3 sm:px-5 py-2.5"
                   >
                     <Plus size={14} strokeWidth={3} /> BUAT MISI
@@ -1158,6 +1071,8 @@ export default function Home() {
                 </button>
               </div>
             </div>
+            {!scenariosLoaded && <div className="mb-6 p-4 border-2 border-dark/10 text-sm font-semibold text-muted">Memuat skenario...</div>}
+            {scenarioError && <div role="alert" className="mb-6 p-4 border-2 border-danger/30 bg-danger/10 text-sm font-semibold text-danger">{scenarioError.message}</div>}
             {allScenarios.length === 0 ? (
               <div className="p-16 border-2 border-dashed border-dark/15 text-center space-y-4">
                 <Target size={48} className="mx-auto text-muted/40" strokeWidth={1.5} />
@@ -1167,7 +1082,7 @@ export default function Home() {
                 </p>
                 {isAdmin && (
                   <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleOpenScenarioBuilder}
                     className="retro-btn retro-btn-primary px-6 py-3 font-bold uppercase text-xs"
                   >
                     <Plus size={14} strokeWidth={3} className="mr-2" /> Buat Skenario
@@ -1288,7 +1203,7 @@ export default function Home() {
             sessions={userSessions}
             isAdmin={isAdmin}
             onSelect={handleSelectScenario}
-            onCreateScenario={() => setIsModalOpen(true)}
+            onCreateScenario={handleOpenScenarioBuilder}
             onEditScenario={isAdmin ? handleEditScenario : undefined}
             onDeleteScenario={handleDeleteScenario}
           />
@@ -1451,10 +1366,11 @@ export default function Home() {
 
       {step === 'personas' && membership && (
         <motion.div key="personas" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          {personaError && <div role="alert" className="mb-4 p-4 border-2 border-danger/30 bg-danger/10 text-sm font-semibold text-danger">{personaError.message}</div>}
           <PersonaSubmissionsScreen
             membership={membership}
             submissions={personaSubmissions.filter(item => item.creatorUid === membership.userId)}
-            approvedPersonas={personas.filter(item => !item.status || item.status === 'approved')}
+            approvedPersonas={approvedPersonas}
             onSubmit={handleSubmitPersona}
           />
         </motion.div>
@@ -1503,24 +1419,29 @@ export default function Home() {
           )}
 
           {adminTab === 'scenarios' && (
-            <ScenarioList
-              scenarios={adminScenarios}
-              personas={personas.filter(item => !item.status || item.status === 'approved')}
-              onSave={handleAdminSaveScenario}
-              onDelete={handleAdminDeleteScenario}
-              loading={!statsLoaded}
-            />
+            scenarioSecretsError
+              ? <div role="alert" className="p-4 border-2 border-danger/30 bg-danger/10 text-sm font-semibold text-danger">{scenarioSecretsError.message}</div>
+              : <ScenarioList
+                  scenarios={adminScenarios}
+                  personas={approvedPersonas}
+                  onSave={handleAdminSaveScenario}
+                  onDelete={handleAdminDeleteScenario}
+                  loading={!scenariosLoaded || !scenarioSecretsLoaded}
+                />
           )}
 
           {adminTab === 'personas' && (
-            personaSecretsLoaded ? <PersonaAdminWorkspace
-              personas={adminPersonas}
-              submissions={personaSubmissions}
-              onSave={handleAdminSavePersona}
-              onArchive={handleAdminDeletePersona}
-              onApprove={handleApprovePersona}
-              onReject={handleRejectPersona}
-            /> : <div className="p-10 text-center font-semibold text-muted">Memuat konfigurasi persona...</div>
+            personaSecretsError
+              ? <div role="alert" className="p-4 border-2 border-danger/30 bg-danger/10 text-sm font-semibold text-danger">{personaSecretsError.message}</div>
+              : personaSecretsLoaded ? <PersonaAdminWorkspace
+                  personas={approvedPersonas}
+                  personaSecrets={personaSecrets}
+                  submissions={personaSubmissions}
+                  onSave={handleAdminSavePersona}
+                  onArchive={handleAdminDeletePersona}
+                  onApprove={handleApprovePersona}
+                  onReject={handleRejectPersona}
+                /> : <div className="p-10 text-center font-semibold text-muted">Memuat konfigurasi persona...</div>
           )}
 
           {adminTab === 'branches' && (

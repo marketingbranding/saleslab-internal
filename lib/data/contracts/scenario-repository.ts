@@ -8,10 +8,9 @@ export interface ScenarioListOptions {
 export interface ScenarioRepository {
   list(options?: ScenarioListOptions): Promise<ScenarioRecord[]>
   subscribe(
+    options: ScenarioListOptions,
     callback: (items: ScenarioRecord[]) => void,
     onError?: (error: DataAccessError) => void,
   ): () => void
   getById(id: string): Promise<ScenarioRecord | null>
-  save(scenario: ScenarioRecord): Promise<void>
-  remove(id: string): Promise<void>
 }

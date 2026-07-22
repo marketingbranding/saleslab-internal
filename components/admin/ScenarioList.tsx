@@ -1,50 +1,45 @@
 'use client'
 
 import * as React from 'react'
-import { Plus, Search, Copy, Archive, Trash2, Edit3 } from 'lucide-react'
-import { SalesScenario } from '@/lib/gemini'
+import { Plus, Search, Copy, Trash2, Edit3 } from 'lucide-react'
 import { ScenarioBuilder } from './ScenarioBuilder'
-import type { PersonaData } from '@/lib/personas'
+import { duplicateScenario, type PersonaRecord, type ScenarioEditorRecord } from '@/lib/data'
 
 interface ScenarioListProps {
-  scenarios: SalesScenario[]
-  onSave: (scenario: SalesScenario) => Promise<void>
+  scenarios: ScenarioEditorRecord[]
+  onSave: (scenario: ScenarioEditorRecord) => Promise<void>
   onDelete: (id: string) => Promise<void>
   loading?: boolean
-  personas?: PersonaData[]
+  personas?: PersonaRecord[]
 }
 
 export function ScenarioList({ scenarios, onSave, onDelete, loading, personas = [] }: ScenarioListProps) {
   const [search, setSearch] = React.useState('')
   const [builderOpen, setBuilderOpen] = React.useState(false)
-  const [editingScenario, setEditingScenario] = React.useState<SalesScenario | null>(null)
+  const [editingScenario, setEditingScenario] = React.useState<ScenarioEditorRecord | null>(null)
   const [deletingId, setDeletingId] = React.useState<string | null>(null)
-  const dupCountRef = React.useRef(0)
 
   const filtered = scenarios.filter(s =>
     s.title.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleSave = async (scenario: SalesScenario) => {
+  const handleSave = async (scenario: ScenarioEditorRecord) => {
     await onSave(scenario)
     setBuilderOpen(false)
     setEditingScenario(null)
   }
 
-  const handleDuplicate = (scenario: SalesScenario) => {
-    dupCountRef.current++
-    const dup: SalesScenario = {
-      ...scenario,
-      id: `scenario-copy-${dupCountRef.current}-${scenario.id}`,
-      title: `${scenario.title} (Salinan)`,
-    }
-    onSave(dup)
+  const handleDuplicate = (scenario: ScenarioEditorRecord) => {
+    void onSave(duplicateScenario(scenario)).catch(error => console.error('Scenario duplication failed:', error))
   }
 
   const handleDelete = async (id: string) => {
     setDeletingId(id)
-    await onDelete(id)
-    setDeletingId(null)
+    try {
+      await onDelete(id)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const difficultyColor = (d: string) =>

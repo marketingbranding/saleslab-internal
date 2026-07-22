@@ -5,9 +5,11 @@ import { Check, ClipboardList, Library, X } from 'lucide-react'
 import { PersonaBuilder } from './PersonaBuilder'
 import { PersonaList } from './PersonaList'
 import { PersonaData, PersonaSubmission, submissionToPersonaData } from '@/lib/personas'
+import { type PersonaRecord, type PersonaSecretRecord } from '@/lib/data'
 
 interface PersonaAdminWorkspaceProps {
-  personas: PersonaData[]
+  personas: PersonaRecord[]
+  personaSecrets: Record<string, PersonaSecretRecord>
   submissions: PersonaSubmission[]
   onSave: (persona: PersonaData) => Promise<void>
   onArchive: (id: string) => Promise<void>
@@ -15,7 +17,7 @@ interface PersonaAdminWorkspaceProps {
   onReject: (submission: PersonaSubmission, reason: string) => Promise<void>
 }
 
-export function PersonaAdminWorkspace({ personas, submissions, onSave, onArchive, onApprove, onReject }: PersonaAdminWorkspaceProps) {
+export function PersonaAdminWorkspace({ personas, personaSecrets, submissions, onSave, onArchive, onApprove, onReject }: PersonaAdminWorkspaceProps) {
   const [view, setView] = React.useState<'queue' | 'library'>('queue')
   const [reviewing, setReviewing] = React.useState<PersonaSubmission | null>(null)
   const pending = submissions.filter(item => item.status === 'pending')
@@ -28,7 +30,7 @@ export function PersonaAdminWorkspace({ personas, submissions, onSave, onArchive
         <button onClick={() => setView('library')} className={`min-h-11 px-4 font-bold text-xs uppercase font-heading flex items-center justify-center gap-2 border-b-2 -mb-[2px] ${view === 'library' ? 'border-primary bg-primary/10' : 'border-transparent text-muted'}`}><Library size={15} /> Library</button>
       </div>
 
-      {view === 'library' ? <PersonaList personas={personas.filter(item => item.status !== 'archived')} onSave={onSave} onDelete={onArchive} /> : (
+      {view === 'library' ? <PersonaList personas={personas} personaSecrets={personaSecrets} onSave={onSave} onDelete={onArchive} /> : (
         <div className="space-y-4">
           {pending.map(submission => (
             <article key={submission.id} className="retro-panel bg-surface p-5 grid lg:grid-cols-[1fr_auto] gap-5 items-center">
@@ -66,9 +68,9 @@ export function PersonaAdminWorkspace({ personas, submissions, onSave, onArchive
           editingPersona={{
             ...submissionToPersonaData(reviewing),
             ...(reviewing.targetPersonaId ? {
-              hiddenInstructions: personas.find(item => item.id === reviewing.targetPersonaId)?.hiddenInstructions || '',
-              personaKnowledge: personas.find(item => item.id === reviewing.targetPersonaId)?.personaKnowledge || '',
-              personaUnknowns: personas.find(item => item.id === reviewing.targetPersonaId)?.personaUnknowns || '',
+              hiddenInstructions: personaSecrets[reviewing.targetPersonaId]?.hiddenInstructions || '',
+              personaKnowledge: personaSecrets[reviewing.targetPersonaId]?.personaKnowledge || '',
+              personaUnknowns: personaSecrets[reviewing.targetPersonaId]?.personaUnknowns || '',
             } : {}),
           }}
           onSave={async persona => { await onApprove(reviewing, persona); setReviewing(null) }}

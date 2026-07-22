@@ -6,6 +6,7 @@ import { Users, Settings, Database, ChevronRight, X, Shield } from 'lucide-react
 import { db, getSettings } from '@/lib/firebase'
 import { useAuth } from '@/lib/AuthContext'
 import { collection, query, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore'
+import { getScenarioRepository, type ScenarioRecord } from '@/lib/data'
 
 interface AdminPanelProps {
   isOpen: boolean
@@ -22,18 +23,12 @@ interface UserEntry {
   role: string
 }
 
-interface ScenarioEntry {
-  id: string
-  title?: string
-  difficulty?: string
-  [key: string]: any
-}
-
 export function AdminPanel({ isOpen, onClose, currentSettings }: AdminPanelProps) {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = React.useState<TabKey>('users')
   const [usersList, setUsersList] = React.useState<UserEntry[]>([])
-  const [scenariosList, setScenariosList] = React.useState<ScenarioEntry[]>([])
+  const [scenariosList, setScenariosList] = React.useState<ScenarioRecord[]>([])
+  const [scenarioError, setScenarioError] = React.useState<string | null>(null)
   const [settings, setSettings] = React.useState<any>(currentSettings || null)
   const [loadingUsers, setLoadingUsers] = React.useState(true)
   const [loadingScenarios, setLoadingScenarios] = React.useState(true)
@@ -69,19 +64,16 @@ export function AdminPanel({ isOpen, onClose, currentSettings }: AdminPanelProps
     if (!isOpen) return
 
     setLoadingScenarios(true)
-    const q = query(collection(db, 'scenarios'))
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const scenarios: ScenarioEntry[] = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        }))
+    const unsubscribe = getScenarioRepository().subscribe(
+      { includeArchived: true },
+      (scenarios) => {
         setScenariosList(scenarios)
+        setScenarioError(null)
         setLoadingScenarios(false)
       },
       (err) => {
         console.error('Failed to fetch scenarios:', err)
+        setScenarioError(err.message)
         setLoadingScenarios(false)
       }
     )
@@ -309,6 +301,8 @@ export function AdminPanel({ isOpen, onClose, currentSettings }: AdminPanelProps
                           Loading scenarios...
                         </p>
                       </div>
+                    ) : scenarioError ? (
+                      <div role="alert" className="bg-danger/10 border-2 border-danger/30 p-4 text-sm font-semibold text-danger">{scenarioError}</div>
                     ) : scenariosList.length === 0 ? (
                       <div className="bg-surface retro-panel p-12 text-center">
                         <Database size={32} className="mx-auto mb-3 text-dark/20" />
@@ -337,9 +331,9 @@ export function AdminPanel({ isOpen, onClose, currentSettings }: AdminPanelProps
                               {s.difficulty && (
                                 <span
                                   className={`inline-block px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider border-[2px] ${
-                                    s.difficulty === 'hard'
+                                    s.difficulty === 'Hard'
                                       ? 'bg-danger/10 text-danger border-danger/20'
-                                      : s.difficulty === 'medium'
+                                      : s.difficulty === 'Medium'
                                         ? 'bg-warning/10 text-warning border-warning/20'
                                         : 'bg-success/10 text-success border-success/20'
                                   }`}

@@ -4,11 +4,12 @@ import * as React from 'react'
 import { Building2, Clock3, Plus, RefreshCw, UserSquare2 } from 'lucide-react'
 import { PersonaBuilder } from '@/components/admin/PersonaBuilder'
 import { PersonaData, PersonaSubmission, UserMembership, submissionToPersonaData } from '@/lib/personas'
+import { toEditablePersona, type PersonaRecord } from '@/lib/data'
 
 interface PersonaSubmissionsScreenProps {
   membership: UserMembership
   submissions: PersonaSubmission[]
-  approvedPersonas: PersonaData[]
+  approvedPersonas: PersonaRecord[]
   onSubmit: (persona: PersonaData, options?: { targetPersonaId?: string; previousSubmissionId?: string }) => Promise<void>
 }
 
@@ -35,8 +36,8 @@ export function PersonaSubmissionsScreen({ membership, submissions, approvedPers
     setBuilderOpen(true)
   }
 
-  const openApprovedRevision = (persona: PersonaData) => {
-    setEditing(persona)
+  const openApprovedRevision = (persona: PersonaRecord) => {
+    setEditing(toEditablePersona(persona))
     setRevision({ targetPersonaId: persona.id, previousSubmissionId: persona.sourceSubmissionId })
     setBuilderOpen(true)
   }

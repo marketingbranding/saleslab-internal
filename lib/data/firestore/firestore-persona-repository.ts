@@ -4,11 +4,15 @@ import type { PersonaRepository } from '../contracts/persona-repository'
 import { toDataAccessError } from './error-mapper'
 import { mapPersonaDocument } from './mappers'
 
+export function mapApprovedPersonaDocuments(items: ReadonlyArray<{ id: string; data(): unknown }>) {
+  return items.map(item => mapPersonaDocument(item.id, item.data())).filter(item => item.status === 'approved')
+}
+
 export class FirestorePersonaRepository implements PersonaRepository {
   async listApproved() {
     try {
       const snapshot = await getDocs(query(collection(db, 'personas')))
-      return snapshot.docs.map(item => mapPersonaDocument(item.id, item.data())).filter(item => item.status === 'approved')
+      return mapApprovedPersonaDocuments(snapshot.docs)
     } catch (error) {
       throw toDataAccessError(error)
     }
@@ -16,14 +20,16 @@ export class FirestorePersonaRepository implements PersonaRepository {
 
   subscribeApproved(callback: Parameters<PersonaRepository['subscribeApproved']>[0], onError?: Parameters<PersonaRepository['subscribeApproved']>[1]) {
     return onSnapshot(query(collection(db, 'personas')), snapshot => {
-      callback(snapshot.docs.map(item => mapPersonaDocument(item.id, item.data())).filter(item => item.status === 'approved'))
+      callback(mapApprovedPersonaDocuments(snapshot.docs))
     }, error => onError?.(toDataAccessError(error)))
   }
 
   async getById(id: string) {
     try {
       const snapshot = await getDoc(doc(db, 'personas', id))
-      return snapshot.exists() ? mapPersonaDocument(snapshot.id, snapshot.data()) : null
+      if (!snapshot.exists()) return null
+      const persona = mapPersonaDocument(snapshot.id, snapshot.data())
+      return persona.status === 'approved' ? persona : null
     } catch (error) {
       throw toDataAccessError(error)
     }

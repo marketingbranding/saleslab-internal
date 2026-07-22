@@ -3,15 +3,17 @@
 import * as React from 'react'
 import { Plus, Search, Copy, Archive, Edit3 } from 'lucide-react'
 import { PersonaBuilder, PersonaData } from './PersonaBuilder'
+import { toEditablePersona, type PersonaRecord, type PersonaSecretRecord } from '@/lib/data'
 
 interface PersonaListProps {
-  personas: PersonaData[]
+  personas: PersonaRecord[]
+  personaSecrets: Record<string, PersonaSecretRecord>
   onSave: (persona: PersonaData) => Promise<void>
   onDelete: (id: string) => Promise<void>
   loading?: boolean
 }
 
-export function PersonaList({ personas, onSave, onDelete, loading }: PersonaListProps) {
+export function PersonaList({ personas, personaSecrets, onSave, onDelete, loading }: PersonaListProps) {
   const [search, setSearch] = React.useState('')
   const [builderOpen, setBuilderOpen] = React.useState(false)
   const [editingPersona, setEditingPersona] = React.useState<PersonaData | null>(null)
@@ -29,20 +31,26 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
 
   const duplicateCountRef = React.useRef(0)
 
-  const handleDuplicate = (persona: PersonaData) => {
+  const handleDuplicate = (persona: PersonaRecord) => {
     duplicateCountRef.current++
+    const editable = toEditablePersona(persona, personaSecrets[persona.id])
     const dup: PersonaData = {
-      ...persona,
+      ...editable,
       id: `persona-copy-${duplicateCountRef.current}-${persona.id}`,
       name: `${persona.name} (Salinan)`,
     }
-    onSave(dup)
+    void onSave(dup).catch(error => console.error('Persona duplication failed:', error))
   }
 
   const handleDelete = async (id: string) => {
     setDeletingId(id)
-    await onDelete(id)
-    setDeletingId(null)
+    try {
+      await onDelete(id)
+    } catch (error) {
+      console.error('Persona archive failed:', error)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   if (loading) {
@@ -101,7 +109,7 @@ export function PersonaList({ personas, onSave, onDelete, loading }: PersonaList
               {persona.creatorBranchName || 'System / Admin'} · {persona.creatorName || persona.creatorEmail || 'Admin'}
             </div>
             <div className="grid grid-cols-[minmax(0,1fr)_44px_44px] gap-2 pt-2">
-              <button onClick={() => { setEditingPersona(persona); setBuilderOpen(true) }} className="min-h-11 bg-primary/10 text-primary hover:bg-primary hover:text-dark font-bold text-xs uppercase font-heading flex items-center justify-center gap-1">
+               <button onClick={() => { setEditingPersona(toEditablePersona(persona, personaSecrets[persona.id])); setBuilderOpen(true) }} className="min-h-11 bg-primary/10 text-primary hover:bg-primary hover:text-dark font-bold text-xs uppercase font-heading flex items-center justify-center gap-1">
                 <Edit3 size={12} /> Edit
               </button>
               <button onClick={() => handleDuplicate(persona)} className="h-11 bg-dark/5 text-muted hover:bg-dark/20 flex items-center justify-center" title="Duplikasi" aria-label={`Duplikasi ${persona.name}`}>

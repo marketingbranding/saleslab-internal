@@ -14,6 +14,16 @@ const CATEGORY_BY_CODE: Record<string, DataAccessErrorCategory> = {
   'resource-exhausted': 'unavailable',
 }
 
+const MESSAGE_BY_CATEGORY: Record<DataAccessErrorCategory, string> = {
+  unauthenticated: 'Silakan login untuk melanjutkan.',
+  forbidden: 'Anda tidak memiliki izin untuk tindakan ini.',
+  'not-found': 'Data yang diminta tidak ditemukan.',
+  validation: 'Data yang diberikan tidak valid.',
+  conflict: 'Data berubah atau sudah tersedia. Muat ulang lalu coba lagi.',
+  unavailable: 'Layanan data sedang tidak tersedia. Coba lagi nanti.',
+  unknown: 'Operasi data gagal.',
+}
+
 export function toDataAccessError(error: unknown): DataAccessError {
   if (error instanceof DataAccessError) return error
 
@@ -21,9 +31,5 @@ export function toDataAccessError(error: unknown): DataAccessError {
   const rawCode = typeof candidate?.code === 'string' ? candidate.code : ''
   const code = rawCode.startsWith('firestore/') ? rawCode.slice('firestore/'.length) : rawCode
   const category = CATEGORY_BY_CODE[code] || 'unknown'
-  const message = typeof candidate?.message === 'string' && candidate.message
-    ? candidate.message
-    : 'Operasi data gagal.'
-
-  return new DataAccessError(message, category, error)
+  return new DataAccessError(MESSAGE_BY_CATEGORY[category], category, error)
 }

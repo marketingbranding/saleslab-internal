@@ -1,7 +1,7 @@
-import type { SalesScenario } from '@/lib/gemini'
-import { normalizePersonaData, type PersonaData } from '@/lib/personas'
+import { normalizePersona } from '../normalizers/persona'
+import { normalizeScenario } from '../normalizers/scenario'
 import { toDomainDate } from '../types/dates'
-import type { BranchRecord, PersonaRecord, RoleplaySessionRecord, ScenarioRecord, SessionFeedback, TranscriptTurn } from '../types/records'
+import type { BranchRecord, PersonaRecord, RoleplaySessionRecord, ScenarioEditorRecord, ScenarioRecord, SessionFeedback, TranscriptTurn } from '../types/records'
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -11,12 +11,6 @@ function record(value: unknown): Record<string, unknown> {
 
 function stringValue(value: unknown, fallback = '') {
   return typeof value === 'string' ? value : fallback
-}
-
-function boundedInteger(value: unknown, fallback: number, minimum: number, maximum: number) {
-  return Number.isInteger(value) && Number(value) >= minimum && Number(value) <= maximum
-    ? Number(value)
-    : fallback
 }
 
 export function mapBranchDocument(id: string, value: unknown): BranchRecord {
@@ -39,42 +33,10 @@ export function mapBranchDocument(id: string, value: unknown): BranchRecord {
 
 export function mapScenarioDocument(id: string, value: unknown): ScenarioRecord {
   const data = record(value)
-  const title = stringValue(data.title, id)
-  const description = stringValue(data.description, title)
-  const difficulty = data.difficulty === 'Easy' || data.difficulty === 'Hard' || data.difficulty === 'Medium'
-    ? data.difficulty
-    : 'Medium'
-  const gender = data.gender === 'Wanita' ? 'Wanita' : 'Pria'
-  const responseStyle = ['To the point', 'Banyak Tanya', 'Ragu-ragu', 'Cerewet'].includes(String(data.responseStyle))
-    ? data.responseStyle as SalesScenario['responseStyle']
-    : 'Banyak Tanya'
-  const firstSpeaker = data.firstSpeaker === 'Sales' ? 'Sales' : 'AI'
-  const successCriteria = Array.isArray(data.successCriteria)
-    ? data.successCriteria.filter((item): item is string => typeof item === 'string')
-    : undefined
-  const status = data.status === 'draft' || data.status === 'published' || data.status === 'archived'
-    ? data.status
-    : undefined
+  const scenario = normalizeScenario(id, data)
 
   return {
-    id,
-    title,
-    description,
-    target: stringValue(data.target, description),
-    consumerProfile: stringValue(data.consumerProfile, description),
-    difficulty,
-    icon: stringValue(data.icon, 'UserPlus'),
-    name: stringValue(data.name, 'Konsumen'),
-    gender,
-    aggressiveness: boundedInteger(data.aggressiveness, 5, 1, 10),
-    patience: boundedInteger(data.patience, 5, 1, 10),
-    responseStyle,
-    firstSpeaker,
-    ...(typeof data.personaId === 'string' && data.personaId ? { personaId: data.personaId } : {}),
-    ...(typeof data.openingMessage === 'string' ? { openingMessage: data.openingMessage } : {}),
-    ...(successCriteria ? { successCriteria } : {}),
-    ...(typeof data.baseXp === 'number' && Number.isFinite(data.baseXp) ? { baseXp: data.baseXp } : {}),
-    ...(status ? { status } : {}),
+    ...scenario,
     ...(typeof data.userId === 'string' ? { userId: data.userId } : {}),
     ...(toDomainDate(data.createdAt) ? { createdAt: toDomainDate(data.createdAt) } : {}),
     ...(toDomainDate(data.updatedAt) ? { updatedAt: toDomainDate(data.updatedAt) } : {}),
@@ -82,27 +44,7 @@ export function mapScenarioDocument(id: string, value: unknown): ScenarioRecord 
 }
 
 export function mapPersonaDocument(id: string, value: unknown): PersonaRecord {
-  const data = record(value)
-  const normalized = normalizePersonaData(id, data as Partial<PersonaData>)
-  const {
-    hiddenInstructions: _hiddenInstructions,
-    personaKnowledge: _personaKnowledge,
-    personaUnknowns: _personaUnknowns,
-    createdAt,
-    updatedAt,
-    approvedAt,
-    ...publicPersona
-  } = normalized
-
-  return {
-    ...publicPersona,
-    status: data.status === undefined || data.status === 'approved'
-      ? 'approved'
-      : data.status === 'archived' ? 'archived' : 'archived',
-    ...(toDomainDate(createdAt) ? { createdAt: toDomainDate(createdAt) } : {}),
-    ...(toDomainDate(updatedAt) ? { updatedAt: toDomainDate(updatedAt) } : {}),
-    ...(toDomainDate(approvedAt) ? { approvedAt: toDomainDate(approvedAt) } : {}),
-  }
+  return normalizePersona(id, value)
 }
 
 export function mapSessionDocument(id: string, value: unknown): RoleplaySessionRecord {
@@ -152,7 +94,7 @@ export function mapSessionDocument(id: string, value: unknown): RoleplaySessionR
   }
 }
 
-export function scenarioWriteData(scenario: SalesScenario) {
-  const { hiddenRules: _hiddenRules, ...publicScenario } = scenario
+export function scenarioWriteData(scenario: ScenarioRecord) {
+  const { hiddenRules: _hiddenRules, ...publicScenario } = scenario as ScenarioEditorRecord
   return Object.fromEntries(Object.entries(publicScenario).filter(([, value]) => value !== undefined))
 }

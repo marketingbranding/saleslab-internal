@@ -66,7 +66,7 @@ test('legacy scenario normalization supplies runtime-safe defaults', () => {
   assert.equal(scenario.patience, 5)
   assert.equal(scenario.responseStyle, 'Banyak Tanya')
   assert.equal(scenario.firstSpeaker, 'AI')
-  assert.equal(scenario.hiddenRules, undefined)
+  assert.equal('hiddenRules' in scenario, false)
   assert.equal(scenario.userId, 'admin-1')
   assert.equal(scenario.createdAt?.toISOString(), '2026-01-01T00:00:00.000Z')
 })
@@ -88,7 +88,7 @@ test('scenario write mapper removes secret and undefined fields', () => {
     firstSpeaker: 'AI',
     hiddenRules: 'secret',
     openingMessage: undefined,
-  })
+  } as import('../../../lib/data/types/records').ScenarioEditorRecord)
 
   assert.equal('hiddenRules' in writeData, false)
   assert.equal('openingMessage' in writeData, false)
@@ -137,7 +137,7 @@ test('Firestore error conversion maps stable public categories', () => {
 
   assert.ok(forbidden instanceof DataAccessError)
   assert.equal(forbidden.category, 'forbidden')
-  assert.equal(forbidden.message, 'Missing permissions')
+  assert.equal(forbidden.message, 'Anda tidak memiliki izin untuk tindakan ini.')
   assert.equal(unavailable.category, 'unavailable')
   assert.equal(unknown.category, 'unknown')
 })

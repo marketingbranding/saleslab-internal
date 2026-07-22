@@ -2,10 +2,21 @@ import type { SalesScenario } from '@/lib/gemini'
 import type { PersonaData, PersonaPublicData, PersonaStatus, PersonaSubmissionStatus } from '@/lib/personas'
 import type { TrialFeedbackData } from '@/lib/sos/evaluation/client-types'
 
-export interface ScenarioRecord extends SalesScenario {
+export interface ScenarioRecord extends Omit<SalesScenario, 'hiddenRules'> {
   userId?: string
   createdAt?: Date
   updatedAt?: Date
+}
+
+export interface ScenarioSecretRecord {
+  scenarioId: string
+  hiddenRules: string
+  updatedAt?: Date
+  updatedBy?: string
+}
+
+export interface ScenarioEditorRecord extends ScenarioRecord {
+  hiddenRules?: string
 }
 
 export interface BranchRecord {
@@ -42,6 +53,15 @@ export type PersonaRecord = Omit<PersonaData,
   createdAt?: Date
   updatedAt?: Date
   approvedAt?: Date
+}
+
+export interface PersonaSecretRecord {
+  personaId: string
+  hiddenInstructions: string
+  personaKnowledge: string
+  personaUnknowns: string
+  updatedAt?: Date
+  updatedBy?: string
 }
 
 export interface PersonaSubmissionRecord {

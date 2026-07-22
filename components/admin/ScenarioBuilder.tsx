@@ -3,16 +3,16 @@
 import * as React from 'react'
 import { motion } from 'motion/react'
 import { X, Save, Info, User, Target, Cpu, BarChart3, Award, Globe } from 'lucide-react'
-import { SalesScenario } from '@/lib/gemini'
-import type { PersonaData } from '@/lib/personas'
+import type { SalesScenario } from '@/lib/gemini'
+import { createScenarioDefaults, DEFAULT_SCENARIO_SUCCESS_CRITERIA, normalizeScenario, type PersonaRecord, type ScenarioEditorRecord } from '@/lib/data'
 
 type BuilderTab = 'basic' | 'persona' | 'objective' | 'ai-config' | 'evaluation' | 'rewards' | 'publish'
 
 interface ScenarioBuilderProps {
-  editingScenario?: SalesScenario | null
-  onSave: (scenario: SalesScenario) => void
+  editingScenario?: ScenarioEditorRecord | null
+  onSave: (scenario: ScenarioEditorRecord) => void | Promise<void>
   onClose: () => void
-  personas?: PersonaData[]
+  personas?: PersonaRecord[]
 }
 
 const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
@@ -26,39 +26,40 @@ const TABS: { key: BuilderTab; label: string; icon: React.ReactNode }[] = [
 ]
 
 export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [] }: ScenarioBuilderProps) {
+  const [defaults] = React.useState(() => createScenarioDefaults(editingScenario || {
+    status: 'draft',
+    successCriteria: [...DEFAULT_SCENARIO_SUCCESS_CRITERIA],
+  }))
   const [tab, setTab] = React.useState<BuilderTab>('basic')
-  const [title, setTitle] = React.useState(editingScenario?.title || '')
-  const [description, setDescription] = React.useState(editingScenario?.description || '')
-  const [target, setTarget] = React.useState(editingScenario?.target || '')
-  const [consumerProfile, setConsumerProfile] = React.useState(editingScenario?.consumerProfile || '')
-  const [difficulty, setDifficulty] = React.useState<'Easy' | 'Medium' | 'Hard'>(editingScenario?.difficulty || 'Medium')
-  const [name, setName] = React.useState(editingScenario?.name || '')
-  const [personaId, setPersonaId] = React.useState(editingScenario?.personaId || '')
-  const [gender, setGender] = React.useState<'Pria' | 'Wanita'>(editingScenario?.gender || 'Pria')
-  const [aggressiveness, setAggressiveness] = React.useState(editingScenario?.aggressiveness || 5)
-  const [patience, setPatience] = React.useState(editingScenario?.patience || 5)
-  const [responseStyle, setResponseStyle] = React.useState(editingScenario?.responseStyle || 'Banyak Tanya')
-  const [firstSpeaker, setFirstSpeaker] = React.useState<'AI' | 'Sales'>(editingScenario?.firstSpeaker || 'AI')
+  const [title, setTitle] = React.useState(defaults.title)
+  const [description, setDescription] = React.useState(defaults.description)
+  const [target, setTarget] = React.useState(defaults.target)
+  const [consumerProfile, setConsumerProfile] = React.useState(defaults.consumerProfile)
+  const [difficulty, setDifficulty] = React.useState<'Easy' | 'Medium' | 'Hard'>(defaults.difficulty)
+  const [name, setName] = React.useState(defaults.name)
+  const [personaId, setPersonaId] = React.useState(defaults.personaId || '')
+  const [gender, setGender] = React.useState<'Pria' | 'Wanita'>(defaults.gender)
+  const [aggressiveness, setAggressiveness] = React.useState(defaults.aggressiveness)
+  const [patience, setPatience] = React.useState(defaults.patience)
+  const [responseStyle, setResponseStyle] = React.useState(defaults.responseStyle)
+  const [firstSpeaker, setFirstSpeaker] = React.useState<'AI' | 'Sales'>(defaults.firstSpeaker)
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   // Extended fields
-  const [openingMessage, setOpeningMessage] = React.useState(editingScenario?.openingMessage || '')
+  const [openingMessage, setOpeningMessage] = React.useState(defaults.openingMessage || '')
   const [hiddenRules, setHiddenRules] = React.useState(editingScenario?.hiddenRules || '')
-  const [successCriteria, setSuccessCriteria] = React.useState<string[]>(editingScenario?.successCriteria || [
-    'Understand the customer concern',
-    'Build rapport and trust',
-    'Present relevant solutions',
-    'Handle objections professionally',
-  ])
+  const [successCriteria, setSuccessCriteria] = React.useState<string[]>(defaults.successCriteria || [...DEFAULT_SCENARIO_SUCCESS_CRITERIA])
   const baseXp = difficulty === 'Easy' ? 50 : difficulty === 'Hard' ? 120 : 80
-  const [status, setStatus] = React.useState<'draft' | 'published' | 'archived'>(editingScenario?.status || 'draft')
+  const [status, setStatus] = React.useState<'draft' | 'published' | 'archived'>(defaults.status || 'draft')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title || !description || !name) return
 
-    const scenario: SalesScenario = {
-      id: editingScenario?.id || `scenario-${Date.now()}`,
-      ...(personaId ? { personaId } : {}),
+    const scenario = normalizeScenario(editingScenario?.id || defaults.id, {
+      ...editingScenario,
+      personaId: personaId || undefined,
       title,
       description,
       target: target || description,
@@ -72,13 +73,20 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
       responseStyle,
       firstSpeaker,
       openingMessage,
-      hiddenRules,
       successCriteria,
       baseXp,
       status,
-    }
+    })
 
-    onSave(scenario)
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave({ ...scenario, hiddenRules })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Skenario gagal disimpan.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const renderTab = () => {
@@ -129,7 +137,6 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
                   setPatience(selected.patience)
                   setResponseStyle((['To the point', 'Banyak Tanya', 'Ragu-ragu', 'Cerewet'].includes(selected.speechStyle) ? selected.speechStyle : 'To the point') as SalesScenario['responseStyle'])
                   setConsumerProfile([selected.backgroundStory, selected.currentSituation, selected.painPoints].filter(Boolean).join(' '))
-                  setHiddenRules(selected.hiddenInstructions)
                 }}
                 className="retro-input bg-surface p-4"
               >
@@ -202,6 +209,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
                     className="retro-input bg-surface p-3 flex-1"
                   />
                   <button
+                    type="button"
                     onClick={() => setSuccessCriteria(successCriteria.filter((_, j) => j !== i))}
                     className="p-2 bg-danger/10 text-danger hover:bg-danger hover:text-surface"
                   >
@@ -210,6 +218,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
                 </div>
               ))}
               <button
+                type="button"
                 onClick={() => setSuccessCriteria([...successCriteria, ''])}
                 className="text-[10px] font-bold uppercase text-primary hover:text-primary/80 font-heading"
               >
@@ -225,8 +234,8 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase text-muted font-heading">Pembicara Pertama</label>
               <div className="flex gap-3">
-                <button onClick={() => setFirstSpeaker('AI')} className={`flex-1 p-4 border-2 font-bold text-[10px] uppercase transition-all ${firstSpeaker === 'AI' ? 'bg-primary text-dark border-primary' : 'bg-surface border-dark/15'}`}>AI First</button>
-                <button onClick={() => setFirstSpeaker('Sales')} className={`flex-1 p-4 border-2 font-bold text-[10px] uppercase transition-all ${firstSpeaker === 'Sales' ? 'bg-primary text-dark border-primary' : 'bg-surface border-dark/15'}`}>Sales First</button>
+                <button type="button" onClick={() => setFirstSpeaker('AI')} className={`flex-1 p-4 border-2 font-bold text-[10px] uppercase transition-all ${firstSpeaker === 'AI' ? 'bg-primary text-dark border-primary' : 'bg-surface border-dark/15'}`}>AI First</button>
+                <button type="button" onClick={() => setFirstSpeaker('Sales')} className={`flex-1 p-4 border-2 font-bold text-[10px] uppercase transition-all ${firstSpeaker === 'Sales' ? 'bg-primary text-dark border-primary' : 'bg-surface border-dark/15'}`}>Sales First</button>
               </div>
             </div>
             <div className="space-y-2">
@@ -275,6 +284,7 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
               <div className="flex gap-3">
                 {(['draft', 'published', 'archived'] as const).map(s => (
                   <button
+                    type="button"
                     key={s}
                     onClick={() => setStatus(s)}
                     className={`flex-1 p-4 border-2 font-bold text-[10px] uppercase transition-all ${
@@ -342,15 +352,17 @@ export function ScenarioBuilder({ editingScenario, onSave, onClose, personas = [
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-w-0">
+          {error && <div role="alert" className="p-3 border-2 border-danger/30 bg-danger/10 text-danger text-xs font-bold">{error}</div>}
           {renderTab()}
 
           {/* Actions */}
           <div className="flex flex-col min-[360px]:flex-row gap-3 pt-4 border-t-2 border-dark/15">
             <button
               type="submit"
-              className="retro-btn retro-btn-primary flex items-center gap-2 text-[11px] flex-1 justify-center"
+              disabled={saving}
+              className="retro-btn retro-btn-primary flex items-center gap-2 text-[11px] flex-1 justify-center disabled:opacity-50"
             >
-              <Save size={16} /> {editingScenario ? 'Update Scenario' : 'Create Scenario'}
+              <Save size={16} /> {saving ? 'Menyimpan...' : editingScenario ? 'Update Scenario' : 'Create Scenario'}
             </button>
             <button type="button" onClick={onClose} className="retro-btn retro-btn-ghost text-[11px]">
               Cancel

@@ -2,65 +2,59 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { SalesScenario } from "@/lib/gemini"
+import { createScenarioDefaults, createScenarioId, normalizeScenario, type ScenarioEditorRecord } from "@/lib/data"
 import { X, Plus, Home, Target, Users, AlertCircle, RefreshCcw } from "lucide-react"
 
 interface CreateScenarioModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreated: (scenario: SalesScenario) => void
-  editingScenario?: SalesScenario | null
+  onCreated: (scenario: ScenarioEditorRecord) => void | Promise<void>
+  editingScenario?: ScenarioEditorRecord | null
+}
+
+function scenarioFormValue(editingScenario?: ScenarioEditorRecord | null) {
+  return createScenarioDefaults(editingScenario || {
+    id: createScenarioId('custom'),
+    target: 'Bikin dia mau lanjut proses berkas',
+  })
 }
 
 export function CreateScenarioModal({ isOpen, onClose, onCreated, editingScenario }: CreateScenarioModalProps) {
-  const [formData, setFormData] = React.useState<Omit<SalesScenario, 'id' | 'icon'>>({
-    title: editingScenario?.title || "",
-    description: editingScenario?.description || "",
-    target: editingScenario?.target || "Bikin dia mau lanjut proses berkas",
-    consumerProfile: editingScenario?.consumerProfile || "",
-    difficulty: editingScenario?.difficulty || "Medium",
-    name: editingScenario?.name || "",
-    gender: editingScenario?.gender || "Pria",
-    aggressiveness: editingScenario?.aggressiveness || 5,
-    patience: editingScenario?.patience || 5,
-    responseStyle: editingScenario?.responseStyle || "Banyak Tanya",
-    firstSpeaker: editingScenario?.firstSpeaker || "AI"
-  })
+  const [formData, setFormData] = React.useState(() => scenarioFormValue(editingScenario))
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   // Sync with editingScenario when it changes
   React.useEffect(() => {
-    if (editingScenario) {
-      const timer = setTimeout(() => {
-        setFormData({
-          title: editingScenario.title,
-          description: editingScenario.description,
-          target: editingScenario.target,
-          consumerProfile: editingScenario.consumerProfile,
-          difficulty: editingScenario.difficulty,
-          name: editingScenario.name,
-          gender: editingScenario.gender,
-          aggressiveness: editingScenario.aggressiveness,
-          patience: editingScenario.patience,
-          responseStyle: editingScenario.responseStyle,
-          firstSpeaker: editingScenario.firstSpeaker
-        })
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-  }, [editingScenario])
+    if (!isOpen) return
+    const timer = setTimeout(() => {
+      setFormData(scenarioFormValue(editingScenario))
+      setError(null)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [editingScenario, isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title || !formData.description || !formData.name) return
 
-    const newScenario: SalesScenario = {
-      id: editingScenario?.id || `custom-${Date.now()}`,
+    const normalized = normalizeScenario(editingScenario?.id || formData.id, {
+      ...editingScenario,
       ...formData,
-      icon: editingScenario?.icon || "UserPlus"
+    })
+    setSaving(true)
+    setError(null)
+    try {
+      await onCreated({
+        ...normalized,
+        ...(editingScenario?.hiddenRules !== undefined ? { hiddenRules: editingScenario.hiddenRules } : {}),
+      })
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Skenario gagal disimpan.')
+    } finally {
+      setSaving(false)
     }
-
-    onCreated(newScenario)
-    onClose()
   }
 
   return (
@@ -95,6 +89,7 @@ export function CreateScenarioModal({ isOpen, onClose, onCreated, editingScenari
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {error && <div role="alert" className="p-3 border-2 border-danger/30 bg-danger/10 text-danger text-xs font-bold">{error}</div>}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-muted flex items-center gap-2">
@@ -236,10 +231,11 @@ export function CreateScenarioModal({ isOpen, onClose, onCreated, editingScenari
 
               <button
                 type="submit"
-                className="w-full retro-button retro-button-gold p-5 text-sm mt-4 flex items-center justify-center gap-3"
+                disabled={saving}
+                className="w-full retro-button retro-button-gold p-5 text-sm mt-4 flex items-center justify-center gap-3 disabled:opacity-50"
               >
                 {editingScenario ? <RefreshCcw size={20} strokeWidth={2.5} /> : <Plus size={20} strokeWidth={2.5} />}
-                {editingScenario ? "UPDATE PERSONA" : "SIMPAN PERSONA"}
+                {saving ? 'MENYIMPAN...' : editingScenario ? "UPDATE PERSONA" : "SIMPAN PERSONA"}
               </button>
             </form>
           </motion.div>
