@@ -8,6 +8,13 @@
       "when": 1784695330076,
       "tag": "0000_wealthy_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784696509537,
+      "tag": "0001_military_sentry",
+      "breakpoints": true
     }
   ]
 }

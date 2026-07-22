@@ -6,6 +6,7 @@ import type { ScenarioSecretRepository } from './contracts/scenario-secret-repos
 import type { SessionRepository } from './contracts/session-repository'
 import type { PersonaAdminRepository } from './contracts/persona-admin-repository'
 import type { PersonaSecretRepository } from './contracts/persona-secret-repository'
+import type { SettingsRepository } from './contracts/settings-repository'
 import { FirestoreBranchRepository } from './firestore/firestore-branch-repository'
 import { FirestorePersonaRepository } from './firestore/firestore-persona-repository'
 import { FirestoreScenarioRepository } from './firestore/firestore-scenario-repository'
@@ -14,6 +15,7 @@ import { FirestoreScenarioSecretRepository } from './firestore/firestore-scenari
 import { FirestoreSessionRepository } from './firestore/firestore-session-repository'
 import { FirestorePersonaAdminRepository } from './firestore/firestore-persona-admin-repository'
 import { FirestorePersonaSecretRepository } from './firestore/firestore-persona-secret-repository'
+import { FirestoreSettingsRepository } from './firestore/firestore-settings-repository'
 
 let branchRepository: BranchRepository | undefined
 let personaRepository: PersonaRepository | undefined
@@ -23,6 +25,7 @@ let scenarioSecretRepository: ScenarioSecretRepository | undefined
 let sessionRepository: SessionRepository | undefined
 let personaAdminRepository: PersonaAdminRepository | undefined
 let personaSecretRepository: PersonaSecretRepository | undefined
+let settingsRepository: SettingsRepository | undefined
 
 export function getBranchRepository(): BranchRepository {
   branchRepository ??= new FirestoreBranchRepository()
@@ -62,6 +65,11 @@ export function getScenarioSecretRepository(): ScenarioSecretRepository {
 export function getSessionRepository(): SessionRepository {
   sessionRepository ??= new FirestoreSessionRepository()
   return sessionRepository
+}
+
+export function getSettingsRepository(): SettingsRepository {
+  settingsRepository ??= new FirestoreSettingsRepository()
+  return settingsRepository
 }
 
 export type * from './contracts/admin-repository'

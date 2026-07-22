@@ -8,7 +8,7 @@ This stage adds a dormant PostgreSQL foundation. Firebase Auth remains the ident
 
 - `firestore`: default; the application does not import or initialize PostgreSQL.
 - `postgres`: enables explicit PostgreSQL server tooling and future server repository integration.
-- `dual-write`: reserved for a later migration stage. No application dual-write path exists yet.
+- `dual-write`: Firestore remains authoritative for branch/settings reads and is written before the PostgreSQL mirror.
 
 Do not create `NEXT_PUBLIC_DATA_BACKEND`. Client components must never receive `DATABASE_URL` or import modules under `lib/server/postgres`.
 
@@ -110,7 +110,7 @@ Before any PostgreSQL write cutover, rollback is configuration-only:
 3. Leave PostgreSQL tables intact for investigation and reconciliation.
 4. Do not run reverse migrations or copy PostgreSQL rows into Firestore.
 
-Because this stage does not route application writes to PostgreSQL, Firestore remains authoritative and no data rollback is required.
+Firestore remains authoritative. Returning to `DATA_BACKEND=firestore` stops PostgreSQL mirror attempts and requires no reverse data copy.
 
 For local disposable databases only, `docker compose ... down -v` removes all PostgreSQL data. Never use destructive schema rollback against a shared or production database. Production schema rollback should use a reviewed forward migration after the application has already returned to Firestore.
 

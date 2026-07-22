@@ -62,18 +62,18 @@ test('health utility reports unavailable databases without leaking driver errors
   assert.equal(JSON.stringify(result).includes('password'), false)
 })
 
-test('client components and app routes do not import PostgreSQL modules', async () => {
-  const paths = [...await sourceFiles('app'), ...await sourceFiles('components')]
+test('client components do not import PostgreSQL modules', async () => {
+  const paths = ['app/page.tsx', ...await sourceFiles('components'), ...await sourceFiles('hooks')]
   for (const path of paths) {
     const source = await readFile(path, 'utf8')
-    assert.doesNotMatch(source, /from ['"](?:postgres|drizzle-orm|@\/lib\/server\/postgres)/, path)
+    assert.doesNotMatch(source, /(?:from|import\()\s*['"](?:postgres|drizzle-orm|@\/lib\/server\/postgres)/, path)
   }
 })
 
 test('generated migration creates the complete empty schema without data writes', async () => {
   const migrationFiles = (await readdir('db/migrations')).filter(name => name.endsWith('.sql'))
-  assert.equal(migrationFiles.length, 1)
-  const sql = await readFile(join('db/migrations', migrationFiles[0]), 'utf8')
+  assert.ok(migrationFiles.length >= 1)
+  const sql = (await Promise.all(migrationFiles.map(name => readFile(join('db/migrations', name), 'utf8')))).join('\n')
   const expectedTables = [
     'users', 'admins', 'branches', 'memberships', 'personas', 'persona_versions',
     'persona_version_secrets', 'persona_submissions', 'scenarios', 'scenario_secrets',
@@ -84,6 +84,8 @@ test('generated migration creates the complete empty schema without data writes'
   assert.doesNotMatch(sql, /^\s*(?:INSERT|UPDATE|DELETE)\b/im)
   assert.match(sql, /persona_submissions_public_payload_check/)
   assert.match(sql, /sessions_public_snapshot_check/)
+  assert.match(sql, /CREATE TABLE "data_sync_receipts"/)
+  assert.match(sql, /ADD COLUMN "source_revision" integer DEFAULT 0 NOT NULL/)
 })
 
 test('backend selector is server-only and never uses a NEXT_PUBLIC variable', async () => {

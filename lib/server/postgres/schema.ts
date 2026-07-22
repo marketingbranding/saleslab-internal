@@ -58,6 +58,8 @@ export const branches = pgTable('branches', {
   status: text('status').notNull().default('active'),
   createdBy: varchar('created_by', { length: 128 }).references(() => users.firebaseUid, { onDelete: 'restrict' }),
   ...timestamps,
+  sourceRevision: integer('source_revision').notNull().default(0),
+  sourceHash: varchar('source_hash', { length: 64 }),
 }, table => [
   check('branches_id_check', sql`${table.id} ~ '^[a-zA-Z0-9_-]+$'`),
   check('branches_type_check', sql`${table.type} is null or ${table.type} in ('KC', 'KCP')`),
@@ -317,11 +319,27 @@ export const appSettings = pgTable('app_settings', {
   nestedConfig: jsonb('nested_config').$type<Record<string, unknown>>(),
   updatedBy: varchar('updated_by', { length: 128 }).references(() => users.firebaseUid, { onDelete: 'restrict' }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  sourceRevision: integer('source_revision').notNull().default(0),
+  sourceHash: varchar('source_hash', { length: 64 }),
 }, table => [
   check('app_settings_singleton_check', sql`${table.id} = 'global'`),
   check('app_settings_provider_check', sql`${table.modelProvider} in ('gemini', 'ollama', 'openrouter')`),
   check('app_settings_thinking_delay_check', sql`${table.thinkingDelay} between 0 and 30000`),
   check('app_settings_frustration_check', sql`${table.frustrationSensitivity} between 1 and 10`),
+])
+
+export const dataSyncReceipts = pgTable('data_sync_receipts', {
+  operationId: varchar('operation_id', { length: 128 }).primaryKey(),
+  commandFingerprint: varchar('command_fingerprint', { length: 64 }).notNull(),
+  entityType: text('entity_type').notNull(),
+  entityId: varchar('entity_id', { length: 128 }).notNull(),
+  sourceRevision: integer('source_revision').notNull(),
+  sourceHash: varchar('source_hash', { length: 64 }).notNull(),
+  appliedAt: timestamp('applied_at', { withTimezone: true }).notNull().defaultNow(),
+}, table => [
+  check('data_sync_receipts_entity_type_check', sql`${table.entityType} in ('branch', 'settings')`),
+  check('data_sync_receipts_revision_check', sql`${table.sourceRevision} >= 1`),
+  index('data_sync_receipts_entity_idx').on(table.entityType, table.entityId),
 ])
 
 export const migrationRecords = pgTable('migration_records', {

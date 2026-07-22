@@ -21,6 +21,8 @@ test('Postgres branch rows map to domain records with copied Date values', () =>
     createdBy: 'firebase-uid',
     createdAt,
     updatedAt,
+    sourceRevision: 3,
+    sourceHash: 'branch-hash',
   }
 
   const record = mapPostgresBranchRow(row)
@@ -68,6 +70,8 @@ test('Postgres settings rows map to complete domain settings', () => {
     nestedConfig: null,
     updatedBy: 'firebase-admin',
     updatedAt: new Date('2026-04-01T00:00:00.000Z'),
+    sourceRevision: 2,
+    sourceHash: 'settings-hash',
   }
 
   const settings = mapPostgresSettingsRow(row)

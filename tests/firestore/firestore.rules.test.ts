@@ -65,10 +65,13 @@ test('normal user cannot read admin settings or secret collections', async () =>
   await assertFails(getDoc(doc(db, 'scenarioSecrets', 'scenario-1')))
 })
 
-test('admin settings cannot store a browser-readable OpenRouter key', async () => {
+test('admin browser writes to master data must use the server command route', async () => {
   const db = environment.authenticatedContext('admin-1').firestore()
-  await assertSucceeds(setDoc(doc(db, 'settings', 'global'), { modelProvider: 'openrouter', openRouterModel: 'test-model' }))
+  await assertFails(setDoc(doc(db, 'settings', 'global'), { modelProvider: 'openrouter', openRouterModel: 'test-model' }))
   await assertFails(setDoc(doc(db, 'settings', 'global'), { modelProvider: 'openrouter', openRouterApiKey: 'secret' }))
+  await assertFails(setDoc(doc(db, 'branches', 'kc-browser'), {
+    id: 'kc-browser', name: 'KC Browser', normalizedName: 'kc browser', status: 'active',
+  }))
 })
 
 test('normal user cannot create or modify admin documents', async () => {

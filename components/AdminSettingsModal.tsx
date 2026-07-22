@@ -4,9 +4,7 @@
 import * as React from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Settings, Save, X, Server, Sparkles, Key } from 'lucide-react'
-import { db, OperationType, handleFirestoreError } from '@/lib/firebase'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { useAuth } from '@/lib/AuthContext'
+import { getSettingsRepository } from '@/lib/data'
 
 interface AdminSettingsModalProps {
   isOpen: boolean
@@ -15,31 +13,28 @@ interface AdminSettingsModalProps {
 }
 
 export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSettingsModalProps) {
-  const { user } = useAuth()
   const [provider, setProvider] = React.useState(currentSettings?.modelProvider || 'gemini')
   const [ollamaModel, setOllamaModel] = React.useState(currentSettings?.ollamaModel || 'llama3')
   const [openRouterModel, setOpenRouterModel] = React.useState(currentSettings?.openRouterModel || 'mistralai/mistral-7b-instruct:free')
   const [thinkingDelay, setThinkingDelay] = React.useState(currentSettings?.thinkingDelay || 1500)
   const [frustrationSensitivity, setFrustrationSensitivity] = React.useState(currentSettings?.frustrationSensitivity || 5)
   const [isSaving, setIsSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const handleSave = async () => {
-    if (!user) return
     setIsSaving(true)
-    const path = 'settings'
+    setError(null)
     try {
-      await setDoc(doc(db, path, 'global'), {
+      await getSettingsRepository().updateGlobal({
         modelProvider: provider,
         ollamaModel,
         openRouterModel,
         thinkingDelay,
         frustrationSensitivity,
-        updatedBy: user.uid,
-        updatedAt: serverTimestamp()
-      }, { merge: true })
+      })
       onClose()
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, path)
+      setError(err instanceof Error ? err.message : 'Gagal menyimpan pengaturan.')
     } finally {
       setIsSaving(false)
     }
@@ -75,6 +70,7 @@ export function AdminSettingsModal({ isOpen, onClose, currentSettings }: AdminSe
             </div>
 
             <div className="space-y-6">
+              {error && <div role="alert" className="p-3 border-2 border-danger/30 bg-danger/10 text-danger text-xs font-bold">{error}</div>}
               {/* Provider Selection */}
               <div className="space-y-3">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted">Pilih AI Provider</label>

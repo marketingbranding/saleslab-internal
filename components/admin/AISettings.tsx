@@ -3,9 +3,7 @@
 import * as React from 'react'
 import { motion } from 'motion/react'
 import { Save, Server, Sparkles, Key, Clock, AlertTriangle } from 'lucide-react'
-import { db, OperationType, handleFirestoreError } from '@/lib/firebase'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { useAuth } from '@/lib/AuthContext'
+import { getSettingsRepository } from '@/lib/data'
 
 interface AISettingsProps {
   currentSettings: any
@@ -13,7 +11,6 @@ interface AISettingsProps {
 }
 
 export function AISettings({ currentSettings, onSaved }: AISettingsProps) {
-  const { user } = useAuth()
   const [provider, setProvider] = React.useState(currentSettings?.modelProvider || 'gemini')
   const [ollamaModel, setOllamaModel] = React.useState(currentSettings?.ollamaModel || 'llama3')
   const [openRouterModel, setOpenRouterModel] = React.useState(currentSettings?.openRouterModel || 'mistralai/mistral-7b-instruct:free')
@@ -23,24 +20,20 @@ export function AISettings({ currentSettings, onSaved }: AISettingsProps) {
   const [message, setMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleSave = async () => {
-    if (!user) return
     setIsSaving(true)
     setMessage(null)
     try {
-      await setDoc(doc(db, 'settings', 'global'), {
+      await getSettingsRepository().updateGlobal({
         modelProvider: provider,
         ollamaModel,
         openRouterModel,
         thinkingDelay,
         frustrationSensitivity,
-        updatedBy: user.uid,
-        updatedAt: serverTimestamp(),
-      }, { merge: true })
+      })
       setMessage({ type: 'success', text: 'Pengaturan berhasil disimpan!' })
       onSaved?.()
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, 'settings')
-      setMessage({ type: 'error', text: 'Gagal menyimpan pengaturan.' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Gagal menyimpan pengaturan.' })
     } finally {
       setIsSaving(false)
     }

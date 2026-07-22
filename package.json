@@ -20,7 +20,8 @@
     "cleanup:openrouter-key": "tsx scripts/cleanup-openrouter-key.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate-postgres.ts",
-    "db:health": "tsx scripts/check-postgres-health.ts"
+    "db:health": "tsx scripts/check-postgres-health.ts",
+    "compare:data": "tsx scripts/compare-data.ts"
   },
   "dependencies": {
     "@google/genai": "^1.17.0",

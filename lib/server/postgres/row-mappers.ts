@@ -33,7 +33,7 @@ export function mapBranchRecordToPostgresValues(branch: BranchRecord, now = new 
     status: branch.status,
     createdBy: branch.createdBy,
     createdAt: branch.createdAt ? new Date(branch.createdAt.getTime()) : new Date(now.getTime()),
-    updatedAt: new Date(now.getTime()),
+    updatedAt: branch.updatedAt ? new Date(branch.updatedAt.getTime()) : new Date(now.getTime()),
   }
 }
 

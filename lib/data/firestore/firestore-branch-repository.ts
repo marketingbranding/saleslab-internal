@@ -5,17 +5,14 @@ import {
   getDocs,
   onSnapshot,
   query,
-  serverTimestamp,
-  setDoc,
-  writeBatch,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { BranchRepository } from '../contracts/branch-repository'
-import { DataAccessError } from '../errors/data-access-error'
 import type { BranchRecord } from '../types/records'
 import { toDomainDate } from '../types/dates'
 import { toDataAccessError } from './error-mapper'
 import { mapBranchDocument } from './mappers'
+import { createCommandId, sendMasterDataCommand } from '../client/master-data-command'
 
 export class FirestoreBranchRepository implements BranchRepository {
   async listActive() {
@@ -58,81 +55,29 @@ export class FirestoreBranchRepository implements BranchRepository {
   }
 
   async save(branch: BranchRecord) {
-    try {
-      await setDoc(doc(db, 'branches', branch.id), {
-        id: branch.id,
-        name: branch.name,
-        ...(branch.type ? { type: branch.type } : {}),
-        normalizedName: branch.normalizedName,
-        status: branch.status,
-        ...(branch.createdBy ? { createdBy: branch.createdBy } : {}),
-        createdAt: branch.createdAt || serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
-    } catch (error) {
-      throw toDataAccessError(error)
-    }
+    await sendMasterDataCommand({ schemaVersion: 1, commandId: createCommandId(), type: 'branch.save', payload: { branch } })
   }
 
   async seedDefaults(input: Parameters<BranchRepository['seedDefaults']>[0]) {
-    try {
-      const existingNames = new Set(input.existing.map(branch => branch.normalizedName))
-      const existingIds = new Set(input.existing.map(branch => branch.id))
-      const missing = input.defaults.filter(branch => !existingNames.has(branch.normalizedName) && !existingIds.has(branch.id))
-      const batch = writeBatch(db)
-      missing.forEach(branch => {
-        batch.set(doc(db, 'branches', branch.id), {
-          ...branch,
-          status: 'active',
-          createdBy: input.actorId,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        })
-      })
-      batch.set(doc(db, 'settings', 'branchCatalog'), {
-        version: 1,
-        seededAt: serverTimestamp(),
-        seededBy: input.actorId,
-      })
-      await batch.commit()
-      return { inserted: missing.length }
-    } catch (error) {
-      throw toDataAccessError(error)
-    }
+    const result = await sendMasterDataCommand({
+      schemaVersion: 1,
+      commandId: createCommandId(),
+      type: 'branch.seed',
+      payload: { defaults: [...input.defaults] },
+    })
+    return { inserted: result.affected }
   }
 
   async rename(input: Parameters<BranchRepository['rename']>[0]) {
-    try {
-      if (input.membershipUserIds.length > 499) {
-        throw new DataAccessError('Cabang memiliki terlalu banyak user untuk diperbarui dalam satu proses.', 'validation')
-      }
-      const batch = writeBatch(db)
-      batch.update(doc(db, 'branches', input.branchId), {
-        name: input.name,
-        type: input.type,
-        normalizedName: input.normalizedName,
-        updatedAt: serverTimestamp(),
-      })
-      input.membershipUserIds.forEach(userId => {
-        batch.update(doc(db, 'userMemberships', userId), {
-          branchName: input.name,
-          updatedAt: serverTimestamp(),
-          updatedBy: input.actorId,
-        })
-      })
-      await batch.commit()
-    } catch (error) {
-      throw toDataAccessError(error)
-    }
+    await sendMasterDataCommand({
+      schemaVersion: 1,
+      commandId: createCommandId(),
+      type: 'branch.rename',
+      payload: { branchId: input.branchId, name: input.name, type: input.type, normalizedName: input.normalizedName },
+    })
   }
 
   async remove(id: string) {
-    try {
-      const batch = writeBatch(db)
-      batch.delete(doc(db, 'branches', id))
-      await batch.commit()
-    } catch (error) {
-      throw toDataAccessError(error)
-    }
+    await sendMasterDataCommand({ schemaVersion: 1, commandId: createCommandId(), type: 'branch.remove', payload: { branchId: id } })
   }
 }
