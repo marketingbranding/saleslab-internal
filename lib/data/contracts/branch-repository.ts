@@ -14,8 +14,12 @@ export interface BranchCatalogMarker {
   seededBy?: string
 }
 
-export interface BranchRepository {
+export interface BranchReader {
   listActive(): Promise<BranchRecord[]>
+  getById(id: string): Promise<BranchRecord | null>
+}
+
+export interface BranchSubscription {
   subscribe(
     callback: (items: BranchRecord[]) => void,
     onError?: (error: DataAccessError) => void,
@@ -24,7 +28,9 @@ export interface BranchRepository {
     callback: (marker: BranchCatalogMarker | null) => void,
     onError?: (error: DataAccessError) => void,
   ): () => void
-  getById(id: string): Promise<BranchRecord | null>
+}
+
+export interface BranchWriter {
   save(branch: BranchRecord): Promise<void>
   seedDefaults(input: {
     defaults: readonly BranchSeed[]
@@ -41,3 +47,5 @@ export interface BranchRepository {
   }): Promise<void>
   remove(id: string): Promise<void>
 }
+
+export interface BranchRepository extends BranchReader, BranchSubscription, BranchWriter {}

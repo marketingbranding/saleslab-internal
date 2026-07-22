@@ -18,4 +18,12 @@ export default defineConfig([{
     rules: {
         "react-hooks/refs": "off",
     },
+}, {
+    files: ["app/page.tsx", "components/**/*.{ts,tsx}", "hooks/**/*.{ts,tsx}", "lib/AuthContext.tsx"],
+    rules: {
+        "no-restricted-imports": ["error", {
+            paths: ["postgres", "drizzle-orm", "drizzle-orm/postgres-js"],
+            patterns: ["drizzle-orm/*", "@/lib/server/postgres/*", "../lib/server/postgres/*", "../../lib/server/postgres/*"],
+        }],
+    },
 }]);
