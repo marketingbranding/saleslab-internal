@@ -3,12 +3,12 @@
 import * as React from 'react'
 import { motion } from 'motion/react'
 import { Building2 } from 'lucide-react'
-import type { Branch } from '@/lib/personas'
+import type { BranchRecord } from '@/lib/data'
 
 interface BranchSelectionModalProps {
-  branches: Branch[]
+  branches: BranchRecord[]
   loading?: boolean
-  onSelect: (branch: Branch) => Promise<void>
+  onSelect: (branch: BranchRecord) => Promise<void>
 }
 
 export function BranchSelectionModal({ branches, loading, onSelect }: BranchSelectionModalProps) {

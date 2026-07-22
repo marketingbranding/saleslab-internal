@@ -37,7 +37,8 @@ import { calculateLevelInfo, calculateStreak, calculateXpEarned, checkAchievemen
 import { useAuth } from '@/lib/AuthContext'
 import { loginWithGoogle, logout, db, handleFirestoreError, OperationType } from '@/lib/firebase'
 import { collection, query, where, onSnapshot, doc, setDoc, serverTimestamp, runTransaction, writeBatch, deleteField } from 'firebase/firestore'
-import { Branch, DEFAULT_BRANCHES, normalizePersonaData, PersonaData, PersonaSubmission, UserMembership, submissionToPersonaData, toPersonaPublicData } from '@/lib/personas'
+import { DEFAULT_BRANCHES, normalizePersonaData, PersonaData, PersonaSubmission, UserMembership, submissionToPersonaData, toPersonaPublicData } from '@/lib/personas'
+import { DataAccessError, getBranchRepository, type BranchRecord } from '@/lib/data'
 
 type Step = 'selection' | 'training' | 'history' | 'performance' | 'achievements' | 'personas' | 'profile' | 'settings' | 'admin' | 'briefing' | 'roleplay' | 'transition' | 'report' | 'dashboard'
 type LoginTransitionState = LoginVisualState | 'complete'
@@ -88,7 +89,7 @@ export default function Home() {
   const [personaSecrets, setPersonaSecrets] = React.useState<Record<string, Pick<PersonaData, 'hiddenInstructions' | 'personaKnowledge' | 'personaUnknowns'>>>({})
   const [personaSecretsLoaded, setPersonaSecretsLoaded] = React.useState(false)
   const [scenarioSecrets, setScenarioSecrets] = React.useState<Record<string, string>>({})
-  const [branches, setBranches] = React.useState<Branch[]>([])
+  const [branches, setBranches] = React.useState<BranchRecord[]>([])
   const [branchesLoaded, setBranchesLoaded] = React.useState(false)
   const [branchCatalogSeeded, setBranchCatalogSeeded] = React.useState<boolean | null>(null)
   const [membership, setMembership] = React.useState<UserMembership | null>(null)
@@ -324,12 +325,12 @@ export default function Home() {
       return
     }
 
-    const unsubscribeBranches = onSnapshot(query(collection(db, 'branches')), snapshot => {
-      setBranches(snapshot.docs.map(item => ({ id: item.id, ...item.data() } as Branch)))
+    const unsubscribeBranches = getBranchRepository().subscribe(items => {
+      setBranches(items)
       setBranchesLoaded(true)
     }, err => {
       setBranchesLoaded(true)
-      if (!isPermissionDenied(err)) handleFirestoreError(err, OperationType.LIST, 'branches')
+      if (err.category !== 'forbidden') handleFirestoreError(err.originalError || err, OperationType.LIST, 'branches')
     })
 
     const unsubscribeMembership = onSnapshot(doc(db, 'userMemberships', user.uid), snapshot => {
@@ -351,43 +352,25 @@ export default function Home() {
       setBranchCatalogSeeded(null)
       return
     }
-    return onSnapshot(doc(db, 'settings', 'branchCatalog'), snapshot => {
-      setBranchCatalogSeeded(snapshot.exists() && snapshot.data().version === 1)
+    return getBranchRepository().subscribeCatalogMarker(marker => {
+      setBranchCatalogSeeded(marker?.version === 1)
     }, err => {
-      if (!isPermissionDenied(err)) handleFirestoreError(err, OperationType.GET, 'settings/branchCatalog')
+      if (err.category !== 'forbidden') handleFirestoreError(err.originalError || err, OperationType.GET, 'settings/branchCatalog')
     })
   }, [isAdmin, isPermissionDenied])
 
   React.useEffect(() => {
     if (!isAdmin || !user || !branchesLoaded || branchCatalogSeeded !== false || branchSeedStartedRef.current) return
-    const existingNames = new Set(branches.map(branch => branch.normalizedName))
-    const existingIds = new Set(branches.map(branch => branch.id))
-    const missingBranches = DEFAULT_BRANCHES.filter(branch => !existingNames.has(branch.normalizedName) && !existingIds.has(branch.id))
-
     branchSeedStartedRef.current = true
-    const batch = writeBatch(db)
-    missingBranches.forEach(branch => {
-      batch.set(doc(db, 'branches', branch.id), {
-        ...branch,
-        status: 'active',
-        createdBy: user.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
-    })
-    batch.set(doc(db, 'settings', 'branchCatalog'), {
-      version: 1,
-      seededAt: serverTimestamp(),
-      seededBy: user.uid,
-    })
-    batch.commit()
-      .then(() => {
+    getBranchRepository().seedDefaults({ defaults: DEFAULT_BRANCHES, existing: branches, actorId: user.uid })
+      .then(({ inserted }) => {
         setBranchCatalogSeeded(true)
-        if (missingBranches.length > 0) setNotification({ message: `${missingBranches.length} cabang berhasil ditambahkan.`, type: 'success' })
+        if (inserted > 0) setNotification({ message: `${inserted} cabang berhasil ditambahkan.`, type: 'success' })
       })
       .catch(err => {
         branchSeedStartedRef.current = false
-        handleFirestoreError(err, OperationType.CREATE, 'branches/default-seed')
+        const cause = err instanceof DataAccessError ? err.originalError || err : err
+        handleFirestoreError(cause, OperationType.CREATE, 'branches/default-seed')
         setNotification({ message: 'Daftar cabang awal gagal ditambahkan.', type: 'error' })
       })
   }, [branchCatalogSeeded, branches, branchesLoaded, isAdmin, user])
@@ -710,7 +693,7 @@ export default function Home() {
     }
   }
 
-  const handleSelectBranch = async (branch: Branch) => {
+  const handleSelectBranch = async (branch: BranchRecord) => {
     if (!user || !profile || !user.email) throw new Error('Profil user belum lengkap.')
     await setDoc(doc(db, 'userMemberships', user.uid), {
       userId: user.uid,
@@ -730,55 +713,44 @@ export default function Home() {
       throw new Error('Nama cabang sudah terdaftar.')
     }
     const branchId = `branch-${Date.now()}`
-    await setDoc(doc(db, 'branches', branchId), {
+    await getBranchRepository().save({
       id: branchId,
       name,
       type: name.toUpperCase().startsWith('KCP ') ? 'KCP' : 'KC',
       normalizedName: name.toLowerCase().trim(),
       status: 'active',
       createdBy: user.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
     })
     setNotification({ message: 'Cabang berhasil ditambahkan.', type: 'success' })
   }
 
-  const handleUpdateBranch = async (branch: Branch, name: string) => {
+  const handleUpdateBranch = async (branch: BranchRecord, name: string) => {
     if (!user || !isAdmin) throw new Error('Hanya admin yang dapat mengubah cabang.')
     const normalizedName = name.toLowerCase().trim()
     if (branches.some(item => item.id !== branch.id && item.normalizedName === normalizedName)) {
       throw new Error('Nama cabang sudah terdaftar.')
     }
 
-    const batch = writeBatch(db)
-    batch.update(doc(db, 'branches', branch.id), {
+    await getBranchRepository().rename({
+      branchId: branch.id,
       name,
       type: name.toUpperCase().startsWith('KCP ') ? 'KCP' : 'KC',
       normalizedName,
-      updatedAt: serverTimestamp(),
+      membershipUserIds: memberships.filter(item => item.branchId === branch.id).map(item => item.userId),
+      actorId: user.uid,
     })
-    memberships.filter(item => item.branchId === branch.id).forEach(item => {
-      batch.update(doc(db, 'userMemberships', item.userId), {
-        branchName: name,
-        updatedAt: serverTimestamp(),
-        updatedBy: user.uid,
-      })
-    })
-    await batch.commit()
     setNotification({ message: `${branch.name} berhasil diubah menjadi ${name}.`, type: 'success' })
   }
 
-  const handleDeleteBranch = async (branch: Branch) => {
+  const handleDeleteBranch = async (branch: BranchRecord) => {
     if (!user || !isAdmin) throw new Error('Hanya admin yang dapat menghapus cabang.')
     const memberCount = memberships.filter(item => item.branchId === branch.id).length
     if (memberCount > 0) throw new Error(`${branch.name} masih digunakan oleh ${memberCount} user.`)
-    const batch = writeBatch(db)
-    batch.delete(doc(db, 'branches', branch.id))
-    await batch.commit()
+    await getBranchRepository().remove(branch.id)
     setNotification({ message: `${branch.name} berhasil dihapus.`, type: 'success' })
   }
 
-  const handleChangeMembership = async (current: UserMembership, branch: Branch) => {
+  const handleChangeMembership = async (current: UserMembership, branch: BranchRecord) => {
     if (!user || !isAdmin) return
     await setDoc(doc(db, 'userMemberships', current.userId), {
       ...current,

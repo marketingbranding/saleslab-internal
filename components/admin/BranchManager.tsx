@@ -2,15 +2,16 @@
 
 import * as React from 'react'
 import { Building2, Check, Pencil, Plus, Trash2, X } from 'lucide-react'
-import type { Branch, UserMembership } from '@/lib/personas'
+import type { UserMembership } from '@/lib/personas'
+import type { BranchRecord } from '@/lib/data'
 
 interface BranchManagerProps {
-  branches: Branch[]
+  branches: BranchRecord[]
   memberships: UserMembership[]
   onCreate: (name: string) => Promise<void>
-  onUpdate: (branch: Branch, name: string) => Promise<void>
-  onDelete: (branch: Branch) => Promise<void>
-  onChangeMembership: (membership: UserMembership, branch: Branch) => Promise<void>
+  onUpdate: (branch: BranchRecord, name: string) => Promise<void>
+  onDelete: (branch: BranchRecord) => Promise<void>
+  onChangeMembership: (membership: UserMembership, branch: BranchRecord) => Promise<void>
 }
 
 export function BranchManager({ branches, memberships, onCreate, onUpdate, onDelete, onChangeMembership }: BranchManagerProps) {
@@ -52,7 +53,7 @@ export function BranchManager({ branches, memberships, onCreate, onUpdate, onDel
     }
   }
 
-  const saveEdit = async (branch: Branch) => {
+  const saveEdit = async (branch: BranchRecord) => {
     const branchName = editingName.trim()
     const validationError = validateName(branchName, branch.id)
     if (validationError) {
@@ -73,7 +74,7 @@ export function BranchManager({ branches, memberships, onCreate, onUpdate, onDel
     }
   }
 
-  const removeBranch = async (branch: Branch) => {
+  const removeBranch = async (branch: BranchRecord) => {
     const memberCount = memberships.filter(item => item.branchId === branch.id).length
     if (memberCount > 0) {
       setError(`${branch.name} masih digunakan oleh ${memberCount} user. Pindahkan user sebelum menghapus cabang.`)
