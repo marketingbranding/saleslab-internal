@@ -39,7 +39,7 @@ service cloud.firestore {
       }
 
       allow read: if true;
-      allow create: if isAdmin() && isValidScenario(request.resource.data) && isValidId(scenarioId);
+      allow create: if isSignedIn() && isValidScenario(request.resource.data) && isValidId(scenarioId);
       allow update: if isAdmin() && isValidScenario(request.resource.data);
       allow delete: if isAdmin();
     }

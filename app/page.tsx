@@ -635,14 +635,12 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 border-dark/15 pb-4 gap-4">
               <h2 className="text-3xl sm:text-5xl font-bold font-heading uppercase">Library Skenario</h2>
               <div className="flex gap-2 sm:gap-4">
-                {isAdmin && (
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-[10px] sm:text-[11px] retro-btn retro-btn-primary px-3 sm:px-5 py-2.5"
-                  >
-                    <Plus size={14} strokeWidth={3} /> BUAT MISSION
-                  </button>
-                )}
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-[10px] sm:text-[11px] retro-btn retro-btn-primary px-3 sm:px-5 py-2.5"
+                >
+                  <Plus size={14} strokeWidth={3} /> BUAT MISSION
+                </button>
                 <button
                   onClick={() => setIsAllScenariosModalOpen(true)}
                   className="flex items-center gap-2 text-[10px] sm:text-[11px] font-bold text-primary hover:text-primary/80 uppercase font-heading"
@@ -658,14 +656,12 @@ export default function Home() {
                 <p className="text-sm font-medium text-muted max-w-md mx-auto">
                   Buat skenario training pertama Anda untuk memulai simulasi roleplay berbasis AI.
                 </p>
-                {isAdmin && (
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="retro-btn retro-btn-primary px-6 py-3 font-bold uppercase text-xs"
-                  >
-                    <Plus size={14} strokeWidth={3} className="mr-2" /> Buat Skenario
-                  </button>
-                )}
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="retro-btn retro-btn-primary px-6 py-3 font-bold uppercase text-xs"
+                >
+                  <Plus size={14} strokeWidth={3} className="mr-2" /> Buat Skenario
+                </button>
               </div>
             ) : (
               <div id="scenarios-list" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -681,18 +677,6 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="space-y-6 sm:space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 border-dark/15 pb-4 gap-4">
-              <h2 className="text-3xl sm:text-5xl font-bold font-heading uppercase">Persona</h2>
-              <p className="text-sm font-semibold text-muted">Buat persona pelanggan untuk roleplay training.</p>
-            </div>
-            <PersonaList
-              personas={personas}
-              onSave={handleAdminSavePersona}
-              onDelete={handleAdminDeletePersona}
-            />
           </div>
 
           <CreateScenarioModal 
