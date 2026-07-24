@@ -44,10 +44,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Persona Rules
+    // Persona Rules — admins manage all; signed-in users manage their own
     match /personas/{personaId} {
+      function isPersonaOwner(data) {
+        return isSignedIn() && data.createdBy == request.auth.uid;
+      }
+
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin() && isValidId(personaId);
+      allow create: if isSignedIn()
+        && isValidId(personaId)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if (isAdmin() || isPersonaOwner(resource.data))
+        && isValidId(personaId);
+      allow delete: if isAdmin() || isPersonaOwner(resource.data);
     }
 
     // Sessions Rules

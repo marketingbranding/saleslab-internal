@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutDashboard, Target, Clock, BarChart3, Medal, User, Settings } from 'lucide-react'
+import { LayoutDashboard, Target, Clock, BarChart3, Medal, User, Users, Settings } from 'lucide-react'
 
 interface MobileNavProps {
   activeStep: string
@@ -11,11 +11,11 @@ interface MobileNavProps {
 const MOBILE_ITEMS = [
   { step: 'selection', label: 'Utama', icon: LayoutDashboard },
   { step: 'training', label: 'Latihan', icon: Target },
+  { step: 'personas', label: 'Persona', icon: Users },
   { step: 'history', label: 'Riwayat', icon: Clock },
   { step: 'performance', label: 'Performa', icon: BarChart3 },
   { step: 'achievements', label: 'Prestasi', icon: Medal },
   { step: 'profile', label: 'Profil', icon: User },
-  { step: 'settings', label: 'Atur', icon: Settings },
 ]
 
 export function MobileNav({ activeStep, onNavigate, isAdmin }: MobileNavProps) {

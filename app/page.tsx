@@ -36,7 +36,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { loginWithGoogle, logout, db, handleFirestoreError, OperationType } from '@/lib/firebase'
 import { collection, query, where, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 
-type Step = 'selection' | 'training' | 'history' | 'performance' | 'achievements' | 'profile' | 'settings' | 'admin' | 'briefing' | 'roleplay' | 'transition' | 'report' | 'dashboard'
+type Step = 'selection' | 'training' | 'history' | 'performance' | 'achievements' | 'personas' | 'profile' | 'settings' | 'admin' | 'briefing' | 'roleplay' | 'transition' | 'report' | 'dashboard'
 type LoginTransitionState = LoginVisualState | 'complete'
 type EntryMode = 'login' | 'restored'
 
@@ -441,6 +441,33 @@ export default function Home() {
       await deleteDoc(doc(db, 'personas', personaId))
     } catch (err) {
       handleFirestoreError(err, OperationType.DELETE, `personas/${personaId}`)
+    }
+  }
+
+  const handleUserSavePersona = async (persona: PersonaData) => {
+    if (!user) return
+    const personaId = persona.id || `persona_${Date.now()}`
+    try {
+      await setDoc(doc(db, 'personas', personaId), {
+        ...persona,
+        id: personaId,
+        createdBy: user.uid,
+        updatedAt: serverTimestamp(),
+      })
+      setNotification({ message: 'Persona berhasil disimpan.', type: 'success' })
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'personas')
+      setNotification({ message: 'Gagal menyimpan persona.', type: 'error' })
+    }
+  }
+
+  const handleUserDeletePersona = async (personaId: string) => {
+    try {
+      await deleteDoc(doc(db, 'personas', personaId))
+      setNotification({ message: 'Persona berhasil dihapus.', type: 'success' })
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `personas/${personaId}`)
+      setNotification({ message: 'Gagal menghapus persona.', type: 'error' })
     }
   }
 
@@ -933,6 +960,25 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
         >
           <AchievementsScreen sessions={userSessions} loading={!statsLoaded} />
+        </motion.div>
+      )}
+
+      {step === 'personas' && (
+        <motion.div
+          key="personas"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-8"
+        >
+          <div className="space-y-2">
+            <h2 className="text-3xl sm:text-5xl font-bold font-heading uppercase">Persona Saya</h2>
+            <p className="text-sm font-semibold text-muted">Buat dan kelola persona pelanggan untuk roleplay training.</p>
+          </div>
+          <PersonaList
+            personas={personas}
+            onSave={handleUserSavePersona}
+            onDelete={handleUserDeletePersona}
+          />
         </motion.div>
       )}
 

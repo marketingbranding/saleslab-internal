@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutDashboard, Target, Clock, BarChart3, Medal, User, Settings } from 'lucide-react'
+import { LayoutDashboard, Target, Clock, BarChart3, Medal, User, Settings, Users } from 'lucide-react'
 
 interface SidebarProps {
   activeStep: string
@@ -13,6 +13,7 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { step: 'selection', label: 'Dashboard', icon: LayoutDashboard },
   { step: 'training', label: 'Latihan', icon: Target },
+  { step: 'personas', label: 'Persona', icon: Users },
   { step: 'history', label: 'Riwayat', icon: Clock },
   { step: 'performance', label: 'Performa', icon: BarChart3 },
   { step: 'achievements', label: 'Pencapaian', icon: Medal },
